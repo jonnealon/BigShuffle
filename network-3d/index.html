@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Transfer network -- 3D layout</title>
+<!--
+  Experimental, interactive companion to data/build_standalone_figures.py's
+  fig_network_layout.png -- "the network laid out by its own structure, not by
+  geography" -- built as a 3D model per direct request, 2026-09-19: "Is it
+  possible to render the transfer network as a 3d model in a html file?" /
+  "build it anyway." No latitude/longitude anywhere in this file or in
+  ../data/network_3d_data.json?v=1790025324 -- reachable from map/index.html's own "More
+  views" button (added 2026-09-19, see map/README.md) but not dependent on it
+  or on any geographic data.
+
+  Library: 3d-force-graph 1.80.0 (bundles its own three.js -- checked directly
+  against its published package.json, "three" is a normal dependency, not a
+  peer, and the UMD bundle is ~1.3MB, consistent with three.js already being
+  inside it; no separate three.js <script> tag needed). Loaded from jsDelivr,
+  version-pinned, matching map/index.html's own CDN-loading convention
+  (mapbox-gl, deck.gl) -- verified live 2026-09-19 that this exact pinned URL
+  resolves (HTTP 200).
+
+  Color: magnitude (betweenness), not categorical -- same reasoning as the
+  static figure for ruling out categorical color (this project's own five-role
+  and fourteen-community categorical palettes both fail the validated-palette
+  gate under all-pairs comparison; see log.md, 2026-09-19).
+
+  Updated 2026-09-19, on direct request ("the color in the betweenness version
+  need to go from red to blue or some other gradient"): a single dark-hue ramp
+  (dark baseline to accent blue) left most of the 612 nodes reading as nearly
+  the same near-invisible dark gray, since betweenness is heavily skewed
+  (~440 facilities sit at or near zero). Now blue (low) -> red (high), reusing
+  this project's own documented diverging pair (references/palette.md: "blue
+  <-> red -- warm/cool poles that read as opposite"), dark-mode steps -- not
+  new hexes. Worth being honest that betweenness is a magnitude, not a true
+  diverging quantity (no meaningful zero-crossing), so this borrows the
+  palette's diverging pair for the visual range it gives across a skewed
+  distribution rather than using it exactly as documented (no neutral gray
+  midpoint here).
+
+  Node/edge data has no pre-filtering baked in (unlike the static PNG, which
+  had to cut to the top 15% of edges by weight for legibility) -- WebGL
+  force-graph rendering handles the full 612-node, 6,630-edge graph
+  interactively, and the weight-threshold slider below does the decluttering
+  at view time instead.
+
+  Updated 2026-09-19, on direct request ("lets see the lines a little more
+  clearly" / "more variation between the biggest and the smallest"): edge
+  width/opacity were scaled linearly against the single heaviest edge
+  (weight 26,477), which crushed almost every edge actually shown into the
+  near-invisible end -- checked directly, not assumed: the default
+  threshold's median shown edge (weight ~510) computed to 2% of the linear
+  scale. First fix widened the linear-then-log1p-scaled width+opacity range;
+  called back moments later ("that was too much on the lines. maybe we can
+  find a good visible weight then have a color gradient") -- every edge
+  changing thickness read as too much, once seen. Now a single fixed width
+  (1.1px) plus a brightness gradient carries the weight signal instead:
+  dark baseline `#383835` (low, recedes into the dark surface) to white
+  `#ffffff` (high, brightest possible pop) -- both this project's own
+  dark-mode ink tokens, deliberately achromatic so it never competes with
+  or gets mistaken for the node color encoding.
+-->
+<script src="https://cdn.jsdelivr.net/npm/3d-force-graph@1.80.0/dist/3d-force-graph.min.js"></script>
+<style>
+  :root{
+    color-scheme: dark;
+    --surface: #1a1a19;       /* dataviz-skill dark chart surface */
+    --panel-bg: rgba(20,20,19,0.92);
+    --panel-border: #383835;   /* dataviz-skill dark baseline/axis */
+    --ink-primary: #ffffff;
+    --ink-secondary: #c3c2b7;
+    --ink-muted: #898781;
+    --accent: #3987e5;         /* dataviz-skill dark-mode categorical slot 1 */
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html,body{margin:0;padding:0;height:100%;background:var(--surface);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden;}
+  #graph{position:absolute;inset:0;}
+  #panel{
+    position:absolute;top:16px;left:16px;z-index:10;width:300px;
+    background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:10px;
+    padding:14px 16px;color:var(--ink-primary);box-shadow:0 10px 40px rgba(0,0,0,.5);
+  }
+  #panel .backlink{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;
+    color:var(--ink-muted);text-decoration:none;margin-bottom:8px;}
+  #panel .backlink:hover{color:var(--ink-primary);}
+  #panel h1{font-size:14px;margin:0 0 4px 0;font-weight:600;}
+  #panel .sub{font-size:11px;color:var(--ink-secondary);margin-bottom:12px;line-height:1.45;}
+  #panel .row{margin:10px 0;}
+  #panel .row label{display:flex;justify-content:space-between;font-size:11px;
+    color:var(--ink-secondary);margin-bottom:4px;}
+  #panel input[type=range]{width:100%;accent-color:var(--accent);}
+  #panel .legend{font-size:10.5px;color:var(--ink-muted);margin-top:2px;}
+  #panel .ramp{height:8px;border-radius:4px;margin:4px 0 2px 0;
+    background:linear-gradient(to right, #3987e5, #e66767);}
+  #panel .ramp-labels{display:flex;justify-content:space-between;font-size:9.5px;color:var(--ink-muted);}
+  #panel button{font-family:inherit;font-size:11px;padding:6px 10px;
+    background:rgba(255,255,255,0.06);border:1px solid var(--panel-border);border-radius:6px;
+    color:var(--ink-primary);cursor:pointer;margin-top:2px;}
+  #panel button:hover{background:rgba(255,255,255,0.12);}
+  #panel .toggle{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink-secondary);
+    cursor:pointer;user-select:none;}
+  #panel .toggle input{accent-color:var(--accent);}
+  #status{position:absolute;bottom:14px;left:16px;z-index:10;font-family:monospace;
+    font-size:10.5px;color:var(--ink-muted);}
+  #loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    color:var(--ink-secondary);font-size:13px;z-index:20;}
+  #err{position:absolute;top:16px;right:16px;z-index:20;background:#3a1414;color:#ffb3b3;
+    padding:10px 14px;border-radius:8px;font-size:12px;max-width:340px;display:none;}
+</style>
+</head>
+<body>
+<div id="graph"></div>
+<div id="loading">Loading network...</div>
+<div id="err"></div>
+
+<div id="panel">
+  <a class="backlink" href="../index.html">&larr; Back to map</a>
+  <h1>The transfer network in 3D</h1>
+  <div class="sub">
+    Laid out by its own structure (a force-directed layout) -- not by latitude
+    and longitude. Drag to rotate, scroll to zoom, click a facility to focus.
+  </div>
+  <div class="row" style="margin-top:-4px;">
+    <div class="legend">Coloring by betweenness &middot; <a href="by-category.html" style="color:var(--accent);">switch to facility category</a></div>
+  </div>
+
+  <div class="row">
+    <label><span>Minimum transfers to draw an edge</span><span id="threshVal">-</span></label>
+    <input type="range" id="thresh" min="0" max="100" value="0" />
+    <div class="legend"><span id="edgeCount">-</span> of <span id="edgeTotal">-</span> edges shown</div>
+  </div>
+
+  <div class="row">
+    <div class="legend">Node color -- betweenness centrality (structural importance)</div>
+    <div class="ramp"></div>
+    <div class="ramp-labels"><span>low</span><span>high</span></div>
+  </div>
+  <div class="row">
+    <div class="legend">Node size -- throughput (transfers in + out)</div>
+  </div>
+
+  <div class="row">
+    <label class="toggle"><input type="checkbox" id="autorotate" /> Auto-rotate</label>
+  </div>
+  <div class="row">
+    <button id="reset">Reset camera</button>
+  </div>
+</div>
+
+<div id="status"></div>
+
+<script>
+(function () {
+  const errEl = document.getElementById('err');
+  function showErr(msg) {
+    errEl.textContent = msg;
+    errEl.style.display = 'block';
+    console.error(msg);
+  }
+  window.addEventListener('error', (e) => showErr('Script error: ' + e.message));
+
+  // Blue -> red, low -> high betweenness. Requested directly, 2026-09-19: the earlier
+  // single-hue ramp (dark baseline to accent blue) left most of the 612 nodes reading
+  // as nearly the same near-invisible dark gray against the dark background, since
+  // betweenness is heavily skewed (~440 facilities sit at or near zero). Reusing this
+  // project's own documented diverging pair (references/palette.md: "blue <-> red --
+  // warm/cool poles that read as opposite"), dark-mode steps -- not new hexes. Worth
+  // being honest that betweenness is a magnitude, not a true diverging quantity (no
+  // meaningful zero-crossing), so this isn't the palette's diverging pair used exactly
+  // as documented (no neutral gray midpoint) -- it's borrowed for the visual range it
+  // gives across a skewed distribution, on direct request.
+  const LOW_COLOR = '#3987e5';   // dark-mode categorical slot 1 (blue)
+  const HIGH_COLOR = '#e66767';  // dark-mode categorical slot 8 (red)
+
+  // Edge weight -> color, not width. Requested directly, 2026-09-19: the previous
+  // width+opacity scaling ("lets see the lines a little more clearly" / "more
+  // variation between the biggest and the smallest") read as too much once seen --
+  // "maybe we can find a good visible weight then have a color gradient" instead. A
+  // single fixed width plus a brightness gradient (dark baseline -> white, both
+  // this project's own dark-mode ink tokens) carries the same weight signal without
+  // every edge changing thickness. Deliberately achromatic (not a hue) so it never
+  // competes with or gets mistaken for the node color encoding (blue-red betweenness
+  // here, five-role categorical on by-category.html).
+  const EDGE_WIDTH = 1.1;
+  const EDGE_LOW = '#383835';   // dark baseline/axis -- recedes into the dark surface
+  const EDGE_HIGH = '#ffffff';  // dark-mode primary ink -- brightest possible pop
+  function edgeWeightColor(t) {
+    const lo = hexToRgb(EDGE_LOW), hi = hexToRgb(EDGE_HIGH);
+    const r = Math.round(lerp(lo[0], hi[0], t));
+    const g = Math.round(lerp(lo[1], hi[1], t));
+    const b = Math.round(lerp(lo[2], hi[2], t));
+    return `rgba(${r},${g},${b},0.6)`;
+  }
+
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function hexToRgb(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  const lowRgb = hexToRgb(LOW_COLOR);
+  const highRgb = hexToRgb(HIGH_COLOR);
+  function betweennessColor(t) {
+    const r = Math.round(lerp(lowRgb[0], highRgb[0], t));
+    const g = Math.round(lerp(lowRgb[1], highRgb[1], t));
+    const b = Math.round(lerp(lowRgb[2], highRgb[2], t));
+    return `rgb(${r},${g},${b})`;
+  }
+
+  fetch('../data/network_3d_data.json?v=1790025324')
+    .then(r => {
+      if (!r.ok) throw new Error('Fetch failed: ' + r.status);
+      return r.json();
+    })
+    .then(data => {
+      document.getElementById('loading').style.display = 'none';
+
+      const maxBt = Math.max(...data.nodes.map(n => n.betweenness), 1e-9);
+      const maxThpt = Math.max(...data.nodes.map(n => n.throughput), 1);
+      const maxWeight = Math.max(...data.links.map(l => l.weight));
+      const minWeight = Math.min(...data.links.map(l => l.weight));
+
+      // Edge weight is heavily skewed (1 to 26,477 -- one campus-to-annex pair
+      // dominates), so a *linear* 0-1 scale crushes almost every edge that actually
+      // survives the threshold slider into the near-invisible end: the default
+      // threshold's median shown edge (weight ~510) lands at t=0.02 on a linear
+      // scale but t=0.58 on a log scale -- checked directly, not assumed. Feeds
+      // edgeWeightColor() above, which carries the weight signal as brightness.
+      const minLogW = Math.log1p(minWeight);
+      const maxLogW = Math.log1p(maxWeight);
+      function logWeightT(w) {
+        return (Math.log1p(w) - minLogW) / (maxLogW - minLogW + 1e-9);
+      }
+
+      function tooltip(n) {
+        const loc = n.city ? `${n.city}${n.state ? ', ' + n.state : ''}` : 'location not geocoded';
+        return `<div style="font:11px -apple-system,sans-serif;color:#fff;background:rgba(20,20,19,0.95);
+          border:1px solid #383835;border-radius:6px;padding:8px 10px;max-width:240px;line-height:1.5;">
+          <b>${n.name}</b> (${n.id})<br/>
+          ${loc}<br/>
+          Throughput: ${Math.round(n.throughput).toLocaleString()}<br/>
+          Betweenness: ${n.betweenness.toFixed(4)}<br/>
+          Community: ${n.community_id !== null ? n.community_id : 'n/a'} &middot;
+          Degree: ${n.degree}
+          </div>`;
+      }
+
+      const Graph = ForceGraph3D()(document.getElementById('graph'))
+        .graphData(data)
+        .backgroundColor('#1a1a19')
+        .nodeId('id')
+        .nodeLabel(tooltip)
+        .nodeVal(n => 1 + 14 * Math.sqrt(n.throughput / maxThpt))
+        .nodeColor(n => betweennessColor(n.betweenness / maxBt))
+        .nodeOpacity(0.95)
+        .linkSource('source')
+        .linkTarget('target')
+        .linkLabel(l => {
+          const s = typeof l.source === 'object' ? l.source : data.nodes.find(n => n.id === l.source);
+          const t = typeof l.target === 'object' ? l.target : data.nodes.find(n => n.id === l.target);
+          return `${s ? s.id : l.source} <-> ${t ? t.id : l.target}: ${l.weight.toLocaleString()} transfers`;
+        })
+        .linkWidth(EDGE_WIDTH)
+        .linkColor(l => edgeWeightColor(logWeightT(l.weight)))
+        .linkOpacity(1)
+        .onNodeClick(node => {
+          const distance = 90;
+          const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z || 1);
+          Graph.cameraPosition(
+            { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio },
+            node,
+            900
+          );
+        });
+
+      // Weight-threshold slider -- this is what lets this page skip the static
+      // figure's forced "top 15% of edges" cut: start at a sane default (85th
+      // percentile, same starting point as fig_network_layout.png) but let the
+      // reader open it up or narrow it further live.
+      const weights = data.links.map(l => l.weight).sort((a, b) => a - b);
+      function percentile(p) {
+        const idx = Math.min(weights.length - 1, Math.floor(p * weights.length));
+        return weights[idx];
+      }
+      const thresh = document.getElementById('thresh');
+      const threshVal = document.getElementById('threshVal');
+      const edgeCount = document.getElementById('edgeCount');
+      const edgeTotal = document.getElementById('edgeTotal');
+      edgeTotal.textContent = data.links.length.toLocaleString();
+
+      thresh.min = minWeight;
+      thresh.max = maxWeight;
+      const defaultThreshold = percentile(0.85);
+      thresh.value = defaultThreshold;
+
+      function applyThreshold() {
+        const v = Number(thresh.value);
+        threshVal.textContent = Math.round(v).toLocaleString();
+        Graph.linkVisibility(l => l.weight >= v);
+        edgeCount.textContent = data.links.filter(l => l.weight >= v).length.toLocaleString();
+      }
+      thresh.addEventListener('input', applyThreshold);
+      applyThreshold();
+
+      document.getElementById('autorotate').addEventListener('change', (e) => {
+        const controls = Graph.controls();
+        controls.autoRotate = e.target.checked;
+        controls.autoRotateSpeed = 0.6;
+      });
+
+      const initialCameraDistance = Graph.cameraPosition();
+      document.getElementById('reset').addEventListener('click', () => {
+        Graph.cameraPosition({ x: 0, y: 0, z: 800 }, { x: 0, y: 0, z: 0 }, 800);
+      });
+
+      document.getElementById('status').textContent =
+        `${data.nodes.length} facilities, ${data.links.length} edges (undirected, combined both directions)`;
+    })
+    .catch(e => {
+      document.getElementById('loading').style.display = 'none';
+      showErr('Could not load network_3d_data.json: ' + e.message +
+        ' -- run "uv run data/build_network_3d_data.py" from the project root, ' +
+        'and serve this page over http:// (not file://), e.g. ' +
+        '"python3 -m http.server" from the project root, then open ' +
+        'http://localhost:8000/network-3d/index.html');
+    });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,2014 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Deportation System Digital Atlas — map draft</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="https://cdn.jsdelivr.net/npm/mapbox-gl@2.15.0/dist/mapbox-gl.css" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/mapbox-gl@2.15.0/dist/mapbox-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/deck.gl@8.9.0/dist.min.js"></script>
+<style>
+  html,body{margin:0;padding:0;height:100%;background:#0a0c10;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+  #map{position:absolute;inset:0;}
+  #panel{
+    position:absolute;top:16px;left:16px;z-index:10;
+    background:rgba(10,12,16,0.88);border:1px solid #2a2e36;border-radius:10px;
+    padding:14px 16px;color:#e8e8e8;font-size:13px;min-width:230px;
+  }
+  #panel h1{font-size:14px;margin:0 0 4px 0;font-weight:600;}
+  #panel .sub{font-size:11px;color:#8a8a8a;margin-bottom:10px;line-height:1.4;}
+  #panel label{display:flex;align-items:center;gap:8px;margin:5px 0;cursor:pointer;}
+  #panel input[type=checkbox]{accent-color:#ff6e3c;}
+  #panel .panel-head{font-size:11px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;
+    color:#c8ccd6;margin:14px 0 5px 0;padding-bottom:4px;border-bottom:1px solid #2a2e36;}
+  #panel .panel-head.first{margin-top:2px;}
+  .swatch{width:10px;height:10px;border-radius:2px;display:inline-block;}
+  /* Ring, not a filled square: mirrors how airports are actually drawn on the map. */
+  .ring{width:10px;height:10px;border-radius:50%;display:inline-block;border:1.6px solid #5ce1e6;background:transparent;box-sizing:border-box;}
+  #legend .legend-head{display:block;font-size:9.5px;letter-spacing:0.8px;text-transform:uppercase;color:#7a7a7a;margin:7px 0 3px 0;}
+  #legend .legend-head:first-child{margin-top:0;}
+  #legend{margin-top:10px;padding-top:10px;border-top:1px solid #2a2e36;}
+  #legend div{display:flex;align-items:center;gap:8px;margin:3px 0;font-size:11px;color:#c8c8c8;}
+  #status{position:absolute;bottom:40px;left:16px;z-index:10;font-family:monospace;font-size:10.5px;color:#7a7a7a;line-height:1.5;}
+  /* #err sits above the control cluster and guide panels on purpose: if the data
+     failed to load there is nothing useful to control, so the error should win. */
+  #err{position:absolute;top:16px;right:16px;z-index:20;background:#3a1414;color:#ffb3b3;padding:10px 14px;border-radius:8px;font-size:12px;max-width:340px;display:none;}
+  /* map controls cluster + guide overlays, adapted from the author's prior TheChurn
+     build (github.com/jonnealon/TheChurn, index.html) -- see log.md, 2026-09-12. */
+  #mapctrls{position:absolute;top:16px;right:16px;z-index:12;display:flex;flex-direction:column;gap:8px;align-items:flex-end;}
+  #compass{width:38px;height:38px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:50%;}
+  #compass svg{display:block;}
+  #compass .needle{transform-origin:50% 50%;transition:transform .12s linear;}
+  /* Mapbox's own ScaleControl, lifted clear of the status line below it. */
+  .mapboxgl-ctrl-bottom-left{bottom:4px;left:4px;}
+  .mapboxgl-ctrl-bottom-left .mapboxgl-ctrl-scale{background:rgba(10,12,16,0.82);border:1px solid #2a2e36;border-top:none;color:#c8c8c8;font-family:monospace;font-size:10px;padding:1px 5px;margin:0 0 0 12px;}
+  .ctrl{font-family:monospace;font-size:11px;letter-spacing:0.4px;padding:8px 13px;background:rgba(10,12,16,0.88);border:1px solid #2a2e36;color:#e8e8e8;border-radius:7px;cursor:pointer;transition:background .14s,border-color .14s;white-space:nowrap;user-select:none;}
+  .ctrl:hover{background:rgba(255,255,255,0.09);border-color:#4a4f5c;}
+  #help,#controls,#sourcesPanel{position:absolute;top:16px;right:16px;z-index:14;width:290px;background:rgba(10,12,16,0.94);border:1px solid #2a2e36;border-radius:10px;padding:16px;color:#e8e8e8;display:none;box-shadow:0 10px 40px rgba(0,0,0,.5);}
+  #help.show,#controls.show,#sourcesPanel.show{display:block;}
+  #help h3,#controls h3,#sourcesPanel h3{font-size:13px;font-weight:600;margin:0 0 12px 0;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  #help h3 .x,#controls h3 .x,#sourcesPanel h3 .x{cursor:pointer;color:#8a8a8a;font-size:17px;line-height:1;}
+  #help h3 .x:hover,#controls h3 .x:hover{color:#e8e8e8;}
+  #help .hrow,#controls .hrow{display:flex;gap:9px;font-size:11.5px;line-height:1.45;color:#c8c8c8;margin-bottom:9px;}
+  #help .hrow:last-child,#controls .hrow:last-child{margin-bottom:0;}
+  #help .hrow .ic,#controls .hrow .ic{color:#ff9c6e;flex-shrink:0;width:20px;text-align:center;font-family:monospace;}
+  /* Case-trace prototype panel -- deliberately unlike #help/#controls (right side, wider,
+     a warning stripe) so it never reads as an ordinary, public-facing part of the map.
+     See tools/case_trace_server.py and data/build_case_trace.py: this is local-only.
+     Right side, below the #mapctrls button stack (2026-09-19, owner) -- it was previously
+     left:16/top:16, directly on top of the layer panel (#panel), leaving no way to change
+     a toggle while a trace was open. */
+  #casePanel{position:absolute;top:230px;right:16px;z-index:15;width:360px;max-height:calc(100vh - 254px);
+    overflow-y:auto;background:rgba(10,12,16,0.96);border:1px solid #5a3a2a;border-radius:10px;
+    color:#e8e8e8;display:none;box-shadow:0 10px 40px rgba(0,0,0,.55);}
+  #casePanel.show{display:block;}
+  #casePanel .cp-warn{background:#3a2414;color:#ffb37e;font-size:10px;letter-spacing:0.6px;
+    text-transform:uppercase;padding:7px 14px;border-radius:9px 9px 0 0;font-family:monospace;}
+  #casePanel .cp-body{padding:14px 16px;}
+  #casePanel h3{font-size:13px;font-weight:600;margin:0 0 10px 0;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  #casePanel h3 .x{cursor:pointer;color:#8a8a8a;font-size:17px;line-height:1;}
+  #casePanel h3 .x:hover{color:#e8e8e8;}
+  #casePanel .cp-meta{font-size:10.5px;color:#9aa0aa;margin-bottom:12px;line-height:1.5;}
+  #casePanel .cp-step{border-left:2px solid #3a414d;padding:2px 0 12px 12px;margin-left:4px;font-size:11.5px;line-height:1.5;}
+  #casePanel .cp-step:last-child{padding-bottom:2px;}
+  #casePanel .cp-kind{font-family:monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#ff9c6e;margin-bottom:2px;}
+  #casePanel .cp-title{font-weight:600;color:#fff;}
+  #casePanel .cp-note{color:#8a8a8a;font-size:10.5px;margin-top:4px;}
+  #casePanel .cp-go{display:inline-block;margin-top:5px;font-family:monospace;font-size:10px;color:#ff9c6e;cursor:pointer;text-decoration:underline;}
+  #casePanel .cp-err{color:#ff8a8a;font-size:11.5px;line-height:1.5;}
+  #casePanel .cp-loading{color:#9aa0aa;font-size:11.5px;}
+  /* Facility-node analysis panel (2026-09-19) -- same position/box chrome as #casePanel
+     (they're never open at the same time; opening one closes the other, since both sit
+     in the same spot on the right) but its own border color and no warning stripe: this
+     shows structural network stats about a building, not a person's own trajectory, so
+     the case-trace panel's access-control warning doesn't apply and would be misleading
+     here. Not merged into one shared panel because the two carry different, unrelated
+     kinds of content and giving them separate ids keeps that boundary visible in the
+     code, not just in the owner's head. */
+  #nodePanel{position:absolute;top:230px;right:16px;z-index:15;width:360px;max-height:calc(100vh - 254px);
+    overflow-y:auto;background:rgba(10,12,16,0.96);border:1px solid #2a4a3a;border-radius:10px;
+    color:#e8e8e8;display:none;box-shadow:0 10px 40px rgba(0,0,0,.55);}
+  #nodePanel.show{display:block;}
+  #nodePanel .np-body{padding:14px 16px;}
+  #nodePanel h3{font-size:13px;font-weight:600;margin:0 0 10px 0;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  #nodePanel h3 .x{cursor:pointer;color:#8a8a8a;font-size:17px;line-height:1;}
+  #nodePanel h3 .x:hover{color:#e8e8e8;}
+  #nodePanel .np-meta{font-size:10.5px;color:#9aa0aa;margin-bottom:12px;line-height:1.5;}
+  /* Grey, matching #hover .hv-kind (2026-09-19, owner: keep hover/panel colors consistent)
+     -- this was an unrelated green before, the only color in either surface with no shared
+     meaning anywhere else on the map. */
+  #nodePanel .np-section{font-family:monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;
+    color:#8a8a8a;margin:14px 0 4px 0;}
+  #nodePanel .np-section:first-of-type{margin-top:0;}
+  #nodePanel .np-row{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;padding:5px 0;border-bottom:1px solid #23262d;}
+  #nodePanel .np-row:last-child{border-bottom:none;}
+  #nodePanel .np-label{color:#9aa0aa;}
+  #nodePanel .np-val{color:#e8e8e8;font-weight:600;text-align:right;}
+  #nodePanel .np-note{color:#8a8a8a;font-size:10.5px;margin-top:10px;line-height:1.5;}
+  /* The bottom strip belongs to the timeline now. The sources block moved into a
+     panel in the top-right cluster (one click away, not removed) and the status line
+     folded into the timeline's own header, where the coverage counts read as timeline
+     metadata rather than as a floating caption. */
+  /* Beneath the timeline rather than above it (2026-09-19, owner) -- the timeline itself
+     sits at bottom:112px, so this only needs to clear that bottom edge, with a small gap
+     above #draftnote (bottom:34px) so the two never collide. */
+  #brandstack{position:absolute;bottom:60px;right:16px;z-index:10;display:flex;flex-direction:column;align-items:flex-end;gap:10px;max-width:300px;}
+  /* Floating panel, not welded to the viewport edge -- it reads as one of the map's
+     instruments, like the panel top-left, and the map stays visible underneath it. */
+  /* Sits in the band of map left open beneath the floating timeline -- it belongs to
+     the page rather than to the layer panel, and it was making that panel taller than
+     its own content warranted. */
+  #draftnote{position:absolute;left:18px;right:18px;bottom:34px;z-index:12;
+    font-size:10.5px;line-height:1.45;color:#8a8a8a;text-align:center;
+    text-shadow:0 1px 3px rgba(0,0,0,0.85);pointer-events:none;}
+  /* A place to link to standalone visualizations that live outside this map (2026-09-19,
+     owner: "a link to this from the map ... located under teh timeline in a place where we
+     can add buttons as we create additional visualizations"). Sits in the same empty band
+     #draftnote does -- measured directly (Playwright bounding-rect check, not eyeballed):
+     the timeline's own bottom edge lands at bottom:112px in the page's coordinate system,
+     #brandstack's top edge at bottom:~79px, leaving an unused ~33px gap between them at
+     every viewport width tried. bottom:86px centers this row in that gap. Container is
+     pointer-events:none (like #draftnote) so empty space in the row doesn't block map drag;
+     each link inside opts back in. New buttons append inside #vizlinks as more standalone
+     visualizations are built -- nothing else needs to change to add one. */
+  #vizlinks{position:absolute;left:16px;right:16px;bottom:84px;z-index:12;
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;pointer-events:none;}
+  #vizlinks .glabel{font-family:monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;
+    color:#7a7a7a;background:rgba(10,12,16,0.88);border:1px solid #2a2e36;border-radius:6px;
+    padding:5px 9px;}
+  /* Deliberately smaller than .ctrl's own default padding (8px 13px) -- the gap this row
+     sits in, between the timeline and #brandstack, is only ~33px tall (measured directly),
+     which the default .ctrl height would not clear on both sides at once. */
+  #vizlinks a.ctrl{pointer-events:auto;text-decoration:none;display:inline-block;
+    padding:5px 10px;font-size:10px;}
+  #timeline{position:absolute;left:16px;right:16px;bottom:112px;z-index:13;
+    background:rgba(10,12,16,0.92);border:1px solid var(--border);border-radius:10px;
+    padding:10px 14px 11px 14px;backdrop-filter:blur(12px);
+    box-shadow:0 10px 40px rgba(0,0,0,.45);}
+  #tlhead{display:flex;justify-content:space-between;align-items:baseline;gap:14px;min-width:0;
+    font-family:monospace;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;
+    color:#7a7a7a;margin-bottom:4px;}
+  #tlstatus{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  #tlread{color:#e8e8e8;letter-spacing:0;text-transform:none;font-size:11px;white-space:nowrap;flex:0 0 auto;}
+  #tlread b{color:#ff6e3c;}
+  #tlstrip{width:100%;height:56px;display:block;cursor:crosshair;user-select:none;}
+  #tlticks{display:flex;justify-content:space-between;font-family:monospace;
+    font-size:9px;color:#5e636e;margin-top:2px;}
+  #tlfoot{display:flex;align-items:center;gap:12px;margin-top:9px;flex-wrap:wrap;}
+  #tlfoot .grp{display:flex;align-items:center;gap:6px;}
+  #tlfoot .glabel{font-family:monospace;font-size:9px;letter-spacing:1px;
+    text-transform:uppercase;color:#7a7a7a;}
+  #tlfoot button,#tlfoot select,#tlfoot input[type=text]{background:rgba(255,255,255,0.05);
+    border:1px solid var(--border);border-radius:6px;color:#e8e8e8;font-family:monospace;
+    font-size:10.5px;padding:5px 9px;cursor:pointer;outline:none;}
+  /* Fixed width (2026-09-19): a plain text input has no intrinsic sizing the way a
+     native date input did, so it needs one set explicitly to fit "MM/DD/YYYY". */
+  #tlfoot input[type=text]{width:82px;cursor:text;}
+  #tlfoot button:hover,#tlfoot select:hover{background:rgba(255,255,255,0.10);border-color:#4a4f5c;}
+  #tlfoot button.on{background:rgba(255,110,60,0.20);border-color:var(--hot);color:#fff;}
+  #tlfoot .seg{display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+  #tlfoot .seg button{border:none;border-radius:0;border-right:1px solid var(--border);}
+  #tlfoot .seg button:last-child{border-right:none;}
+  #tlPlay{min-width:62px;font-weight:700;}
+  /* Step buttons: a thin arrow running into a bar, so they read as one increment
+     rather than as a second pair of play controls. Drawn rather than set in type --
+     the solid glyphs they replaced were the same weight as Play and implied the same
+     kind of action. */
+  #tlPrev,#tlNext{padding:5px 9px;line-height:0;}
+  .stepicon{width:16px;height:12px;display:block;fill:none;stroke:currentColor;
+    stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;opacity:0.85;}
+  #tlPrev:hover .stepicon,#tlNext:hover .stepicon{opacity:1;}
+  #tier{font-family:monospace;font-size:9px;color:#5e636e;white-space:nowrap;margin-left:auto;}
+  #sources{max-width:300px;background:rgba(10,12,16,0.82);border:1px solid #2a2e36;border-radius:8px;padding:10px 12px;font-size:10.5px;line-height:1.55;color:#9a9a9a;}
+  /* <verify> wordmark -- typographic, not an image file, matching the author's own
+     rendering in TheChurn: Space Mono 700 with the angle brackets in the accent color.
+     Accent here is this map's #ff6e3c rather than TheChurn's #ff5a3c -- see map/README.md,
+     the two builds currently disagree and it is the owner's call which is canonical. */
+  #verify{font-family:'Space Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:19px;font-weight:700;letter-spacing:0.5px;color:#e8e8e8;opacity:0.92;user-select:none;line-height:1;}
+  #verify .br{color:#ff6e3c;}
+  /* Same byline already paired with <verify> on the password gate ("Jon Nealon · <verify>")
+     and in the Sources panel credit line -- added here too (2026-09-19, owner) so the
+     wordmark carries it wherever it appears in the map itself, not only at the door. */
+  #credit{font-family:'Space Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;
+    color:#8a8a8a;letter-spacing:0.3px;user-select:none;text-shadow:0 1px 3px rgba(0,0,0,0.85);}
+  #gate .g-by{font-family:'Space Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#c8c8c8;margin-bottom:20px;letter-spacing:0.3px;}
+  #gate .g-by .br{color:#ff6e3c;}
+  #sources b{color:#c8c8c8;}
+  /* hover boxes: one element, repositioned and refilled per hovered object. */
+  #hover{position:absolute;z-index:30;pointer-events:none;display:none;max-width:290px;
+    background:rgba(10,12,16,0.96);border:1px solid #3a414d;border-radius:8px;
+    padding:10px 12px;color:#e8e8e8;font-size:11.5px;line-height:1.5;
+    box-shadow:0 8px 30px rgba(0,0,0,.55);}
+  #hover.show{display:block;}
+  #hover .hv-kind{font-family:monospace;font-size:9px;letter-spacing:1.2px;text-transform:uppercase;
+    color:#8a8a8a;margin-bottom:4px;}
+  #hover .hv-title{font-size:13px;font-weight:600;line-height:1.25;margin-bottom:2px;}
+  #hover .hv-sub{color:#9aa0aa;font-size:10.5px;margin-bottom:7px;}
+  /* Ownership/operator line -- a plain fact, not a caveat, so it gets hv-sub's neutral
+     grey rather than hv-flag's warning orange. Shared with #nodePanel (2026-09-19,
+     owner: keep hover/panel colors consistent). */
+  #hover .hv-note,#nodePanel .hv-note{color:#9aa0aa;font-size:10.5px;margin-top:6px;line-height:1.4;}
+  #hover table{border-collapse:collapse;width:100%;}
+  #hover td{padding:1px 0;vertical-align:top;}
+  #hover td.k{color:#8a8a8a;padding-right:10px;white-space:nowrap;}
+  #hover td.v{color:#e8e8e8;text-align:right;font-family:monospace;}
+  #hover .hv-flag{margin-top:8px;padding-top:7px;border-top:1px solid #3a414d;
+    color:#ffc9a8;font-size:10.5px;line-height:1.45;}
+  /* Shared with #nodePanel (2026-09-19, owner: keep category color consistent between the
+     hover box and the facility analysis panel) -- same class, same per-category swatch
+     color computed the same way in both, rather than two independent color choices for
+     the same fact about the same facility. */
+  #hover .hv-cat,#nodePanel .hv-cat{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;
+    font-family:monospace;margin-top:2px;}
+  #sources a{color:#ff9c6e;text-decoration:none;}
+  #sources a:hover{text-decoration:underline;}
+  #gate{position:fixed;inset:0;z-index:1000;background:#0a0c10;display:flex;align-items:center;justify-content:center;flex-direction:column;}
+  #gate .inner{text-align:center;}
+  #gate .g-title{font-size:20px;font-weight:600;color:#fff;margin-bottom:4px;}
+  #gate .g-sub{font-size:12px;color:#8a8a8a;margin-bottom:22px;}
+  #gate .row{display:flex;gap:8px;justify-content:center;}
+  #gate input{background:#15181e;border:1px solid #2a2e36;border-radius:4px;padding:10px 12px;color:#e8e8e8;font-size:13px;outline:none;width:180px;}
+  #gate input:focus{border-color:#ff6e3c;}
+  #gate button{background:#ff6e3c;border:none;border-radius:4px;color:#fff;font-size:12px;letter-spacing:0.5px;text-transform:uppercase;padding:10px 16px;cursor:pointer;}
+  #gate button:hover{background:#ff9c6e;}
+  #gate .g-err{font-size:11px;color:#ff6e3c;margin-top:12px;height:14px;opacity:0;transition:opacity .15s;}
+  #gate .g-err.show{opacity:1;}
+</style>
+</head>
+<body>
+<div id="gate">
+  <div class="inner">
+    <div class="g-title">Deportation System Digital Atlas</div>
+    <div class="g-sub">working map draft &middot; password required</div>
+    <div class="g-by">Jon Nealon &nbsp;&middot;&nbsp; <span class="br">&lt;</span>verify<span class="br">&gt;</span></div>
+    <div class="row">
+      <input id="gpw" type="password" placeholder="password" autocomplete="off" spellcheck="false">
+      <button id="gbtn">Enter</button>
+    </div>
+    <div class="g-err" id="gerr">Incorrect password</div>
+  </div>
+</div>
+<div id="map"></div>
+
+<div id="panel">
+  <h1>Deportation System Digital Atlas — map draft</h1>
+  <div class="panel-head first">Facilities &amp; geography</div>
+  <label><input type="checkbox" id="toggle-facilities" checked> Facilities</label>
+  <label><input type="checkbox" id="toggle-labels" checked> Place labels (cities &amp; towns)</label>
+  <label><input type="checkbox" id="toggle-airports"> Airports (flight network)</label>
+  <label><input type="checkbox" id="toggle-circuits"> Federal circuit boundaries</label>
+  <label><input type="checkbox" id="toggle-roads"> Interstate highways</label>
+  <div class="panel-head">Movement</div>
+  <label><input type="checkbox" id="toggle-arrests"> Arrest &rarr; first detention</label>
+  <label><input type="checkbox" id="toggle-arcs"> Transfer arcs (all mapped edges)</label>
+  <div class="panel-head">ICE Air</div>
+  <label><input type="checkbox" id="toggle-flights"> System movement</label>
+  <label><input type="checkbox" id="toggle-removals"> Removals</label>
+  <label><input type="checkbox" id="toggle-connectors"> Deportation connectors (pickup legs)</label>
+  <label><input type="checkbox" id="toggle-returns"> Return legs (no passengers)</label>
+  <label><input type="checkbox" id="toggle-fuel"> Fuel stops</label>
+  <div id="legend">
+    <div class="legend-head">Facility role</div>
+    <div><span class="swatch" style="background:#e63946"></span>central hub</div>
+    <div><span class="swatch" style="background:#f4a261"></span>entry/intake</div>
+    <div><span class="swatch" style="background:#2a9d8f"></span>regional collector/feeder</div>
+    <div><span class="swatch" style="background:#8d5fd3"></span>terminal/exit-dominant</div>
+    <div><span class="swatch" style="background:#6c757d"></span>unclassified</div>
+    <div><span class="swatch" style="background:#d162a4"></span>minimal activity (&lt;100 stints)</div>
+    <div class="legend-head">Other</div>
+    <div><span class="ring"></span>airport (flight network)</div>
+    <div><span class="swatch" style="background:#bcdcff;height:2px;border-radius:1px"></span>flight &mdash; system movement</div>
+    <div><span class="swatch" style="background:#ffd166;height:2px;border-radius:1px"></span>flight &mdash; removal (leg out)</div>
+    <div><span class="swatch" style="background:#ffc48a;height:1px;border-radius:1px"></span>deportation connector (pickup leg)</div>
+    <div><span class="swatch" style="background:#7ee08a;height:2px;border-radius:1px"></span>arrest &rarr; first detention</div>
+    <div><span class="swatch" style="background:#a98cff;height:1px;border-radius:1px"></span>return leg (aircraft only)</div>
+    <div><span class="swatch" style="background:#96969e;height:1px;border-radius:1px"></span>fuel stop (refueling leg)</div>
+    <div><span class="swatch" style="background:#ff8a4c;height:2px;border-radius:1px"></span>transfer (inferred mode)</div>
+  </div>
+</div>
+
+<div id="mapctrls">
+  <div class="ctrl" id="resetBtn">&#10226; Reset view</div>
+  <div class="ctrl" id="helpBtn">How to read</div>
+  <div class="ctrl" id="ctrlBtn">Controls</div>
+  <div class="ctrl" id="srcBtn">Sources</div>
+  <div class="ctrl" id="compass" title="North up">
+    <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+      <circle cx="10" cy="10" r="8.5" fill="none" stroke="#4a4f5c" stroke-width="1"/>
+      <g class="needle">
+        <polygon points="10,2.5 12.6,10 10,8.2 7.4,10" fill="#ff6e3c"/>
+        <polygon points="10,17.5 7.4,10 10,11.8 12.6,10" fill="#7a7f8c"/>
+      </g>
+    </svg>
+  </div>
+</div>
+
+<div id="help">
+  <h3>How to read this map <span class="x" id="helpX">&times;</span></h3>
+  <div class="hrow"><span class="ic">&#9679;</span><span>Each <b>dot is an ICE detention facility</b>, colored by its role in the transfer network (see the legend, left) and sized by throughput -- total stints recorded there since 2025-01-20.</span></div>
+  <div class="hrow"><span class="ic">&#8635;</span><span>Each <b>arc is a facility-to-facility transfer route</b>, drawn thicker the more transfers ran along it. Only the top 3,000 routes by volume are drawn, so the low-volume tail is not shown.</span></div>
+  <div class="hrow"><span class="ic">&#9635;</span><span><b>Flight arcs</b> are recorded ICE Air legs — brighter, thinner and higher than the transfer arcs, because a leg is an observed event where a transfer's mode is inferred. They depict aircraft, not people.</span></div>
+  <div class="hrow"><span class="ic">&#8599;</span><span><b>Arrest → first detention</b> (off by default) shows where people enter the system: both ends recorded, the straight line between them not. Green, low, beneath everything else.</span></div>
+  <div class="hrow"><span class="ic">&#8599;</span><span><b>Removal flights</b> are the warmer arcs, drawn higher. Many leave the frame entirely — the map does not stop at the border, because the operation does not.</span></div>
+  <div class="hrow"><span class="ic">&#9711;</span><span><b>Airports</b> are drawn as hollow rings, not filled dots -- a different kind of node from a facility. Off by default, like the <b>federal circuit boundaries</b>; switch both on in the panel at left. The airports layer shows locations only; it is not yet joined to actual flight legs.</span></div>
+  <div class="hrow"><span class="ic">&#9633;</span><span><b>Interstate highways</b> can be switched on as quiet ground context for the routes.</span></div>
+  <div class="hrow"><span class="ic">&#10162;</span><span><b>Hover anything</b> — a facility, a route, an airport, a circuit — for its details. Route boxes give the straight-line distance, the time in transit, and an <b>inferred</b> travel mode — which is also how you can tell a real move from an administrative one between buildings on the same site.</span></div>
+  <div class="hrow"><span class="ic">&#8505;</span><span>The <b>line at bottom-left</b> reports how many facilities and routes are actually drawn, and how many facilities were dropped for want of coordinates. Read it before drawing conclusions from an empty-looking region.</span></div>
+  <div class="hrow"><span class="ic">&#10226;</span><span><b>Reset view</b> returns the layers and the camera to how the map opened.</span></div>
+</div>
+
+<div id="controls">
+  <h3>Moving around the map <span class="x" id="ctrlX">&times;</span></h3>
+  <div class="hrow"><span class="ic">+ &minus;</span><span><b>Scroll or pinch</b> to zoom in for facility-level detail, out for the whole country.</span></div>
+  <div class="hrow"><span class="ic">&#10021;</span><span><b>Drag</b> to pan across the map.</span></div>
+  <div class="hrow"><span class="ic">&#8679;</span><span><b>Shift-drag</b> (or right-click drag) to tilt and rotate into a 3D view -- useful for reading arc height where routes overlap.</span></div>
+  <div class="hrow"><span class="ic">&#8857;</span><span><b>Double-click</b> to zoom toward a point.</span></div>
+  <div class="hrow"><span class="ic">&#9650;</span><span>The <b>compass</b> shows which way is north once you've rotated; click it to level out and face north again.</span></div>
+  <div class="hrow"><span class="ic">&#9473;</span><span>The <b>scale bar</b> at bottom left gives distance at the current zoom -- worth a glance before judging how far a transfer actually moved someone.</span></div>
+  <div class="hrow"><span class="ic">&#10226;</span><span><b>Reset view</b> snaps back to the opening angle, zoom, and layer selection.</span></div>
+</div>
+
+<div id="draftnote">Working draft, built inside the Quarto project (map/index.html). Not the finished deliverable — see map/README.md for status and known gaps.</div>
+<div id="timeline">
+  <div id="tlhead">
+    <span id="tlstatus">loading…</span>
+    <span id="tlread">—</span>
+  </div>
+  <svg id="tlstrip"></svg>
+  <div id="tlticks"></div>
+  <div id="tlfoot">
+    <div class="grp">
+      <span class="glabel">From</span><input type="text" id="tlFrom" placeholder="MM/DD/YYYY" inputmode="numeric" maxlength="10">
+      <span class="glabel">To</span><input type="text" id="tlTo" placeholder="MM/DD/YYYY" inputmode="numeric" maxlength="10">
+    </div>
+    <div class="grp">
+      <button id="tlPrev" title="Back one bin" aria-label="Back one bin"><svg class="stepicon" viewBox="0 0 16 12" aria-hidden="true"><path d="M3 1.5v9"/><path d="M13 6H5.2"/><path d="M8.4 2.8 5.2 6l3.2 3.2"/></svg></button>
+      <button id="tlPlay">▶ Play</button>
+      <button id="tlNext" title="Forward one bin" aria-label="Forward one bin"><svg class="stepicon" viewBox="0 0 16 12" aria-hidden="true"><path d="M13 1.5v9"/><path d="M3 6h7.8"/><path d="M7.6 2.8 10.8 6l-3.2 3.2"/></svg></button>
+    </div>
+    <div class="grp">
+      <span class="glabel">Play</span>
+      <div class="seg">
+        <button id="tlSlide" class="on">Slide</button>
+        <button id="tlAcc">Accumulate</button>
+      </div>
+    </div>
+    <div class="grp">
+      <span class="glabel">Bin</span>
+      <div class="seg">
+        <button class="tlBin" data-bin="daily">Daily</button>
+        <button class="tlBin" data-bin="weekly">Weekly</button>
+        <button class="tlBin on" data-bin="monthly">Monthly</button>
+      </div>
+    </div>
+    <div class="grp">
+      <span class="glabel">Speed</span>
+      <select id="tlSpeed">
+        <option value="800">slow</option>
+        <option value="420" selected>normal</option>
+        <option value="160">fast</option>
+      </select>
+    </div>
+    <div class="grp"><button id="tlAll">Whole period</button></div>
+    <span id="tier">monthly · from zoom</span>
+  </div>
+</div>
+<div id="vizlinks">
+  <span class="glabel">More views</span>
+  <a class="ctrl" href="network-3d/by-category.html" target="_blank" rel="noopener">3D network (interactive) ↗</a>
+</div>
+<div id="err"></div>
+<div id="hover"></div>
+<div id="casePanel">
+  <!-- Deliberately NOT the "this journey is representative, not any individual's
+       recorded path" wording the proposal's privacy design commits to and Prof.
+       Jiang's progress-report-3 feedback (2026-09-18) suggested labeling on this
+       panel -- that label would be false here. This prototype traces one real
+       person's real recorded path (data/build_case_trace.py), a deliberate
+       interim step ahead of the synthetic, distribution-faithful view the
+       proposal actually promises (01-proposal.qmd, Significance section) --
+       see todo.md's case-trace thread. The label says what is actually true
+       today rather than the design's eventual claim. -->
+  <div class="cp-warn">Real individual's detention record &middot; prototype &middot; local only &middot; not gated</div>
+  <div class="cp-body" id="cpBody"></div>
+</div>
+<div id="nodePanel">
+  <div class="np-body" id="npBody"></div>
+</div>
+<div id="brandstack">
+<div id="credit">Analysis and design by Jon Nealon</div>
+<div id="verify"><span class="br">&lt;</span>verify<span class="br">&gt;</span></div>
+</div>
+<div id="sourcesPanel">
+  <h3>Sources <span class="x" id="srcX">&times;</span></h3>
+  <div id="sources">
+  <b>Sources.</b> Transfers &amp; facilities: Deportation Data Project, ICE records via FOIA
+  (<a href="https://deportationdata.org" target="_blank" rel="noopener">deportationdata.org</a>).
+  Hold-room coordinates: CovenAnalytica/coldCounter
+  (<a href="https://github.com/CovenAnalytica/coldCounter" target="_blank" rel="noopener">GitHub</a>),
+  geocoded via the U.S. Census Bureau Geocoder. Federal circuit boundaries: U.S. Census
+  Bureau 2023 cartographic boundary file, circuits per 28 U.S.C. &sect;41. Airports:
+  author's prior flight-mapping work. Flight data: Human Rights First, ICE Flight Monitor
+  (<a href="https://www.humanrightsfirst.org/ice-flight-monitor" target="_blank" rel="noopener">humanrightsfirst.org</a>)
+  -- not yet joined to this map's layers. Full citations: <code>references.bib</code>,
+  <code>02-data.qmd</code>. Analysis &amp; visualization: Jon Nealon<span class="br" style="color:#ff6e3c;">/</span><span class="br" style="color:#ff6e3c;">&lt;</span>verify<span class="br" style="color:#ff6e3c;">&gt;</span>.
+</div>
+</div>
+
+<script>
+// Mapbox token: a dedicated public token for this project (created 2026-09-07),
+// URL-restricted in the Mapbox account dashboard to https://jonnealon.github.io/* --
+// safe to expose publicly at that domain since it can't be used anywhere else, per
+// Mapbox's own guidance that public (pk.*) tokens are meant to be client-side visible.
+// Do NOT reuse the old TheChurn token here (GitHub's push protection already rejected
+// that once, since it was unrestricted -- see log.md, 2026-09-07).
+const MAPBOX_TOKEN = 'pk.eyJ1IjoibmVhbG9uIiwiYSI6ImNtdHJucGx3djA2aGkyd3B5Y2RjcTd6MjcifQ.YaWrgBupdgd5-Pjo2-gpvA';
+
+const CATEGORY_COLOR = {
+  'central hub (many-to-many)':        [230, 57, 70],
+  'entry/intake (field-office hold)':  [244, 162, 97],
+  'regional collector/feeder':         [42, 157, 143],
+  'terminal/exit-dominant':            [141, 95, 211],
+  'unclassified (mixed signal)':       [108, 117, 125],
+  // Added 2026-09-21 with build_facility_flows.py's new sixth category (owner's
+  // direction: every facility on the map, not just those with >=200 stints -- see
+  // log.md). Checked against this project's dataviz-skill validator before picking
+  // this hex: the existing 5-color set already fails lightness-band and chroma-floor
+  // (documented in network-3d/README.md); #d162a4 was the candidate that added no
+  // NEW failure beyond those two -- its own worst pairing is a CVD WARN, not a FAIL,
+  // acceptable per the skill's own rule given the category name is always shown as
+  // text in the hover box, not color alone.
+  'minimal activity (low volume)':     [209, 98, 164],
+};
+function facColor(d){ return CATEGORY_COLOR[d.category] || [108,117,125]; }
+function facRadius(d){ return Math.max(400, Math.sqrt(d.throughput || 1) * 60); }
+
+// The opening camera and the opening layer selection, defined once here and used by
+// both boot() and resetView() -- so "the view the map opens with" can't drift between
+// the two. The checkbox `checked` attributes in the markup above are applied from
+// LAYER_DEFAULTS at boot, making this object the single source of truth.
+const INIT_VIEW = { longitude: -96, latitude: 32, zoom: 4.2, pitch: 0, bearing: 0 };
+// All arc/flow layers start OFF (2026-09-15, owner) -- the map opens on facilities alone
+// rather than every movement layer at once, so a viewer chooses what to look at rather
+// than un-picking six things first.
+const LAYER_DEFAULTS = {
+  showFacilities: true,
+  showLabels: false,
+  showArcs: false,
+  showCircuits: false,
+  showAirports: false,
+  showRoads: false,
+  showFlights: false,
+  showRemovals: false,
+  showArrests: false,
+  showReturns: false,
+  showFuel: false,
+  showConnectors: false,
+};
+const TOGGLE_IDS = {
+  showFacilities: 'toggle-facilities',
+  showLabels: 'toggle-labels',
+  showArcs: 'toggle-arcs',
+  showCircuits: 'toggle-circuits',
+  showAirports: 'toggle-airports',
+  showRoads: 'toggle-roads',
+  showFlights: 'toggle-flights',
+  showRemovals: 'toggle-removals',
+  showArrests: 'toggle-arrests',
+  showReturns: 'toggle-returns',
+  showFuel: 'toggle-fuel',
+  showConnectors: 'toggle-connectors',
+};
+
+const state = Object.assign(
+  { facilities: [], edges: [], circuits: null, airports: [], stats: null, modes: null,
+    flightRoutes: null, flightDays: null, winFlights: null, winRemovals: null,
+    arrests: null, arrestDays: null, winArrests: null, winReturns: null, winFuel: null, winConnectors: null,
+    bindata: null, tier: 'monthly', win: null, winEdges: null, series: null, seriesIdx: null, lastComplete: null, playMode: 'slide', tierLocked: false, playing: false, playTimer: null,
+    caseTrace: null,
+    view: Object.assign({}, INIT_VIEW) },
+  LAYER_DEFAULTS
+);
+
+let deckgl;
+
+// Arcs across the Pacific. deck.gl draws an arc between the two longitudes exactly as given,
+// so a leg from Anchorage (-150) to Hanoi (+106) is drawn as a 256-degree sweep eastward over
+// North America, the Atlantic and Asia rather than the 104-degree hop west across the Pacific
+// the aircraft actually flew. Sixteen routes in the current data cross the antimeridian --
+// Anchorage to Fuzhou, Seoul and Guam; Honolulu to Kwajalein; Miramar to Amritsar -- and every
+// one of them was drawn backwards. Shifting the destination by a full turn puts the arc on the
+// short side, which for these distances is also the side the great circle runs. deck.gl accepts
+// longitudes outside [-180, 180] and the basemap wraps to match.
+function wrapLon(fromLon, toLon){
+  const d = toLon - fromLon;
+  if (d > 180) return toLon - 360;
+  if (d < -180) return toLon + 360;
+  return toLon;
+}
+
+// Every date shown to a viewer goes through this pair, one master format for the whole
+// page (2026-09-19, owner: the timeline's own two date displays disagreed -- ISO in
+// #tlread/#tlticks, but the #tlFrom/#tlTo native date inputs rendered in whatever format
+// the browser's own locale picked, dd/mm/yyyy on the owner's machine). All internal
+// dates stay ISO (sortable, and what data/*.json already uses); only the two functions
+// below touch the human-facing text. #tlFrom/#tlTo were switched from
+// `<input type="date">` to plain text inputs to make this actually guaranteed rather
+// than locale-dependent -- native date inputs have no supported way to force a specific
+// display format across browsers, which is the bug this fixes, not a stopgap around it.
+function isoToUS(iso){
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return `${m}/${d}/${y}`;
+}
+function usToIso(us){
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec((us || '').trim());
+  if (!m) return null;
+  const mm = +m[1], dd = +m[2], yyyy = +m[3];
+  if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return null;
+  return `${yyyy}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
+}
+
+function buildLayers(){
+  const layers = [];
+
+  if (state.showCircuits && state.circuits) {
+    layers.push(new deck.GeoJsonLayer({
+      id: 'circuits', data: state.circuits,
+      stroked: true, filled: true,
+      getFillColor: [255,255,255,8],
+      getLineColor: [255,255,255,90],
+      getLineWidth: 2, lineWidthMinPixels: 1,
+      // Not pickable (2026-09-15, owner): each circuit's fill covers several whole
+      // states, so a hover box tied to it fires on nearly any cursor position rather
+      // than on a deliberate target -- the opposite of what a hover box is for.
+      pickable: false,
+    }));
+  }
+
+  const arcData = state.winEdges || state.edges;
+  if (state.showArcs && arcData.length) {
+    layers.push(new deck.ArcLayer({
+      id: 'edges', data: arcData,
+      getSourcePosition: d => [d.src_lon, d.src_lat],
+      getTargetPosition: d => [wrapLon(d.src_lon, d.dst_lon), d.dst_lat],
+      getSourceColor: [255,150,70,120],
+      getTargetColor: [255,110,60,120],
+      getWidth: d => Math.max(1, Math.log2(d.cnt)),
+      getHeight: 0.35,
+      pickable: true,
+    }));
+  }
+
+  if (state.showFacilities && state.facilities.length) {
+    layers.push(new deck.ScatterplotLayer({
+      id: 'facilities', data: state.facilities,
+      getPosition: d => [d.lon, d.lat],
+      getFillColor: facColor,
+      getRadius: facRadius,
+      radiusUnits: 'meters', radiusMinPixels: 2, radiusMaxPixels: 22,
+      pickable: true, opacity: 0.85,
+    }));
+  }
+
+  // Recorded flight legs. Drawn deliberately unlike the transfer arcs: brighter, thinner,
+  // higher over the ground. A leg is an observed event -- this aircraft flew this route on
+  // this date -- where a transfer arc is an inferred journey, and the difference in
+  // evidence is carried by the difference in the mark rather than by a footnote.
+  // See notes/timeline-window-design.md section 18, and 04-interface.qmd.
+  // Arrest -> first detention. Both endpoints are RECORDED (the joined arrests/stays
+  // table links an apprehension to the stay it produced), but the path between them is
+  // not: these are direct lines and a direct line is not a claim about a route. Drawn
+  // low and green, beneath everything else, because this is the entry to the system
+  // rather than movement within it. Road geometry replaces the straight lines when it
+  // exists.
+  if (state.showArrests && state.winArrests && state.winArrests.length) {
+    layers.push(new deck.ArcLayer({
+      id: 'arrests', data: state.winArrests,
+      getSourcePosition: d => [d.o_lon, d.o_lat],
+      getTargetPosition: d => [wrapLon(d.o_lon, d.d_lon), d.d_lat],
+      getSourceColor: [126, 224, 138, 150],
+      getTargetColor: [126, 224, 138, 215],
+      getWidth: d => Math.max(1, Math.log2(d.n + 1) * 0.8),
+      getHeight: 0.18,
+      widthMinPixels: 0.7, widthMaxPixels: 4,
+      pickable: true,
+    }));
+  }
+
+  // Return legs: the aircraft going home empty. Shown by default -- they are part of the
+  // record -- but given their own violet hue, thinner and dimmer than the removal amber,
+  // so they read as logistics rather than as movement of people. An arc flying into the
+  // United States from a deportation destination is the easiest thing on this map to
+  // misread, so the color does the separating rather than hiding the layer.
+  // Fuel stops: a leg flown to refuel, not to deliver anyone anywhere. Drawn in the neutral
+  // grey the return legs used to carry, because that is what this color is for on this map --
+  // the logistics of the operation rather than movement through it. Naming them matters more
+  // than it looks: a refueling hop from Curacao to Miami drawn identically to a shuffle leg
+  // invites the reader to count it as a movement of people, and it is not one. 41 of the 151
+  // fuel-stop pairs are also flown under another classification, so the label belongs to the
+  // leg rather than to the route, and the hover box reports the breakdown.
+  if (state.showFuel && state.winFuel && state.winFuel.length) {
+    layers.push(new deck.ArcLayer({
+      id: 'fuel', data: state.winFuel,
+      getSourcePosition: d => [d.dep_lon, d.dep_lat],
+      getTargetPosition: d => [wrapLon(d.dep_lon, d.dst_lon), d.dst_lat],
+      getSourceColor: [150, 150, 158, 115],
+      getTargetColor: [120, 120, 128, 135],
+      getWidth: 1, getHeight: 0.85, getTilt: 10,
+      widthMinPixels: 0.5, widthMaxPixels: 1.6,
+      pickable: true,
+    }));
+  }
+
+  if (state.showReturns && state.winReturns && state.winReturns.length) {
+    layers.push(new deck.ArcLayer({
+      id: 'returns', data: state.winReturns,
+      getSourcePosition: d => [d.dep_lon, d.dep_lat],
+      getTargetPosition: d => [wrapLon(d.dep_lon, d.dst_lon), d.dst_lat],
+      getSourceColor: [169, 140, 255, 120],
+      getTargetColor: [139, 112, 214, 140],
+      getWidth: 1, getHeight: 1.05, getTilt: 10,
+      widthMinPixels: 0.5, widthMaxPixels: 1.6,
+      pickable: true,
+    }));
+  }
+
+  // Deportation connectors: the pickup legs of a removal operation -- the aircraft collecting
+  // people at successive airports before the leg that leaves the country. Drawn in the removal
+  // family, a paler amber, thinner and slightly lower, because that is what the evidence says
+  // they are: not movement around the detention system but the first legs of a removal. Tested
+  // against both datasets on 2026-09-14 (notes/removal-connection-legs.md) -- people aboard are
+  // not re-detained at the intermediate stops, so the detention network the transfer layer
+  // draws does not see them again. Subordinate weight rather than a separate hue, so the
+  // relationship to the removal leg is legible without a caption.
+  if (state.showConnectors && state.winConnectors && state.winConnectors.length) {
+    layers.push(new deck.ArcLayer({
+      id: 'connectors', data: state.winConnectors,
+      getSourcePosition: d => [d.dep_lon, d.dep_lat],
+      getTargetPosition: d => [wrapLon(d.dep_lon, d.dst_lon), d.dst_lat],
+      getSourceColor: [255, 196, 138, 165],
+      getTargetColor: [255, 176, 110, 190],
+      getWidth: d => Math.max(1, Math.log2(d.legs + 1) * 0.8),
+      getHeight: 0.9, getTilt: 10,
+      widthMinPixels: 0.7, widthMaxPixels: 3.4,
+      pickable: true,
+    }));
+  }
+
+  // Removals are drawn as their own layer, above and warmer, because they are a
+  // different kind of movement: out of the system rather than around it. Many terminate
+  // outside the frame, which is itself the point -- the map should not stop at the border
+  // when the operation it describes does not.
+  if (state.showRemovals && state.winRemovals && state.winRemovals.length) {
+    layers.push(new deck.ArcLayer({
+      id: 'removals', data: state.winRemovals,
+      getSourcePosition: d => [d.dep_lon, d.dep_lat],
+      getTargetPosition: d => [wrapLon(d.dep_lon, d.dst_lon), d.dst_lat],
+      getSourceColor: [255, 209, 102, 200],
+      getTargetColor: [255, 160, 70, 225],
+      getWidth: d => Math.max(1, Math.log2(d.legs + 1) * 1.0),
+      getHeight: 0.95, getTilt: 10,
+      widthMinPixels: 0.9, widthMaxPixels: 5,
+      pickable: true,
+    }));
+  }
+
+  if (state.showFlights && state.winFlights && state.winFlights.length) {
+    layers.push(new deck.ArcLayer({
+      id: 'flights', data: state.winFlights,
+      getSourcePosition: d => [d.dep_lon, d.dep_lat],
+      getTargetPosition: d => [wrapLon(d.dep_lon, d.dst_lon), d.dst_lat],
+      getSourceColor: [188, 220, 255, 210],
+      getTargetColor: [235, 245, 255, 210],
+      getWidth: d => Math.max(1, Math.log2(d.legs + 1) * 0.9),
+      getHeight: 0.72,
+      // Directional separation, as in the author's TheChurn build. 466 of 884 flight
+      // routes (53%) have a reverse leg that would otherwise be drawn on the identical
+      // path, hiding one direction entirely.
+      //
+      // A CONSTANT POSITIVE tilt is what achieves this, not a signed one. deck.gl tilts
+      // the arc plane relative to the source->target vector, so A->B and B->A bow to
+      // opposite sides in world space from the same positive value — the separation comes
+      // free from the swap. Negative tilts were tried on this project earlier and clip
+      // below the globe (recorded in the project's own notes), so ±10 would reintroduce a
+      // bug already solved. TheChurn uses a constant 15; 10 here, since these arcs already
+      // sit higher than the transfer layer.
+      getTilt: 10,
+      widthMinPixels: 0.8, widthMaxPixels: 4,
+      pickable: true,
+    }));
+  }
+
+  if (state.showAirports && state.airports.length) {
+    // Airports are drawn as hollow rings, not filled dots: they are a different KIND of
+    // node from a detention facility (a flight-network node, not a place anyone is held),
+    // and the two layers are routinely on screen together. Shape carries that distinction
+    // where a second fill color would not -- it survives color-blind vision, projection,
+    // and a greyscale print of a screenshot, and an unfilled ring doesn't hide whatever
+    // facility dot sits beneath it. Cyan reads as cool against the warm facility palette.
+    layers.push(new deck.ScatterplotLayer({
+      id: 'airports', data: state.airports,
+      getPosition: d => [d.lon, d.lat],
+      stroked: true, filled: false,
+      getLineColor: [92, 225, 230, 235],
+      getLineWidth: 2, lineWidthUnits: 'pixels',
+      lineWidthMinPixels: 1.4, lineWidthMaxPixels: 2.4,
+      getRadius: d => Math.max(600, Math.sqrt(d.total_flights || 1) * 80),
+      radiusUnits: 'meters', radiusMinPixels: 3, radiusMaxPixels: 16,
+      pickable: true, opacity: 1,
+    }));
+  }
+
+  // Case-trace path (2026-09-15, prototype -- see the click handler below). Drawn on
+  // top of everything else, in its own bright color that nothing else on this map uses,
+  // because this is the one thing here that is a single person's own recorded route
+  // rather than an aggregate. Only the recorded stops are connected -- arrest, then
+  // each stint in order -- never the removal itself, since a country has no single
+  // point and drawing one there would assert a precision the data doesn't have.
+  if (state.caseTrace) {
+    const pts = caseTracePoints(state.caseTrace);
+    if (pts.length) {
+      const segments = [];
+      for (let i = 1; i < pts.length; i++) segments.push({ a: pts[i - 1], b: pts[i] });
+      layers.push(new deck.LineLayer({
+        id: 'case-path', data: segments,
+        getSourcePosition: d => [d.a.lon, d.a.lat],
+        getTargetPosition: d => [d.b.lon, d.b.lat],
+        getColor: [255, 230, 60, 235], getWidth: 3,
+        widthMinPixels: 2, widthMaxPixels: 5,
+      }));
+      layers.push(new deck.ScatterplotLayer({
+        id: 'case-path-points', data: pts,
+        getPosition: d => [d.lon, d.lat],
+        getFillColor: [255, 230, 60, 255],
+        stroked: true, getLineColor: [30, 20, 0, 255], getLineWidth: 2,
+        lineWidthUnits: 'pixels',
+        getRadius: 9, radiusUnits: 'pixels',
+        pickable: false,
+      }));
+      layers.push(new deck.TextLayer({
+        id: 'case-path-labels', data: pts,
+        getPosition: d => [d.lon, d.lat],
+        getText: d => d.label,
+        getColor: [255, 230, 60, 255],
+        getSize: 12, getPixelOffset: [0, -16],
+        fontFamily: 'monospace', fontWeight: 700,
+        background: true, getBackgroundColor: [10, 12, 16, 200],
+        backgroundPadding: [4, 2],
+      }));
+    }
+  }
+
+  deckgl.setProps({ layers });
+}
+
+// The interstate layer lives in Mapbox's own style, not in a deck.gl layer, so it is
+// shown/hidden through the Mapbox map rather than through buildLayers(). Wrapped in a
+// try/catch because the style (and therefore the layer) may not have finished loading
+// when this is called -- e.g. a reset fired seconds after page load.
+function setRoadsVisible(visible){
+  const mbMap = deckgl && deckgl.getMapboxMap ? deckgl.getMapboxMap() : null;
+  if (!mbMap) return;
+  try {
+    if (mbMap.getLayer('roads-interstate')) {
+      mbMap.setLayoutProperty('roads-interstate', 'visibility', visible ? 'visible' : 'none');
+    }
+  } catch (e) { /* style not ready yet; the layer is created hidden, so nothing to undo */ }
+}
+
+// Place labels also live in Mapbox's own style (the 'places' vector source added in
+// boot()'s 'load' handler), same reasoning as setRoadsVisible above.
+function setLabelsVisible(visible){
+  const mbMap = deckgl && deckgl.getMapboxMap ? deckgl.getMapboxMap() : null;
+  if (!mbMap) return;
+  try {
+    if (mbMap.getLayer('place-labels')) {
+      mbMap.setLayoutProperty('place-labels', 'visibility', visible ? 'visible' : 'none');
+    }
+  } catch (e) { /* style not ready yet; the layer is created with the right default, so nothing to undo */ }
+}
+
+function wireToggles(){
+  document.getElementById('toggle-facilities').addEventListener('change', e => { state.showFacilities = e.target.checked; buildLayers(); });
+  document.getElementById('toggle-arcs').addEventListener('change', e => { state.showArcs = e.target.checked; buildLayers(); });
+  document.getElementById('toggle-circuits').addEventListener('change', e => { state.showCircuits = e.target.checked; buildLayers(); });
+  document.getElementById('toggle-airports').addEventListener('change', e => { state.showAirports = e.target.checked; buildLayers(); });
+  document.getElementById('toggle-flights').addEventListener('change', e => { state.showFlights = e.target.checked; buildLayers(); });
+  document.getElementById('toggle-removals').addEventListener('change', e => { state.showRemovals = e.target.checked; buildLayers(); });
+  document.getElementById('toggle-arrests').addEventListener('change', e => { state.showArrests = e.target.checked; buildLayers(); });
+  document.getElementById('toggle-returns').addEventListener('change', e => { state.showReturns = e.target.checked; buildLayers(); });
+  document.getElementById('toggle-fuel').addEventListener('change', e => { state.showFuel = e.target.checked; buildLayers(); });
+  document.getElementById('toggle-connectors').addEventListener('change', e => { state.showConnectors = e.target.checked; buildLayers(); });
+  document.getElementById('toggle-roads').addEventListener('change', e => {
+    state.showRoads = e.target.checked;
+    setRoadsVisible(e.target.checked);
+  });
+  document.getElementById('toggle-labels').addEventListener('change', e => {
+    state.showLabels = e.target.checked;
+    setLabelsVisible(e.target.checked);
+  });
+}
+
+// Apply LAYER_DEFAULTS to both the state object and the checkboxes, so the markup's
+// own `checked` attributes never become a second, competing source of truth.
+function applyLayerDefaults(){
+  Object.keys(LAYER_DEFAULTS).forEach(key => {
+    state[key] = LAYER_DEFAULTS[key];
+    const box = document.getElementById(TOGGLE_IDS[key]);
+    if (box) box.checked = LAYER_DEFAULTS[key];
+  });
+  setRoadsVisible(LAYER_DEFAULTS.showRoads);
+  setLabelsVisible(LAYER_DEFAULTS.showLabels);
+}
+
+// Reset view: layer selection and camera both back to how the map opened. Adapted from
+// resetView() in the author's prior TheChurn build -- that version also cleared a
+// selection, a filter subset and a running animation, none of which exist in this draft
+// yet. Extend this function when they do, or reset will quietly stop being a real reset.
+function resetView(){
+  applyLayerDefaults();
+  closeGuides();
+  hideCasePanel();
+  hideNodePanel();
+  setPlaying(false);
+  state.tierLocked = false; state.playMode = 'slide';
+  const sl = document.getElementById('tlSlide'), ac = document.getElementById('tlAcc');
+  if (sl) sl.classList.add('on'); if (ac) ac.classList.remove('on');
+  if (state.bindata) state.win = { i0: 0, i1: state.bindata.bins.length - 1 };
+  state.view = Object.assign({}, INIT_VIEW);
+  updateCompass();
+  deckgl.setProps({ initialViewState: Object.assign({}, INIT_VIEW, { transitionDuration: 900 }) });
+  applyWindow();
+}
+
+function closeGuides(){
+  document.getElementById('help').classList.remove('show');
+  document.getElementById('controls').classList.remove('show');
+  document.getElementById('sourcesPanel').classList.remove('show');
+}
+function toggleSources(){
+  const el = document.getElementById('sourcesPanel');
+  const was = el.classList.contains('show');
+  closeGuides();
+  if (!was) el.classList.add('show');
+}
+
+// Two panels answering two different questions -- what the marks mean, and how to move
+// around -- sharing one control cluster, only one open at a time.
+function toggleHelp(){
+  const wasOpen = document.getElementById('help').classList.contains('show');
+  closeGuides();
+  if (!wasOpen) document.getElementById('help').classList.add('show');
+}
+function toggleControls(){
+  const wasOpen = document.getElementById('controls').classList.contains('show');
+  closeGuides();
+  if (!wasOpen) document.getElementById('controls').classList.add('show');
+}
+
+// The compass is drawn here rather than added as a mapboxgl.NavigationControl on
+// purpose. In this setup deck.gl owns the camera and the Mapbox map follows it, so a
+// Mapbox-side control that moves the Mapbox map would desync the two. This one reads
+// deck.gl's own view state and writes back through the same setProps path that
+// resetView() uses. The ScaleControl below is fine as a Mapbox control because it only
+// reads -- it never moves the camera.
+function updateCompass(){
+  const needle = document.querySelector('#compass .needle');
+  if (!needle) return;
+  const bearing = state.view.bearing || 0;
+  needle.style.transform = 'rotate(' + (-bearing) + 'deg)';
+  const el = document.getElementById('compass');
+  if (el) el.title = bearing ? ('Bearing ' + Math.round(((bearing % 360) + 360) % 360) + '\u00b0 \u2014 click for north up') : 'North up';
+}
+
+function faceNorth(){
+  state.view = Object.assign({}, state.view, { bearing: 0, pitch: 0 });
+  deckgl.setProps({ initialViewState: Object.assign({}, state.view, { transitionDuration: 400 }) });
+  updateCompass();
+}
+
+function wireMapControls(){
+  document.getElementById('compass').addEventListener('click', faceNorth);
+  document.getElementById('map').addEventListener('pointerleave',
+    () => document.getElementById('hover').classList.remove('show'));
+  document.getElementById('resetBtn').addEventListener('click', resetView);
+  document.getElementById('helpBtn').addEventListener('click', toggleHelp);
+  document.getElementById('helpX').addEventListener('click', toggleHelp);
+  document.getElementById('ctrlBtn').addEventListener('click', toggleControls);
+  document.getElementById('ctrlX').addEventListener('click', toggleControls);
+  document.getElementById('srcBtn').addEventListener('click', toggleSources);
+  document.getElementById('srcX').addEventListener('click', toggleSources);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeGuides(); });
+}
+
+// ---------------------------------------------------------------------------
+// Hover boxes. One element, refilled per hovered object, positioned at the
+// cursor and flipped when it would run off an edge. Content is built per layer
+// rather than generically, because what is worth saying about a facility, a
+// transfer route, an airport and a circuit are four different things.
+// Every figure shown here comes from the loaded data files; nothing is derived
+// beyond the great-circle distance computed below, which is labeled as such.
+// ---------------------------------------------------------------------------
+const CATEGORY_SWATCH = {
+  'central hub (many-to-many)':        '#e63946',
+  'entry/intake (field-office hold)':  '#f4a261',
+  'regional collector/feeder':         '#2a9d8f',
+  'terminal/exit-dominant':            '#8d5fd3',
+  'unclassified (mixed signal)':       '#6c757d',
+  'minimal activity (low volume)':     '#d162a4',
+};
+
+// Ownership/operator (2026-09-19, data/build_facility_ownership.py) -- one shared label
+// function so the hover box and the facility-analysis panel can never say this two
+// different ways (2026-09-19, owner: keep the two surfaces consistent). DDP's own data
+// does not carry this at all; it is compiled from ICE's own FY26 facility statistics
+// (owner_type, from the contract-mechanism code) and Wikipedia's cited compilation
+// (operator_name) -- coverage is real but partial, stated as such rather than implied
+// complete, since ICE's official list excludes hold rooms and most of the smaller
+// facilities this project's own map still has to place.
+const OWNER_TYPE_LABEL = {
+  private: 'Privately owned',
+  federal: 'Federally owned',
+  state: 'State owned',
+  county_or_city: 'County/city owned',
+  not_classified: 'Owner type not determined by contract code (staging/short-term facility)',
+  no_official_list_entry: "Not in ICE's official active-facility list",
+};
+function ownershipLine(d){
+  const ownerLabel = OWNER_TYPE_LABEL[d.owner_type] || OWNER_TYPE_LABEL.no_official_list_entry;
+  const hasOperator = d.operator_name && d.operator_name !== 'not identified in sources checked';
+  if (!hasOperator) return ownerLabel;  // "operated by [not identified]" reads redundant
+  return `${ownerLabel} &middot; operated by ${d.operator_name}`;
+}
+
+// Straight-line distance between two points, in km. Used only to tell a real
+// geographic transfer from an administrative move between co-located buildings.
+function haversineKm(lat1, lon1, lat2, lon2){
+  const R = 6371, toRad = d => d * Math.PI / 180;
+  const dLat = toRad(lat2-lat1), dLon = toRad(lon2-lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+// Threshold for "same site". 2 km is a stated choice, not a measured one -- it is
+// wide enough to catch a shared campus and narrow enough to exclude a real move
+// across a metro area. See todo.md, "what counts as a transfer".
+const SAME_SITE_KM = 2;
+
+const facName = code => {
+  const f = state.facilities.find(x => x.fac === code);
+  return f ? f.name : code;
+};
+const num = v => (v === null || v === undefined || isNaN(v)) ? '—' : Number(v).toLocaleString();
+const row = (k, v) => `<tr><td class="k">${k}</td><td class="v">${v}</td></tr>`;
+
+const pct = v => (v === null || v === undefined || isNaN(v)) ? '—' : Math.round(v*100) + '%';
+
+function hoverFacility(d){
+  const sw = CATEGORY_SWATCH[d.category] || '#6c757d';
+  // Forward progress is only defined for stays that ended in removal, so it is shown
+  // only where it exists rather than printed as a zero (03-model.qmd).
+  const fwd = (d.fwd_median_days_to_removal !== null && d.fwd_median_days_to_removal !== undefined
+               && !isNaN(d.fwd_median_days_to_removal))
+    ? row('Median days to removal', num(d.fwd_median_days_to_removal))
+      + row('Within one hop of removal', pct(d.fwd_share_leq1_hop_from_removal))
+    : '';
+  const approx = (d.coord_source || '').includes('approximate');
+  return `<div class="hv-kind">Detention facility</div>
+    <div class="hv-title">${d.name || d.fac}</div>
+    <div class="hv-sub">${[d.city, d.state].filter(Boolean).join(', ')} &nbsp;·&nbsp; ${d.fac}</div>
+    <table>
+      ${row('Throughput', num(d.throughput))}
+      ${row('Stints in window', num(d.total_stints))}
+      ${row('Arrived from', num(d.in_distinct_srcs) + ' facilities')}
+      ${row('Sent to', num(d.out_distinct_dests) + ' facilities')}
+      ${row('First stop of a stay', pct(d.entry_frac))}
+      ${row('Stays ending in removal', pct(d.exit_removed_frac))}
+      ${fwd}
+    </table>
+    <div class="hv-cat" style="background:${sw}22;color:${sw};border:1px solid ${sw}66;">${d.category || 'uncategorized'}</div>
+    <div class="hv-note">${ownershipLine(d)}</div>
+    ${approx ? `<div class="hv-flag"><b>Approximate location.</b> These coordinates come from
+      an inexact address match for a hold room, not from the facilities table. The dot is in
+      roughly the right place, not exactly it.</div>` : ''}`;
+}
+
+// Mode is inferred, never recorded. The wording of each label is set once in
+// data/build_transfer_modes.py and read from the data file rather than restated
+// here, so the map cannot drift from the script's own claim. The gradation is
+// deliberate: air is a deduction ("the only mode consistent with"), road is an
+// inference ("the most plausible mode consistent with"), and ambiguous claims
+// nothing. Route geometry, when it exists, carries `route_label` for the same reason.
+const MODE_TINT = {
+  same_site:      '#6c757d',
+  road_no_flight: '#5ce1e6',
+  road_likely:    '#5ce1e6',
+  road_possible:  '#7fb6bd',
+  air_required:   '#ff9c6e',
+  air_likely:     '#d99a78',
+  // Distance rules out road here regardless of implied speed (2026-09-15, see
+  // data/build_transfer_modes.py's ROAD_IMPLAUSIBLE_KM) -- kept in the air family of
+  // colors rather than falling back to the neutral grey "ambiguous" gets, since these
+  // pairs are not actually ambiguous about mode, only about which specific flight.
+  too_far_for_road:    '#e8956b',
+  air_likely_far:      '#f2a67a',
+  air_far_unconfirmed: '#c98f74',
+  ambiguous:      '#8a8a8a',
+  undetermined:   '#8a8a8a',
+};
+const FLIGHT_NOTE = {
+  flight_route_recorded: 'A charter flight route connected airports serving these facilities during the window. That does not place anyone on it — the flight data carries no manifest and no time of day.',
+  no_flight_route_found: 'No charter flight route connected airports serving these facilities. That rules out ICE Air charter, not commercial, Marshals or Bureau of Prisons movement.',
+  airports_unresolved:   'One or both facilities have no airport with known coordinates within 120 km, so flight availability could not be checked.',
+};
+
+function hoverEdge(d){
+  const km = haversineKm(d.src_lat, d.src_lon, d.dst_lat, d.dst_lon);
+  const dist = km < 1 ? `${Math.round(km*1000)} m` : `${km.toFixed(km < 10 ? 1 : 0)} km`;
+  const m = state.modes && state.modes.pairs ? state.modes.pairs[`${d.src}>${d.dst}`] : null;
+  // Prefer the flight-refined reading where it exists; fall back to the physics-only one.
+  const cls = m ? (m.refined || m.mode) : null;
+  const labels = state.modes ? (state.modes.refined_labels || state.modes.mode_labels) : null;
+  const label = m && labels ? (labels[cls] || (state.modes.mode_labels || {})[m.mode]) : null;
+  const tint = m ? (MODE_TINT[cls] || '#8a8a8a') : '#8a8a8a';
+
+  const modeRows = m
+    ? row('Median time in transit', `${m.gap_h} h`) + row('Implied speed', `${m.kmh} km/h`)
+    : '';
+  const modeBlock = label
+    ? `<div class="hv-cat" style="background:${tint}22;color:${tint};border:1px solid ${tint}66;">${label}</div>`
+    : `<div class="hv-cat" style="background:#8a8a8a22;color:#8a8a8a;border:1px solid #8a8a8a66;">Mode not classified for this pair</div>`;
+
+  return `<div class="hv-kind">Transfer route</div>
+    <div class="hv-title">${facName(d.src)} → ${facName(d.dst)}</div>
+    <div class="hv-sub">${d.src} → ${d.dst}</div>
+    <table>
+      ${row(state.winEdges ? 'Transfers in window' : 'Transfers', num(d.cnt))}
+      ${d.total && d.total !== d.cnt ? row('Transfers, whole period', num(d.total)) : ''}
+      ${row('Straight-line distance', dist)}
+      ${modeRows}
+    </table>
+    ${modeBlock}
+    ${m && m.mode === 'same_site' ? `<div class="hv-flag"><b>Same site.</b> These facilities are
+      ${dist} apart. A move between them is administrative rather than geospatial, and is
+      currently counted the same as a cross-country transfer. Being addressed — see
+      <code>todo.md</code>.</div>` : ''}
+    ${m && cls !== 'same_site' ? `<div class="hv-flag">Mode is <b>inferred</b> from distance and
+      elapsed book-out to book-in time; the source records no mode of transport.${
+        m.flight && FLIGHT_NOTE[m.flight] ? ' ' + FLIGHT_NOTE[m.flight] : ''}</div>` : ''}`;
+}
+
+function hoverAirport(d){
+  return `<div class="hv-kind">Airport</div>
+    <div class="hv-title">${d.airport}</div>
+    <div class="hv-sub">${d.city || ''}</div>
+    <table>${row('Flights (HRF, total)', num(d.total_flights))}</table>
+    <div class="hv-flag">Location only. The flight data is not yet joined to this map's
+      transfer network, so this point does not say which routes flew.</div>`;
+}
+
+function hoverCircuit(d){
+  const p = d.properties || {};
+  return `<div class="hv-kind">Federal judicial circuit</div>
+    <div class="hv-title">Circuit ${p.circuit}</div>
+    <div class="hv-sub">${p.states || ''}</div>`;
+}
+
+// Kind labels are defined once in data/build_flight_legs.py (KIND_LABELS) and read from the
+// routes file, so the wording on a hover box cannot drift from the wording in the builder.
+const FALLBACK_KIND_LABELS = {
+  removal: 'Removal flight — the leg out of the country',
+  removal_connector: 'Deportation connector — pickup leg of a removal',
+  removal_return: 'Return leg — aircraft only',
+  fuel: 'Fuel stop — refueling leg',
+  network: 'Recorded flight route',
+};
+function kindLabel(k){
+  const fromData = state.flightRoutes && state.flightRoutes.kind_labels;
+  return (fromData && fromData[k]) || FALLBACK_KIND_LABELS[k] || 'Recorded flight route';
+}
+
+function hoverFlight(d){
+  const isRem = d.kind === 'removal';
+  const isRet = d.kind === 'removal_return';
+  const isFuel = d.kind === 'fuel';
+  const isConn = d.kind === 'removal_connector';
+  // The source's own classification counts, shown whenever the route carries more than one.
+  // A route grouped as "network" may be any mix of Domestic Shuffle, Removal Connection and
+  // Redirection, and the reader is better served by the source's word than by ours.
+  const cls = d.cls ? Object.entries(d.cls).sort((a,b) => b[1]-a[1]) : [];
+  return `<div class="hv-kind">${kindLabel(d.kind)}${d.intl ? ' · international' : ''}</div>
+    <div class="hv-title">${d.dep_city || d.dep} → ${d.dst_city || d.dst}</div>
+    <div class="hv-sub">${d.dep} → ${d.dst}</div>
+    <table>
+      ${row('Legs in window', num(d.legs))}
+      ${row('Legs, whole period', num(d.legs_total || d.legs))}
+      ${d.carriers && d.carriers.length ? row('Carriers', d.carriers.join(', ')) : ''}
+      ${d.types && d.types.length ? row('Aircraft', d.types.join(', ')) : ''}
+      ${cls.length > 1 ? row('Source classification', cls.map(([k,v]) => `${k} (${num(v)})`).join(', ')) : ''}
+    </table>
+    <div class="hv-flag">A <b>recorded</b> leg: this aircraft flew this route on these dates.${
+      isRet ? ' <b>This is the aircraft returning</b>, classified by the source as a removal return — not people arriving in the United States.'
+      : isFuel ? ' Classified by the source as a <b>fuel stop</b> — a leg flown to refuel, not to deliver anyone anywhere.'
+      : isConn ? ' Classified by the source as a <b>removal connection</b>: a pickup leg of a removal operation, collecting people before the leg that leaves the country. In the operations tested against the detention records, people aboard these legs were not booked into detention at the intermediate stops.'
+            : (isRem ? ' Classified by the source as a removal.' : '')}
+      The monitor carries no manifest and no time of day, so this says nothing about who was
+      aboard — and flights are drawn sharply for that reason, where inferred transfers are not.</div>`;
+}
+
+function hoverArrest(d){
+  return `<div class="hv-kind">Arrest → first detention</div>
+    <div class="hv-title">${d.city}, ${d.state} → ${d.fac_name || d.fac}</div>
+    <div class="hv-sub">${[d.fac_city, d.fac_state].filter(Boolean).join(', ')} · ${d.fac}</div>
+    <table>
+      ${row('Arrests in window', num(d.n))}
+      ${d.n_total && d.n_total !== d.n ? row('Arrests, whole period', num(d.n_total)) : ''}
+    </table>
+    <div class="hv-flag">Both ends are <b>recorded</b>: the source links this apprehension
+      to the detention stay it produced. The <b>path is not</b> — this is a direct line, not
+      a route. Arrest coordinates are a city point, not an address.</div>
+    ${d.n === 1
+      ? '<div class="hv-flag" style="border-top:none;margin-top:4px;padding-top:0;">Exactly one arrest in the current window — <b>click to trace this case</b>.</div>'
+      : `<div class="hv-flag" style="border-top:none;margin-top:4px;padding-top:0;">${d.n} arrests in the current window — <b>click to explore them individually</b> (daily is the finest window the timeline offers, so narrowing further won't separate them).</div>`}`;
+}
+
+const HOVER_BUILDERS = {
+  arrests: hoverArrest,
+  returns: hoverFlight,
+  fuel: hoverFlight,
+  connectors: hoverFlight,
+  flights: hoverFlight,
+  removals: hoverFlight,
+  facilities: hoverFacility,
+  edges: hoverEdge,
+  airports: hoverAirport,
+  // circuits deliberately absent: the layer itself is now not pickable (see buildLayers()),
+  // so this would never fire, but leaving the entry out here too avoids a second place
+  // that would need to change if a hover were ever reintroduced for a redesigned layer.
+};
+
+function handleHover({ object, layer, x, y }){
+  const box = document.getElementById('hover');
+  if (!object || !layer || !HOVER_BUILDERS[layer.id]) { box.classList.remove('show'); return; }
+  box.innerHTML = HOVER_BUILDERS[layer.id](object);
+  box.classList.add('show');
+  // Flip against the viewport edges so the box is never clipped.
+  const r = box.getBoundingClientRect(), pad = 14;
+  const left = (x + pad + r.width > window.innerWidth) ? x - r.width - pad : x + pad;
+  const top  = (y + pad + r.height > window.innerHeight) ? y - r.height - pad : y + pad;
+  box.style.left = Math.max(4, left) + 'px';
+  box.style.top  = Math.max(4, top) + 'px';
+}
+
+// ---------------------------------------------------------------------------
+// Case-trace prototype (2026-09-15). Click an arrest arc isolated to exactly one
+// person in the current window and walk their own recorded sequence: arrest, every
+// stint of their stay in order, and removal if it happened. Requires
+// tools/case_trace_server.py rather than a plain static server -- there is no way to
+// answer "which one case is this" from a file the browser already has, since the
+// arrest layer is aggregated by (city, facility) with a count, not one row per person.
+// NOT gated beyond this file living behind the same weak password gate as the rest of
+// the map (see the comment on that gate below) -- deliberately so, for now, at the
+// owner's own direction. See log.md and todo.md, 2026-09-15, before this goes further
+// than a local prototype: a client-side gate is not real access control.
+function currentWindowDateRange(){
+  const d = state.bindata;
+  if (!d || !d.bin_ranges || !state.win) return null;
+  return [d.bin_ranges[state.win.i0][0], d.bin_ranges[state.win.i1][1]];
+}
+
+function handleClick({ object, layer }){
+  if (!layer || !object) return;
+  if (layer.id === 'facilities') { openFacilityAnalysis(object); return; }
+  if (layer.id !== 'arrests') return;
+  // Any count is clickable now (2026-09-15, owner): daily is already the finest window
+  // the timeline offers, so a multi-person day can't be resolved by narrowing further --
+  // traceCase() below shows a picker instead of a single trace when the live lookup
+  // comes back with more than one match.
+  traceCase(object);
+}
+
+const NOT_REACHABLE_HTML = `<div class="cp-err"><b>Case-trace server not reachable.</b> This
+  needs <code>uv run tools/case_trace_server.py</code> instead of
+  <code>python3 -m http.server</code> -- the plain static server has no way to
+  answer this lookup.</div>`;
+
+async function traceCase(d){
+  const range = currentWindowDateRange();
+  if (!range) { showCasePanel('<div class="cp-err">No active timeline window.</div>'); return; }
+  showCasePanel('<div class="cp-loading">Tracing case&hellip;</div>');
+  const params = new URLSearchParams({
+    city: d.city, state: d.state, fac: d.fac,
+    date_start: range[0], date_end: range[1],
+  });
+  let res, body;
+  try {
+    res = await fetch('/api/trace?' + params.toString());
+    body = await res.json();
+  } catch (e) {
+    showCasePanel(NOT_REACHABLE_HTML);
+    return;
+  }
+  // Ambiguous-with-a-roster is not an error to surface as one -- it's the expected
+  // outcome once a window is down to one day and still holds more than one person
+  // (owner, 2026-09-15: "There should be an option in the hover window to explore
+  // those detainees individually"). Anything else non-OK (no_match, a bare ambiguous
+  // with no roster, a server error) is still shown as an error message.
+  if (res.status === 409 && body.roster) { renderRoster(body, d); return; }
+  if (!res.ok) {
+    showCasePanel(`<div class="cp-err">${body.note || body.error || 'Lookup failed.'}</div>`);
+    return;
+  }
+  renderCase(body);
+}
+
+async function traceByStayId(stayId){
+  showCasePanel('<div class="cp-loading">Tracing case&hellip;</div>');
+  let res, body;
+  try {
+    res = await fetch('/api/trace?' + new URLSearchParams({ stay_id: stayId }).toString());
+    body = await res.json();
+  } catch (e) {
+    showCasePanel(NOT_REACHABLE_HTML);
+    return;
+  }
+  if (!res.ok) {
+    showCasePanel(`<div class="cp-err">${body.note || body.error || 'Lookup failed.'}</div>`);
+    return;
+  }
+  renderCase(body);
+}
+
+function rosterRowHtml(p, i, total){
+  // The onclick attribute below is single-quoted, deliberately: JSON.stringify() below
+  // delimits its own output with double quotes, which collided with a double-quoted
+  // onclick attribute and silently truncated it right after the opening parenthesis --
+  // the handler was calling traceByStayId( and nothing after, so clicking did nothing
+  // (found 2026-09-15, owner). stay_ID (a hash plus a timestamp) can never itself
+  // contain a single quote, so this is safe.
+  return `<div class="cp-step">
+    <div class="cp-kind">Person ${i + 1} of ${total}</div>
+    <div class="cp-title">${p.citizenship_country || '?'} &middot; ${p.gender || '?'}</div>
+    <div class="cp-note">${p.apprehension_method || '?'} &middot; ${p.apprehension_criminality || '?'}<br>
+      ${p.n_stints} stint${p.n_stints === 1 ? '' : 's'} &middot; last known: ${p.detention_facility_last || '?'}<br>
+      <span style="opacity:.7">id (DDP's own de-identified hash, not a name): ${p.unique_identifier.slice(0, 12)}&hellip;</span></div>
+    <span class="cp-go" onclick='traceByStayId(${JSON.stringify(p.stay_ID)})'>trace this one &rarr;</span></div>`;
+}
+
+function renderRoster(body, d){
+  const html = `<h3>Choose a case <span class="x" onclick="hideCasePanel()">&times;</span></h3>
+    <div class="cp-meta">${body.count} arrests match ${d.city}, ${d.state} &rarr;
+      ${d.fac_name || d.fac} in the current window. Daily is the finest resolution the
+      timeline offers, so narrowing the window further won't separate them -- pick one
+      below instead. None of the fields shown identify anyone by name.</div>
+    ${body.roster.map((p, i) => rosterRowHtml(p, i, body.count)).join('')}`;
+  showCasePanel(html);
+}
+
+function stepHtml(s){
+  const go = (s.lat && s.lon)
+    ? `<span class="cp-go" onclick="flyDeck(${s.lon}, ${s.lat}, 9)">fly to this point &rarr;</span>`
+    : '';
+  if (s.type === 'arrest') return `<div class="cp-step">
+      <div class="cp-kind">Arrest</div>
+      <div class="cp-title">${s.city}, ${s.state} &middot; ${isoToUS(s.date.slice(0,10))}</div>
+      <div class="cp-note">${s.method || ''}</div>${go}</div>`;
+  if (s.type === 'stint') return `<div class="cp-step">
+      <div class="cp-kind">Detention</div>
+      <div class="cp-title">${s.facility} (${s.facility_code})</div>
+      <div class="cp-note">${s.book_in} &rarr; ${s.book_out}<br>
+        ${s.length_days} days &middot; released: ${s.release_reason}</div>${go}</div>`;
+  if (s.type === 'transfer') return `<div class="cp-step">
+      <div class="cp-kind">Transfer</div>
+      <div class="cp-title">${s.from} &rarr; ${s.to}</div>
+      <div class="cp-note">${s.gap_hours!=null ? s.gap_hours+'h gap, ' : ''}${s.distance_km!=null ? s.distance_km+' km, ' : ''}
+        inferred mode: <b>${s.inferred_mode}</b> (flight check: ${s.flight_status || 'n/a'})<br>
+        ${s.note || ''}</div></div>`;
+  if (s.type === 'removal') return `<div class="cp-step">
+      <div class="cp-kind">Removal</div>
+      <div class="cp-title">${isoToUS(s.date.slice(0,10))} &middot; to ${s.country}</div></div>`;
+  return '';
+}
+
+// Only the points DDP actually records a location for -- arrest (city-level) and each
+// stint (facility-level) -- are connected. A removal has no single point in this data
+// (a whole country isn't one), so it is described in the panel but never drawn as an
+// endpoint here; drawing one would assert a precision nothing in the source supports.
+function caseTracePoints(c){
+  const pts = [];
+  let n = 0;
+  c.steps.forEach(s => {
+    if ((s.type === 'arrest' || s.type === 'stint') && s.lat && s.lon) {
+      n++;
+      pts.push({ lat: s.lat, lon: s.lon,
+                 label: n + '. ' + (s.type === 'arrest' ? 'Arrest' : s.facility_code) });
+    }
+  });
+  return pts;
+}
+
+// Camera moves MUST go through deck.gl's own view state, the same way resetView()
+// already does it below (`deckgl.setProps({ initialViewState: ... })`) -- never through
+// deckgl.getMapboxMap().flyTo()/.fitBounds() directly. deck.gl tracks its own camera
+// and only redraws its layers (arcs, points, this case path) when THAT state changes;
+// moving the raw Mapbox instance underneath slides the basemap while every deck.gl
+// layer stays frozen at the old position. Found 2026-09-15 from exactly that symptom.
+function flyDeck(longitude, latitude, zoom){
+  deckgl.setProps({ initialViewState: Object.assign({}, state.view, { longitude, latitude, zoom, transitionDuration: 1200 }) });
+}
+
+function fitToCase(pts){
+  if (!pts.length) return;
+  if (pts.length === 1) { flyDeck(pts[0].lon, pts[0].lat, 8); return; }
+  let minLon = pts[0].lon, maxLon = pts[0].lon, minLat = pts[0].lat, maxLat = pts[0].lat;
+  pts.forEach(p => {
+    minLon = Math.min(minLon, p.lon); maxLon = Math.max(maxLon, p.lon);
+    minLat = Math.min(minLat, p.lat); maxLat = Math.max(maxLat, p.lat);
+  });
+  const fitted = new deck.WebMercatorViewport({ width: window.innerWidth, height: window.innerHeight })
+    .fitBounds([[minLon, minLat], [maxLon, maxLat]], { padding: 100 });
+  flyDeck(fitted.longitude, fitted.latitude, Math.min(fitted.zoom, 9));
+}
+
+function renderCase(c){
+  const html = `<h3>Case trace <span class="x" onclick="hideCasePanel()">&times;</span></h3>
+    <div class="cp-meta">${c.person.citizenship_country || '?'} citizen &middot;
+      ${c.person.apprehension_criminality || ''} &middot; ${c.n_stints} stint${c.n_stints===1?'':'s'}
+      &middot; outcome: ${c.stay_outcome || '?'}<br>
+      <span style="opacity:.7">id (DDP's own de-identified hash, not a name): ${c.unique_identifier.slice(0,12)}&hellip;</span>
+      <br><span style="color:#ffe63c">&#9679; yellow path on the map is this case's own recorded stops, in order.</span></div>
+    ${c.steps.map(stepHtml).join('')}`;
+  state.caseTrace = c;
+  showCasePanel(html);
+  buildLayers();
+  fitToCase(caseTracePoints(c));
+}
+
+function showCasePanel(html){
+  hideNodePanel();  // the two panels share one screen position -- never both at once
+  document.getElementById('cpBody').innerHTML = html;
+  document.getElementById('casePanel').classList.add('show');
+}
+function hideCasePanel(){
+  document.getElementById('casePanel').classList.remove('show');
+  if (state.caseTrace) { state.caseTrace = null; buildLayers(); }
+}
+
+// ---------------------------------------------------------------------------
+// Facility-node analysis panel (2026-09-19, notes/spatial-analysis-plan.md step 6).
+// Click a facility dot: camera flies in to building level, and this panel shows what
+// data/build_network_analysis.py computed for it (betweenness, Louvain community) next
+// to the existing facility-role stats. First-pass, exploratory numbers -- see
+// notes/network-analysis-findings.md -- stated as such in the panel itself, not just in
+// that note, since a reader of the map alone would otherwise have no way to know.
+const NET_TOTAL_FACILITIES = 612;  // data/build_network_analysis.py's own graph size --
+  // every facility with a mapped transfer edge, not just the 369 with map coordinates,
+  // so a rank of "1 of 612" here is the true rank, not rescoped to what's drawn.
+
+function openFacilityAnalysis(d){
+  flyDeck(d.lon, d.lat, 17);  // building-level zoom, not just "closer" -- the point of this click
+  showNodePanel(facilityAnalysisHtml(d));
+}
+
+function facilityAnalysisHtml(d){
+  // Same swatch, same computation as hoverFacility() -- a facility's category color must
+  // read identically whether it's seen in the hover box or here (2026-09-19, owner).
+  const sw = CATEGORY_SWATCH[d.category] || '#6c757d';
+  const hasNet = d.betweenness !== null && d.betweenness !== undefined;
+  const rankLine = hasNet
+    ? `<div class="np-row"><span class="np-label">Betweenness rank</span><span class="np-val">${d.betweenness_rank} of ${NET_TOTAL_FACILITIES}</span></div>
+       <div class="np-row"><span class="np-label">Betweenness (raw)</span><span class="np-val">${(+d.betweenness).toFixed(4)}</span></div>
+       <div class="np-row"><span class="np-label">Community</span><span class="np-val">#${d.community_id} (${d.community_size} facilities)</span></div>
+       <div class="np-row"><span class="np-label">Degree (unweighted)</span><span class="np-val">${d.degree}</span></div>`
+    : `<div class="np-note">Not in the network analysis graph -- either no transfer edges
+        recorded, or data/build_network_analysis.py hasn't been run since this facility's
+        coordinates were added.</div>`;
+  const colocatedLines = [];
+  if (d.colocated_out_share > 0) colocatedLines.push(
+    `<div class="np-row"><span class="np-label">Outbound to a co-located site</span><span class="np-val">${(d.colocated_out_share*100).toFixed(1)}%</span></div>`);
+  if (d.colocated_in_share > 0) colocatedLines.push(
+    `<div class="np-row"><span class="np-label">Inbound from a co-located site</span><span class="np-val">${(d.colocated_in_share*100).toFixed(1)}%</span></div>`);
+  return `<h3>${d.name} <span class="x" onclick="hideNodePanel()">&times;</span></h3>
+    <div class="np-meta">${d.city}, ${d.state} &middot; <code>${d.fac}</code><br>
+      <div class="hv-cat" style="background:${sw}22;color:${sw};border:1px solid ${sw}66;">${d.category || 'uncategorized'}</div>
+      <div class="hv-note">${ownershipLine(d)}</div></div>
+    <div class="np-section">Facility-role stats</div>
+    <div class="np-row"><span class="np-label">Throughput</span><span class="np-val">${(+d.throughput).toLocaleString()}</span></div>
+    <div class="np-row"><span class="np-label">Distinct sources / destinations</span><span class="np-val">${d.in_distinct_srcs} / ${d.out_distinct_dests}</span></div>
+    <div class="np-section">Network position (first-pass, exploratory)</div>
+    ${rankLine}
+    ${colocatedLines.length ? `<div class="np-section">Co-located transfers</div>${colocatedLines.join('')}` : ''}
+    <div class="np-note">Betweenness and community membership are step 3 of
+      notes/spatial-analysis-plan.md, not yet reviewed by Prof. Jiang -- see
+      notes/network-analysis-findings.md. Expect these numbers to change.</div>`;
+}
+
+function showNodePanel(html){
+  hideCasePanel();  // the two panels share one screen position -- never both at once
+  document.getElementById('npBody').innerHTML = html;
+  document.getElementById('nodePanel').classList.add('show');
+}
+function hideNodePanel(){
+  document.getElementById('nodePanel').classList.remove('show');
+}
+
+// ---------------------------------------------------------------------------
+// Timeline. The window over time selects which transfers the arc layer draws.
+//
+// Bin resolution follows zoom, and so does what gets downloaded: the monthly file
+// loads at startup, weekly and daily are fetched only when their zoom tier is
+// reached. Coarse bins are deliberately NOT rolled up from the daily file in the
+// browser -- that would mean shipping 1.25 MB to draw a national view.
+//
+// Cells reference edges by index into map_edges.json, so the two must come
+// from the same build; `edges_fingerprint` is checked on load.
+// ---------------------------------------------------------------------------
+const TIER_FILES = {
+  monthly: 'data/map_edges_binned_monthly.json?v=1790025324',
+  weekly:  'data/map_edges_binned_weekly.json?v=1790025324',
+  daily:   'data/map_edges_binned_daily.json?v=1790025324',
+};
+// Zoom thresholds are estimates, untuned against real use (see 04-interface.qmd).
+function tierForZoom(z){ return z >= 7 ? 'daily' : (z >= 5 ? 'weekly' : 'monthly'); }
+
+const tierCache = {};
+async function loadTier(tier){
+  if (tierCache[tier]) return tierCache[tier];
+  const d = await fetch(TIER_FILES[tier]).then(r => r.json());
+  const fp = `${state.edges.length}:${state.edges[0].src}>${state.edges[0].dst}:` +
+             `${state.edges[state.edges.length-1].src}>${state.edges[state.edges.length-1].dst}`;
+  if (d.edges_fingerprint && d.edges_fingerprint !== fp) {
+    // The generic version of this message gave no way to tell WHICH side was stale
+    // without guessing -- shown twice on 2026-09-15 and diagnosed by hand each time.
+    // Printing both fingerprints turns that into a one-look diagnosis: if they differ
+    // only in count, it's almost certainly a rebuild that didn't run all three coupled
+    // scripts; if the browser's own value looks like an OLD edge list the files on disk
+    // no longer match, it's very likely browser cache, not the files themselves.
+    showError(`Edge bins were built against a different edge list — re-run `
+      + `data/build_map_data.py, data/build_edge_bins.py and data/build_transfer_modes.py `
+      + `together. Browser has: ${fp} · File (${tier}) has: ${d.edges_fingerprint}`);
+    console.error('Edge fingerprint mismatch', { tier, browser: fp, file: d.edges_fingerprint });
+    return null;
+  }
+  d.totals = d.cells.map(c => c.reduce((a, x) => a + x[1], 0));
+  tierCache[tier] = d;
+  return d;
+}
+
+// Which bin of a given tier's bin_ranges covers a real calendar date. 'start' finds the
+// first bin whose own span reaches at least that far (so a window's start date lands on
+// or after itself); 'end' finds the last bin whose span begins at or before that date.
+function binIndexForDate(bin_ranges, date, endpoint){
+  if (endpoint === 'start') {
+    for (let i = 0; i < bin_ranges.length; i++) if (bin_ranges[i][1] >= date) return i;
+    return bin_ranges.length - 1;
+  }
+  for (let i = bin_ranges.length - 1; i >= 0; i--) if (bin_ranges[i][0] <= date) return i;
+  return 0;
+}
+
+// Keep the same REAL CALENDAR DATES when the bin resolution changes under the window --
+// not a fraction of the previous tier's bin count. The previous version converted the
+// window to a fraction of prev.bins.length, then floor/ceil'd that fraction into the new
+// tier's bin count; floor and ceil round in opposite directions, so the covered span could
+// only ever grow, never shrink, and cycling between tiers a few times ratcheted the window
+// wider indefinitely with no way back down (found 2026-09-15, owner: locking to Daily then
+// visiting Weekly/Monthly and back would not return to a small window, and settled at
+// roughly a 6-day floor no matter how many more times Daily was clicked). Converting by
+// real date instead is stable: the same date range always maps to the same bins in a given
+// tier, so repeated round-trips through other tiers cannot compound an error.
+async function setTier(tier){
+  if (tier === state.tier && state.bindata) return;
+  const prev = state.bindata;
+  const dateRange = (prev && prev.bin_ranges && state.win)
+    ? [prev.bin_ranges[state.win.i0][0], prev.bin_ranges[state.win.i1][1]]
+    : null;
+  const d = await loadTier(tier);
+  if (!d) return;
+  state.tier = tier; state.bindata = d;
+  const n = d.bins.length;
+  if (dateRange) {
+    const i0 = binIndexForDate(d.bin_ranges, dateRange[0], 'start');
+    const i1 = binIndexForDate(d.bin_ranges, dateRange[1], 'end');
+    state.win = { i0: Math.min(i0, i1), i1: Math.max(i0, i1) };
+  } else {
+    state.win = { i0: 0, i1: n - 1 };
+  }
+  document.getElementById('tier').textContent = tier + (state.tierLocked ? ' · locked' : ' · from zoom');
+  document.querySelectorAll('.tlBin').forEach(b => b.classList.toggle('on', b.dataset.bin === tier));
+  applyWindow();
+}
+
+function applyWindow(){
+  const d = state.bindata;
+  if (!d || !state.win) { state.winEdges = null; drawTimeline(); buildLayers(); return; }
+  const acc = new Map();
+  for (let b = state.win.i0; b <= state.win.i1; b++)
+    for (const [ei, n] of (d.cells[b] || [])) acc.set(ei, (acc.get(ei) || 0) + n);
+  const out = [];
+  acc.forEach((cnt, ei) => {
+    const e = state.edges[ei];
+    if (e) out.push({ src: e.src, dst: e.dst, cnt, total: e.cnt,
+                      src_lat: e.src_lat, src_lon: e.src_lon,
+                      dst_lat: e.dst_lat, dst_lon: e.dst_lon });
+  });
+  state.winEdges = out;
+  applyWindowFlights();
+  applyWindowArrests();
+  drawTimeline(); buildLayers(); setStatus();
+}
+
+// Flights are filtered by the window's DATE span rather than by bin index: the legs
+// carry a date and nothing finer, so they need no tier machinery of their own.
+function applyWindowArrests(){
+  const aj = state.arrests, ad = state.arrestDays, d = state.bindata;
+  if (!aj || !ad || !d || !d.bin_ranges || !state.win) { state.winArrests = null; return; }
+  const a = d.bin_ranges[state.win.i0][0], b = d.bin_ranges[state.win.i1][1];
+  const acc = new Map();
+  ad.dates.forEach((date, i) => {
+    if (date < a || date > b) return;
+    for (const [ji, n] of ad.cells[i]) acc.set(ji, (acc.get(ji) || 0) + n);
+  });
+  const out = [];
+  acc.forEach((n, ji) => {
+    const j = aj.journeys[ji];
+    if (j) out.push(Object.assign({}, j, { n, n_total: j.n }));
+  });
+  state.winArrests = out;
+}
+
+function applyWindowFlights(){
+  const fr = state.flightRoutes, fd = state.flightDays, d = state.bindata;
+  if (!fr || !fd || !d || !d.bin_ranges || !state.win) { state.winFlights = null; return; }
+  const a = d.bin_ranges[state.win.i0][0], b = d.bin_ranges[state.win.i1][1];
+  const acc = new Map();
+  fd.dates.forEach((date, i) => {
+    if (date < a || date > b) return;
+    for (const [ri, n] of fd.cells[i]) acc.set(ri, (acc.get(ri) || 0) + n);
+  });
+  const net = [], rem = [], ret = [], fuel = [], conn = [];
+  acc.forEach((legs, ri) => {
+    const r = fr.routes[ri];
+    if (!r) return;
+    const row = Object.assign({}, r, { legs, legs_total: r.legs });
+    if (r.kind === 'removal') rem.push(row);
+    else if (r.kind === 'removal_return') ret.push(row);
+    else if (r.kind === 'fuel') fuel.push(row);
+    else if (r.kind === 'removal_connector') conn.push(row);
+    else net.push(row);
+  });
+  state.winFlights = net;
+  state.winRemovals = rem;
+  state.winReturns = ret;
+  state.winFuel = fuel;
+  state.winConnectors = conn;
+}
+
+function drawTimeline(){
+  const svg = document.getElementById('tlstrip');
+  const d = state.bindata, ser = state.series;
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  if (!d || !ser) return;
+  const w = svg.clientWidth || 900, h = 56, N = ser.length, bw = w / N;
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  const NS2 = 'http://www.w3.org/2000/svg';
+  const max = Math.max(...ser.map(r => r.transfers));
+
+  // The context histogram is always the DAILY series, whatever bin tier drives the
+  // selection. 564 thin bars carry the shape of the period -- the surge through 2025,
+  // the dip, the climb into 2026 -- where 20 monthly blocks flatten it into steps.
+  // The bins decide what is selected; the daily series decides what is seen.
+  const span = binSpanDays();
+  ser.forEach((r, i) => {
+    const bh = Math.max(1, (r.transfers / max) * (h - 6));
+    const rect = document.createElementNS(NS2, 'rect');
+    rect.setAttribute('x', (i*bw).toFixed(2)); rect.setAttribute('y', (h-bh).toFixed(2));
+    rect.setAttribute('width', Math.max(0.6, bw - (bw > 3 ? 0.6 : 0.1)).toFixed(2));
+    rect.setAttribute('height', bh.toFixed(2));
+    const inWin = span && i >= span[0] && i <= span[1];
+    const cens = state.lastComplete && r.date.slice(0,7) > state.lastComplete;
+    rect.setAttribute('fill', cens ? (inWin ? '#8a5a3c' : '#4a3527')
+                                   : (inWin ? '#ff6e3c' : '#333842'));
+    svg.appendChild(rect);
+  });
+
+  // Right-censored region: the last periods of a FOIA release under-report because
+  // stints had not been recorded when the extract was cut. Shaded, never trimmed.
+  const firstCens = ser.findIndex(r => state.lastComplete && r.date.slice(0,7) > state.lastComplete);
+  if (firstCens >= 0) {
+    const x = firstCens * bw;
+    const box = document.createElementNS(NS2, 'rect');
+    box.setAttribute('x', x.toFixed(2)); box.setAttribute('y', 0);
+    box.setAttribute('width', Math.max(1, w - x).toFixed(2)); box.setAttribute('height', h);
+    box.setAttribute('fill', 'rgba(255,110,60,0.07)');
+    box.setAttribute('stroke', 'rgba(255,110,60,0.35)');
+    box.setAttribute('stroke-dasharray', '3 3'); box.setAttribute('stroke-width', '1');
+    svg.appendChild(box);
+    const label = document.createElementNS(NS2, 'text');
+    label.setAttribute('x', (x + 4).toFixed(2)); label.setAttribute('y', 10);
+    label.setAttribute('fill', '#c98a63'); label.setAttribute('font-size', '9');
+    label.setAttribute('font-family', 'monospace');
+    label.textContent = 'incomplete';
+    svg.appendChild(label);
+  }
+
+  if (span) [span[0]*bw, (span[1]+1)*bw].forEach(x => {
+    const g = document.createElementNS(NS2, 'rect');
+    g.setAttribute('x', (x-1.5).toFixed(2)); g.setAttribute('y', 0);
+    g.setAttribute('width', 3); g.setAttribute('height', h);
+    g.setAttribute('fill', '#fff'); g.setAttribute('opacity', '0.85');
+    svg.appendChild(g);
+  });
+
+  const total = state.winEdges ? state.winEdges.reduce((a, e) => a + e.cnt, 0) : 0;
+  const r0 = d.bin_ranges ? d.bin_ranges[state.win.i0][0] : d.bins[state.win.i0];
+  const r1 = d.bin_ranges ? d.bin_ranges[state.win.i1][1] : d.bins[state.win.i1];
+  document.getElementById('tlread').innerHTML =
+    `${isoToUS(r0)} &rarr; ${isoToUS(r1)} &nbsp;·&nbsp; <b>${total.toLocaleString()}</b> transfers &nbsp;·&nbsp; `
+    + `${(state.winEdges||[]).length.toLocaleString()} routes`;
+  const picks = [0, Math.floor(N*0.33), Math.floor(N*0.66), N-1];
+  document.getElementById('tlticks').innerHTML =
+    picks.map(i => `<span>${isoToUS(ser[i].date)}</span>`).join('');
+  document.getElementById('tlFrom').value = isoToUS(r0);
+  document.getElementById('tlTo').value = isoToUS(r1);
+}
+
+// Where the selected bin window falls on the daily axis, as [firstDayIdx, lastDayIdx].
+function binSpanDays(){
+  const d = state.bindata, idx = state.seriesIdx;
+  if (!d || !d.bin_ranges || !idx || !state.win) return null;
+  const a = d.bin_ranges[state.win.i0][0], b = d.bin_ranges[state.win.i1][1];
+  const i0 = idx[a], i1 = idx[b];
+  if (i0 === undefined || i1 === undefined) return null;
+  return [i0, i1];
+}
+
+// Which bin of the current tier contains a given day of the daily axis.
+function binForDay(dayIdx){
+  const d = state.bindata, ser = state.series;
+  if (!d || !d.bin_ranges || !ser || !ser[dayIdx]) return 0;
+  const date = ser[dayIdx].date;
+  for (let i = 0; i < d.bin_ranges.length; i++) {
+    const [a, b] = d.bin_ranges[i];
+    if (date >= a && date <= b) return i;
+    if (date < a) return Math.max(0, i - 1);
+  }
+  return d.bin_ranges.length - 1;
+}
+
+function wireTimeline(){
+  const svg = document.getElementById('tlstrip');
+  let drag = null;
+  const dayAt = e => {
+    const N = state.series.length, bw = svg.clientWidth / N;
+    return Math.max(0, Math.min(N-1, Math.floor(e.offsetX / bw)));
+  };
+  svg.addEventListener('pointerdown', e => {
+    if (!state.bindata || !state.series) return;
+    const span = binSpanDays(); if (!span) return;
+    const bw = svg.clientWidth / state.series.length;
+    const day = dayAt(e);
+    if (Math.abs(e.offsetX - span[0]*bw) < 8) drag = {t:'L'};
+    else if (Math.abs(e.offsetX - (span[1]+1)*bw) < 8) drag = {t:'R'};
+    else if (day >= span[0] && day <= span[1])
+      drag = {t:'move', grab:binForDay(day), i0:state.win.i0, i1:state.win.i1};
+    else {
+      const wd = state.win.i1 - state.win.i0, b = binForDay(day);
+      state.win.i0 = Math.max(0, Math.min(state.bindata.bins.length-1-wd, b));
+      state.win.i1 = state.win.i0 + wd; applyWindow(); return;
+    }
+    svg.setPointerCapture(e.pointerId);
+  });
+  svg.addEventListener('pointermove', e => {
+    if (!state.bindata || !state.series) return;
+    const span = binSpanDays();
+    if (!drag) {
+      const bw = svg.clientWidth / state.series.length;
+      const near = span && (Math.abs(e.offsetX - span[0]*bw) < 8
+                         || Math.abs(e.offsetX - (span[1]+1)*bw) < 8);
+      svg.style.cursor = near ? 'ew-resize' : 'crosshair'; return;
+    }
+    const b = binForDay(dayAt(e));
+    if (drag.t === 'L') state.win.i0 = Math.min(b, state.win.i1);
+    if (drag.t === 'R') state.win.i1 = Math.max(b, state.win.i0);
+    if (drag.t === 'move') {
+      const dd = b - drag.grab, wd = drag.i1 - drag.i0;
+      state.win.i0 = Math.max(0, Math.min(state.bindata.bins.length-1-wd, drag.i0+dd));
+      state.win.i1 = state.win.i0 + wd;
+    }
+    applyWindow();
+  });
+  svg.addEventListener('pointerup', () => { drag = null; });
+
+  const step = dir => {
+    if (!state.bindata) return;
+    const n = state.bindata.bins.length;
+    if (dir > 0 && state.win.i1 < n-1) { state.win.i0++; state.win.i1++; }
+    if (dir < 0 && state.win.i0 > 0)   { state.win.i0--; state.win.i1--; }
+    applyWindow();
+  };
+  document.getElementById('tlPrev').addEventListener('click', () => step(-1));
+  document.getElementById('tlNext').addEventListener('click', () => step(1));
+  document.getElementById('tlAll').addEventListener('click', () => {
+    if (!state.bindata) return;
+    state.tierLocked = false;
+    state.win = { i0: 0, i1: state.bindata.bins.length - 1 };
+    document.getElementById('tier').textContent = state.tier + ' · from zoom';
+    applyWindow();
+  });
+  document.getElementById('tlPlay').addEventListener('click', () => setPlaying(!state.playing));
+
+  const setMode = m => {
+    state.playMode = m;
+    document.getElementById('tlSlide').classList.toggle('on', m === 'slide');
+    document.getElementById('tlAcc').classList.toggle('on', m === 'accumulate');
+    if (state.playing) setPlaying(true);   // restart with the new rule
+  };
+  document.getElementById('tlSlide').addEventListener('click', () => setMode('slide'));
+  document.getElementById('tlAcc').addEventListener('click', () => setMode('accumulate'));
+  document.getElementById('tlSpeed').addEventListener('change', () => {
+    if (state.playing) setPlaying(true);
+  });
+
+  // Choosing a bin overrides the zoom-derived tier and locks it, so the map does not
+  // silently undo the choice on the next pan. "Whole period" releases the lock.
+  document.querySelectorAll('.tlBin').forEach(b =>
+    b.addEventListener('click', () => { state.tierLocked = true; setTier(b.dataset.bin); }));
+
+  // Typed dates snap to whichever bins contain them. Parsed from the MM/DD/YYYY the
+  // input now always shows (usToIso returns null on anything unparseable, e.g. still
+  // mid-edit -- silently ignored rather than treated as a date, same as an empty native
+  // date input used to be).
+  const fromDates = () => {
+    const a = usToIso(document.getElementById('tlFrom').value),
+          b = usToIso(document.getElementById('tlTo').value);
+    if (!a || !b || !state.seriesIdx) return;
+    const near = v => {
+      if (state.seriesIdx[v] !== undefined) return state.seriesIdx[v];
+      let best = 0;
+      state.series.forEach((r, i) => { if (r.date <= v) best = i; });
+      return best;
+    };
+    const b0 = binForDay(near(a)), b1 = binForDay(near(b));
+    state.win.i0 = Math.min(b0, b1); state.win.i1 = Math.max(b0, b1);
+    applyWindow();
+  };
+  document.getElementById('tlFrom').addEventListener('change', fromDates);
+  document.getElementById('tlTo').addEventListener('change', fromDates);
+}
+
+function setPlaying(p){
+  state.playing = p;
+  const b = document.getElementById('tlPlay');
+  b.textContent = p ? '❚❚ Pause' : '▶ Play'; b.classList.toggle('on', p);
+  if (state.playTimer) { clearInterval(state.playTimer); state.playTimer = null; }
+  if (!p) return;
+  const ms = +document.getElementById('tlSpeed').value || 420;
+  state.playTimer = setInterval(() => {
+    const n = state.bindata ? state.bindata.bins.length : 0;
+    if (!n) return;
+    const wd = state.win.i1 - state.win.i0;
+    if (state.playMode === 'accumulate') {
+      // start fixed, end advancing: how the period built up
+      if (state.win.i1 >= n-1) state.win.i1 = state.win.i0;
+      else state.win.i1++;
+    } else {
+      // fixed width sliding across the span: the system operating, period by period
+      if (state.win.i1 >= n-1) { state.win.i0 = 0; state.win.i1 = wd; }
+      else { state.win.i0++; state.win.i1++; }
+    }
+    applyWindow();
+  }, ms);
+}
+
+function setStatus(){
+  // Facility/edge coverage gap made visible on the map itself, not only in
+  // map/README.md -- feedback item #7 (2026-09-08): a reader of the map alone
+  // previously saw a complete-looking network with no indication that 66 (now
+  // more, on the current pull) categorized facilities had been silently dropped
+  // for want of coordinates.
+  const st = state.stats;
+  const facLine = st
+    ? `${st.facilities_shown} of ${st.facilities_scored} facilities shown (${st.facilities_dropped_no_coords} without coordinates)`
+    : `${state.facilities.length} facilities`;
+  const edgeLine = st
+    ? `${st.edges_mapped_total} mapped transfer edges shown`
+    : `${state.edges.length} arcs`;
+  document.getElementById('tlstatus').textContent =
+    `${facLine} · ${edgeLine} · `
+    + `${state.airports.length} airports · `
+    + `${state.flightRoutes ? state.flightRoutes.legs_total.toLocaleString() : 0} recorded flight legs `
+    + `(${(state.winRemovals||[]).length.toLocaleString()} removal routes in window) `
+    + `(to ${state.flightRoutes ? state.flightRoutes.coverage.last : '—'})`;
+}
+
+function showError(msg){
+  const el = document.getElementById('err');
+  el.style.display = 'block';
+  el.textContent = msg;
+}
+
+async function boot(){
+  deckgl = new deck.DeckGL({
+    container: 'map',
+    mapboxApiAccessToken: MAPBOX_TOKEN,
+    mapStyle: 'mapbox://styles/mapbox/satellite-v9',
+    mapOptions: { projection: 'mercator' },
+    initialViewState: INIT_VIEW,
+    controller: { minZoom: 3, dragRotate: true, touchRotate: true },
+    onViewStateChange: ({ viewState }) => {
+      state.view = viewState; updateCompass();
+      if (!state.tierLocked) {
+        const t = tierForZoom(viewState.zoom);
+        if (t !== state.tier) setTier(t);
+      }
+    },
+    onHover: handleHover,
+    onClick: handleClick,
+    layers: [],
+  });
+
+  // Roads from Mapbox's own vector tiles (composite / road source-layer).
+  // No external file needed -- motorway + trunk only so it reads as quiet context,
+  // not a competing foreground layer. Off by default; toggle-roads checkbox enables it.
+  // Inserted below 'waterway' so it sits clearly behind all data layers.
+  // Imperial units: the stated audience for this map is US journalists, attorneys and
+  // policymakers (paper/04-discussion.qmd, @sec-intended-use). Change 'imperial' to
+  // 'metric' here if that audience assumption changes.
+  deckgl.getMapboxMap().addControl(
+    new mapboxgl.ScaleControl({ maxWidth: 110, unit: 'imperial' }), 'bottom-left');
+
+  deckgl.getMapboxMap().on('load', function() {
+    const mbMap = deckgl.getMapboxMap();
+    // `mapStyle` above is 'satellite-v9', a pure raster style with no vector source of
+    // its own -- found 2026-09-15 while diagnosing an unrelated report, when the
+    // roads-interstate layer below turned out to have been throwing on every load, ever,
+    // because it read from a 'composite' source that was never actually there. Fixed for
+    // real (not just caught) by adding Mapbox's own public streets tileset as an explicit
+    // source: it carries both a 'road' source-layer (for the interstate line layer) and a
+    // 'place_label' source-layer (for the city/town labels the owner asked for on
+    // 2026-09-15), so one addSource covers both. Still wrapped in try/catch, since a
+    // style/network hiccup here should never be able to take down anything else in boot().
+    try {
+      mbMap.addSource('places', {
+        type: 'vector',
+        url: 'mapbox://mapbox.mapbox-streets-v8',
+      });
+
+      mbMap.addLayer({
+        id: 'roads-interstate',
+        type: 'line',
+        source: 'places',
+        'source-layer': 'road',
+        filter: ['in', 'class', 'motorway', 'trunk'],
+        layout: { visibility: LAYER_DEFAULTS.showRoads ? 'visible' : 'none' },
+        paint: {
+          'line-color': '#3a3f50',
+          'line-width': [
+            'interpolate', ['linear'], ['zoom'],
+            4, 0.7,
+            8, 1.6,
+            12, 2.8
+          ],
+          'line-opacity': 0.6
+        }
+      });
+
+      // City/town labels for orientation when zoomed in -- deliberately just the two
+      // biggest place types ('city', 'town'), not 'village'/'hamlet', so the label set
+      // stays legible rather than crowding at street-level zoom; Mapbox's own label
+      // collision handling thins it further at any given zoom without extra filtering
+      // logic here. minzoom 6 is deliberately well above the opening view (zoom 4.2,
+      // whole-country) -- tested at 4 first and even "city"/"town" alone was a wall of
+      // small-town names (Woodward OK, Altus OK, ...) across the whole map, the opposite
+      // of the ask, which was orientation help while zoomed in, not a label layer that
+      // competes with the facility dots at the map's default view.
+      mbMap.addLayer({
+        id: 'place-labels',
+        type: 'symbol',
+        source: 'places',
+        'source-layer': 'place_label',
+        filter: ['in', 'type', 'city', 'town'],
+        minzoom: 6,
+        layout: {
+          visibility: LAYER_DEFAULTS.showLabels ? 'visible' : 'none',
+          'text-field': ['get', 'name'],
+          'text-font': ['DIN Pro Medium', 'Arial Unicode MS Regular'],
+          'text-size': ['interpolate', ['linear'], ['zoom'], 6, 10, 9, 12, 12, 15],
+          'text-max-width': 8,
+          'symbol-sort-key': ['get', 'symbolrank'],
+        },
+        paint: {
+          'text-color': '#f2f4f8',
+          'text-halo-color': 'rgba(10,12,18,0.85)',
+          'text-halo-width': 1.3,
+          'text-halo-blur': 0.4,
+        },
+      });
+    } catch (e) {
+      console.warn('places source/layers (roads-interstate, place-labels) could not be added:', e.message);
+    }
+  });
+
+  try {
+    const [facilities, edges, circuits, airports, stats, modes, series, tsum, froutes, fdays, ajourneys, adays] = await Promise.all([
+      fetch('data/map_facilities.json?v=1790025324').then(r => r.json()),
+      fetch('data/map_edges.json?v=1790025324').then(r => r.json()),
+      fetch('data/federal_circuit_boundaries.geojson?v=1790025324').then(r => r.json()),
+      fetch('data/map_airports.json?v=1790025324').then(r => r.json()),
+      fetch('data/map_stats.json?v=1790025324').then(r => r.json()),
+      fetch('data/map_edge_modes.json?v=1790025324').then(r => r.json()),
+      fetch('data/time_series_daily.json?v=1790025324').then(r => r.json()),
+      fetch('data/time_series_summary.json?v=1790025324').then(r => r.json()),
+      fetch('data/map_flight_routes.json?v=1790025324').then(r => r.json()),
+      fetch('data/map_flight_days.json?v=1790025324').then(r => r.json()),
+      fetch('data/map_arrest_journeys.json?v=1790025324').then(r => r.json()),
+      fetch('data/map_arrest_days.json?v=1790025324').then(r => r.json()),
+    ]);
+    state.facilities = facilities.filter(d => d.lat && d.lon);
+    state.edges = edges;
+    state.circuits = circuits;
+    state.airports = airports;
+    state.stats = stats;
+    state.modes = modes;
+    state.series = series;
+    state.seriesIdx = {};
+    series.forEach((r, i) => { state.seriesIdx[r.date] = i; });
+    state.lastComplete = tsum.last_complete_month;
+    state.flightRoutes = froutes;
+    state.flightDays = fdays;
+    state.arrests = ajourneys;
+    state.arrestDays = adays;
+    // Opens on a few real days at the start of the period, not the whole 564-day span
+    // (owner, 2026-09-19: "when the map loads only have a few days towards the
+    // beginning of the time period selected"). Needs the daily tier loaded up front
+    // (1.81 MB vs. monthly's 435 KB) since only daily bins can express a window this
+    // narrow -- a real payload cost, accepted for a lighter, more legible opening view
+    // (a handful of days' arcs, not five years' worth, drawn on first paint). Zoom
+    // still drives tier switching normally the moment the reader pans or zooms
+    // (tierForZoom, above); this only sets what shows before that first interaction.
+    await setTier('daily');
+    if (state.bindata) {
+      state.win = { i0: 0, i1: Math.min(4, state.bindata.bins.length - 1) };
+      document.getElementById('tier').textContent = state.tier + ' · opening default';
+      applyWindow();
+    }
+  } catch (e) {
+    showError('Data failed to load: ' + e.message
+      + '. This page uses fetch() to load data/*.json and *.geojson, which most '
+      + 'browsers block for local file:// pages. Serve this folder over a local HTTP '
+      + 'server, e.g. from the book/ project root: `python3 -m http.server` then open '
+      + 'http://localhost:8000/map/, rather than opening map/index.html directly.');
+  }
+
+  setStatus();
+  applyLayerDefaults();
+  wireToggles();
+  wireMapControls();
+  wireTimeline();
+  buildLayers();
+}
+
+// Client-side gate only -- same mechanism as jonnealon/TheChurn's own gate. This does
+// NOT secure the underlying data: the map's JS/data files are still fetchable directly
+// by anyone who knows or guesses the URLs, same caveat as the original. It only keeps
+// the page from opening to a casual visitor. Change the password by editing PASSWORD
+// below directly (plaintext is fine here -- the "hash" below is just obfuscation, not
+// real security, exactly like the original).
+(function(){
+  function h(s){var x=5381;for(var i=0;i<s.length;i++){x=((x*33)^s.charCodeAt(i))>>>0;}return x;}
+  var PASSWORD = 'bigshuffle'; // <-- change this, then update PWHASH to h(PASSWORD)
+  var PWHASH = h(PASSWORD);
+  // Unlock remembered for the browser tab only (sessionStorage, not localStorage) --
+  // added 2026-09-21, owner: re-entering the password every time the 3D network view's
+  // "back to map" link returns here was the complaint. sessionStorage is cloned into a
+  // same-origin tab opened via the map's own "More views" link at the moment it opens,
+  // and survives ordinary same-tab navigation, so the round trip (unlock map -> open
+  // network-3d in a new tab -> "back to map" in that same tab) stays unlocked without
+  // remembering the password itself or persisting past the tab closing.
+  var GATE_KEY = 'map-gate-unlocked';
+  var g=document.getElementById('gate'), i=document.getElementById('gpw'),
+      b=document.getElementById('gbtn'), e=document.getElementById('gerr');
+  function unlock(){
+    g.style.display = 'none';
+    try { sessionStorage.setItem(GATE_KEY, '1'); } catch(err){} // private-mode/blocked storage: fails silently, gate just re-shows next time
+  }
+  try { if (sessionStorage.getItem(GATE_KEY) === '1') { unlock(); } } catch(err){}
+  function tryOpen(){
+    if (h(i.value) === PWHASH) { unlock(); }
+    else { e.classList.add('show'); i.value=''; i.focus(); setTimeout(()=>e.classList.remove('show'), 2000); }
+  }
+  b.addEventListener('click', tryOpen);
+  i.addEventListener('keydown', function(ev){ if (ev.key === 'Enter') tryOpen(); });
+  window.addEventListener('load', function(){ i.focus(); });
+})();
+
+(function wait(n){
+  if (window.mapboxgl && window.deck) { try { boot(); } catch(e){ showError(e.message); } return; }
+  if (n <= 0) { showError('Mapbox GL / deck.gl failed to load from CDN.'); return; }
+  setTimeout(() => wait(n-1), 200);
+})(25);
+</script>
+</body>
+</html>

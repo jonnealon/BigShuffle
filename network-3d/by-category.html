@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Transfer network -- 3D layout, by facility category</title>
+<!--
+  Sibling to index.html (same 3D force layout, same ../data/network_3d_data.json?v=1790025324),
+  requested directly, 2026-09-19: "now lets do a separate version of this same
+  visualization that uses the same colors from our classification."
+
+  Color: categorical, by the same six-role facility categorization used
+  throughout this project (03-model.qmd's "Facility categorization" section --
+  a sixth role, "minimal activity (low volume)", added 2026-09-21) -- the SAME
+  hex values already live on map/index.html's CATEGORY_SWATCH (checked directly
+  against that file, not re-picked), so a reader who has seen the map sees the
+  same category mean the same color here.
+
+  Stated plainly, not glossed over: this project's own dataviz-skill validator
+  fails this color set (lightness-band FAIL, chroma-floor FAIL -- see log.md,
+  2026-09-19 and 2026-09-21), and a categorical palette this size fails the
+  stricter "all-pairs" gate a node-link chart like this one is held to
+  regardless of how many or which colors are used (that gate is why index.html
+  uses sequential betweenness color instead). Building this anyway, on direct
+  request, matches what map/index.html already ships throughout the rest of the
+  project -- not a new inconsistency introduced here, the existing one carried
+  over on purpose.
+
+  UPDATED 2026-09-21: previously, 243 of 612 nodes had no category at all
+  (below data/build_facility_flows.py's old 200-stint floor for being scored
+  at all). That floor is gone -- every facility with any recorded activity now
+  gets a category, "minimal activity (low volume)" below 100 stints rather
+  than nothing (owner's direction; see log.md, 2026-09-21). One node (MONTGAL)
+  still shows no category, a pre-existing edge-window boundary case unrelated
+  to this change, not a reintroduction of the old gap; the "not in categorized
+  set" swatch stays only for that.
+
+  Edges: same rendering as index.html regardless of how nodes are colored here --
+  fixed width, weight carried as a dark-baseline-to-white brightness gradient
+  (2026-09-19, direct request; see index.html's own comment for the full history
+  and the measured numbers behind the log1p scale).
+-->
+<script src="https://cdn.jsdelivr.net/npm/3d-force-graph@1.80.0/dist/3d-force-graph.min.js"></script>
+<style>
+  :root{
+    color-scheme: dark;
+    --surface: #1a1a19;
+    --panel-bg: rgba(20,20,19,0.92);
+    --panel-border: #383835;
+    --ink-primary: #ffffff;
+    --ink-secondary: #c3c2b7;
+    --ink-muted: #898781;
+    --accent: #3987e5;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html,body{margin:0;padding:0;height:100%;background:var(--surface);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden;}
+  #graph{position:absolute;inset:0;}
+  #panel{
+    position:absolute;top:16px;left:16px;z-index:10;width:300px;
+    background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:10px;
+    padding:14px 16px;color:var(--ink-primary);box-shadow:0 10px 40px rgba(0,0,0,.5);
+  }
+  #panel .backlink{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;
+    color:var(--ink-muted);text-decoration:none;margin-bottom:8px;}
+  #panel .backlink:hover{color:var(--ink-primary);}
+  #panel h1{font-size:14px;margin:0 0 4px 0;font-weight:600;}
+  #panel .sub{font-size:11px;color:var(--ink-secondary);margin-bottom:12px;line-height:1.45;}
+  #panel .row{margin:10px 0;}
+  #panel .row label{display:flex;justify-content:space-between;font-size:11px;
+    color:var(--ink-secondary);margin-bottom:4px;}
+  #panel input[type=range]{width:100%;accent-color:var(--accent);}
+  #panel .legend{font-size:10.5px;color:var(--ink-muted);margin-top:2px;}
+  #panel button{font-family:inherit;font-size:11px;padding:6px 10px;
+    background:rgba(255,255,255,0.06);border:1px solid var(--panel-border);border-radius:6px;
+    color:var(--ink-primary);cursor:pointer;margin-top:2px;}
+  #panel button:hover{background:rgba(255,255,255,0.12);}
+  #panel .toggle{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink-secondary);
+    cursor:pointer;user-select:none;}
+  #panel .toggle input{accent-color:var(--accent);}
+  #panel .catrow{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink-secondary);
+    margin:4px 0;}
+  #panel .swatch{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+  #panel .catcount{margin-left:auto;color:var(--ink-muted);font-size:10px;}
+  #panel .caveat{font-size:10px;color:var(--ink-muted);line-height:1.5;margin-top:10px;
+    padding-top:10px;border-top:1px solid var(--panel-border);}
+  #status{position:absolute;bottom:14px;left:16px;z-index:10;font-family:monospace;
+    font-size:10.5px;color:var(--ink-muted);}
+  #loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    color:var(--ink-secondary);font-size:13px;z-index:20;}
+  #err{position:absolute;top:16px;right:16px;z-index:20;background:#3a1414;color:#ffb3b3;
+    padding:10px 14px;border-radius:8px;font-size:12px;max-width:340px;display:none;}
+</style>
+</head>
+<body>
+<div id="graph"></div>
+<div id="loading">Loading network...</div>
+<div id="err"></div>
+
+<div id="panel">
+  <a class="backlink" href="../index.html">&larr; Back to map</a>
+  <h1>The transfer network in 3D, by category</h1>
+  <div class="sub">
+    Laid out by its own structure -- not by latitude and longitude. Drag to
+    rotate, scroll to zoom, click a facility to focus.
+  </div>
+  <div class="row" style="margin-top:-4px;">
+    <div class="legend">Coloring by facility category &middot; <a href="index.html" style="color:var(--accent);">switch to betweenness</a></div>
+  </div>
+
+  <div class="row">
+    <label><span>Minimum transfers to draw an edge</span><span id="threshVal">-</span></label>
+    <input type="range" id="thresh" min="0" max="100" value="0" />
+    <div class="legend"><span id="edgeCount">-</span> of <span id="edgeTotal">-</span> edges shown</div>
+  </div>
+
+  <div class="row" id="legendRows">
+    <div class="legend">Node color -- facility category (same colors as the map)</div>
+  </div>
+  <div class="row">
+    <div class="legend">Node size -- throughput (transfers in + out)</div>
+  </div>
+
+  <div class="row">
+    <label class="toggle"><input type="checkbox" id="autorotate" /> Auto-rotate</label>
+  </div>
+  <div class="row">
+    <button id="reset">Reset camera</button>
+  </div>
+
+  <div class="caveat">
+    These 6 colors are the same ones on the main map, but this project's own
+    accessibility check fails them (contrast/color-vision gates) -- shown here
+    for consistency with the map, not because they passed that check.
+  </div>
+</div>
+
+<div id="status"></div>
+
+<script>
+(function () {
+  const errEl = document.getElementById('err');
+  function showErr(msg) {
+    errEl.textContent = msg;
+    errEl.style.display = 'block';
+    console.error(msg);
+  }
+  window.addEventListener('error', (e) => showErr('Script error: ' + e.message));
+
+  // Verbatim from map/index.html's own CATEGORY_SWATCH -- not re-picked here.
+  const CATEGORY_COLOR = {
+    'central hub (many-to-many)':       '#e63946',
+    'entry/intake (field-office hold)': '#f4a261',
+    'regional collector/feeder':        '#2a9d8f',
+    'terminal/exit-dominant':           '#8d5fd3',
+    'unclassified (mixed signal)':      '#6c757d',
+    'minimal activity (low volume)':    '#d162a4',
+  };
+  const CATEGORY_LABEL = {
+    'central hub (many-to-many)':       'central hub',
+    'entry/intake (field-office hold)': 'entry/intake',
+    'regional collector/feeder':        'regional collector/feeder',
+    'terminal/exit-dominant':           'terminal/exit-dominant',
+    'unclassified (mixed signal)':      'unclassified',
+    'minimal activity (low volume)':    'minimal activity (<100 stints)',
+  };
+  // CHANGED 2026-09-21: data/build_facility_flows.py now scores every facility
+  // with any recorded activity (owner's direction -- see log.md), assigning
+  // "minimal activity (low volume)" above rather than leaving a facility
+  // uncategorized below MIN_STINTS. Only a single node (MONTGAL, a pre-existing
+  // edge-window boundary case unrelated to this change) still has no category
+  // value at all in the current data; this fallback stays for that genuine
+  // edge case rather than being removed.
+  const NO_CATEGORY_COLOR = '#3a3a38';
+  const NO_CATEGORY_LABEL = 'not in categorized set';
+
+  // Edge weight -> color, not width -- same as index.html (2026-09-19, direct
+  // request: "that was too much on the lines. maybe we can find a good visible
+  // weight then have a color gradient"). Fixed width, brightness carries weight:
+  // dark baseline (low, recedes) to white (high, brightest pop), both this
+  // project's own dark-mode ink tokens, deliberately achromatic so it never
+  // competes with the categorical node colors on this page.
+  const EDGE_WIDTH = 1.1;
+  const EDGE_LOW = '#383835';
+  const EDGE_HIGH = '#ffffff';
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function hexToRgb(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function edgeWeightColor(t) {
+    const lo = hexToRgb(EDGE_LOW), hi = hexToRgb(EDGE_HIGH);
+    const r = Math.round(lerp(lo[0], hi[0], t));
+    const g = Math.round(lerp(lo[1], hi[1], t));
+    const b = Math.round(lerp(lo[2], hi[2], t));
+    return `rgba(${r},${g},${b},0.6)`;
+  }
+
+  fetch('../data/network_3d_data.json?v=1790025324')
+    .then(r => {
+      if (!r.ok) throw new Error('Fetch failed: ' + r.status);
+      return r.json();
+    })
+    .then(data => {
+      document.getElementById('loading').style.display = 'none';
+
+      const maxThpt = Math.max(...data.nodes.map(n => n.throughput), 1);
+      const maxWeight = Math.max(...data.links.map(l => l.weight));
+      const minWeight = Math.min(...data.links.map(l => l.weight));
+
+      // Edge weight is heavily skewed (1 to 26,477), so a linear 0-1 scale crushes
+      // almost every edge that survives the threshold slider into the near-invisible
+      // end -- same fix as index.html, see its comment for the measured numbers.
+      const minLogW = Math.log1p(minWeight);
+      const maxLogW = Math.log1p(maxWeight);
+      function logWeightT(w) {
+        return (Math.log1p(w) - minLogW) / (maxLogW - minLogW + 1e-9);
+      }
+
+      // Build the legend from the categories actually present, with live counts,
+      // rather than assuming every category appears.
+      const counts = {};
+      data.nodes.forEach(n => {
+        const key = n.category || '__none__';
+        counts[key] = (counts[key] || 0) + 1;
+      });
+      const legendRows = document.getElementById('legendRows');
+      Object.keys(CATEGORY_COLOR).forEach(cat => {
+        if (!counts[cat]) return;
+        const row = document.createElement('div');
+        row.className = 'catrow';
+        row.innerHTML = `<span class="swatch" style="background:${CATEGORY_COLOR[cat]}"></span>` +
+          `<span>${CATEGORY_LABEL[cat]}</span><span class="catcount">${counts[cat]}</span>`;
+        legendRows.appendChild(row);
+      });
+      if (counts['__none__']) {
+        const row = document.createElement('div');
+        row.className = 'catrow';
+        row.innerHTML = `<span class="swatch" style="background:${NO_CATEGORY_COLOR}"></span>` +
+          `<span>${NO_CATEGORY_LABEL}</span><span class="catcount">${counts['__none__']}</span>`;
+        legendRows.appendChild(row);
+      }
+
+      function tooltip(n) {
+        const loc = n.city ? `${n.city}${n.state ? ', ' + n.state : ''}` : 'location not geocoded';
+        const cat = n.category ? (CATEGORY_LABEL[n.category] || n.category) : NO_CATEGORY_LABEL;
+        return `<div style="font:11px -apple-system,sans-serif;color:#fff;background:rgba(20,20,19,0.95);
+          border:1px solid #383835;border-radius:6px;padding:8px 10px;max-width:240px;line-height:1.5;">
+          <b>${n.name}</b> (${n.id})<br/>
+          ${loc}<br/>
+          Category: ${cat}<br/>
+          Throughput: ${Math.round(n.throughput).toLocaleString()}<br/>
+          Betweenness: ${n.betweenness.toFixed(4)}
+          </div>`;
+      }
+
+      const Graph = ForceGraph3D()(document.getElementById('graph'))
+        .graphData(data)
+        .backgroundColor('#1a1a19')
+        .nodeId('id')
+        .nodeLabel(tooltip)
+        .nodeVal(n => 1 + 14 * Math.sqrt(n.throughput / maxThpt))
+        .nodeColor(n => CATEGORY_COLOR[n.category] || NO_CATEGORY_COLOR)
+        .nodeOpacity(0.95)
+        .linkSource('source')
+        .linkTarget('target')
+        .linkLabel(l => {
+          const s = typeof l.source === 'object' ? l.source : data.nodes.find(n => n.id === l.source);
+          const t = typeof l.target === 'object' ? l.target : data.nodes.find(n => n.id === l.target);
+          return `${s ? s.id : l.source} <-> ${t ? t.id : l.target}: ${l.weight.toLocaleString()} transfers`;
+        })
+        .linkWidth(EDGE_WIDTH)
+        .linkColor(l => edgeWeightColor(logWeightT(l.weight)))
+        .linkOpacity(1)
+        .onNodeClick(node => {
+          const distance = 90;
+          const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z || 1);
+          Graph.cameraPosition(
+            { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio },
+            node,
+            900
+          );
+        });
+
+      const weights = data.links.map(l => l.weight).sort((a, b) => a - b);
+      function percentile(p) {
+        const idx = Math.min(weights.length - 1, Math.floor(p * weights.length));
+        return weights[idx];
+      }
+      const thresh = document.getElementById('thresh');
+      const threshVal = document.getElementById('threshVal');
+      const edgeCount = document.getElementById('edgeCount');
+      const edgeTotal = document.getElementById('edgeTotal');
+      edgeTotal.textContent = data.links.length.toLocaleString();
+
+      thresh.min = minWeight;
+      thresh.max = maxWeight;
+      const defaultThreshold = percentile(0.85);
+      thresh.value = defaultThreshold;
+
+      function applyThreshold() {
+        const v = Number(thresh.value);
+        threshVal.textContent = Math.round(v).toLocaleString();
+        Graph.linkVisibility(l => l.weight >= v);
+        edgeCount.textContent = data.links.filter(l => l.weight >= v).length.toLocaleString();
+      }
+      thresh.addEventListener('input', applyThreshold);
+      applyThreshold();
+
+      document.getElementById('autorotate').addEventListener('change', (e) => {
+        const controls = Graph.controls();
+        controls.autoRotate = e.target.checked;
+        controls.autoRotateSpeed = 0.6;
+      });
+
+      document.getElementById('reset').addEventListener('click', () => {
+        Graph.cameraPosition({ x: 0, y: 0, z: 800 }, { x: 0, y: 0, z: 0 }, 800);
+      });
+
+      document.getElementById('status').textContent =
+        `${data.nodes.length} facilities, ${data.links.length} edges (undirected, combined both directions)`;
+    })
+    .catch(e => {
+      document.getElementById('loading').style.display = 'none';
+      showErr('Could not load network_3d_data.json: ' + e.message +
+        ' -- run "uv run data/build_network_3d_data.py" from the project root, ' +
+        'and serve this page over http:// (not file://), e.g. ' +
+        '"python3 -m http.server" from the project root, then open ' +
+        'http://localhost:8000/network-3d/by-category.html');
+    });
+})();
+</script>
+</body>
+</html>
