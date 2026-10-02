@@ -1,0 +1,15 @@
+{
+  "data_release_date": "2026-08-26",
+  "study_start": "2025-01-20",
+  "facilities_scored": 677,
+  "facilities_shown": 617,
+  "facilities_dropped_no_coords": 60,
+  "edges_mapped_total": 8888,
+  "edges_shown": 8888,
+  "coord_sources": {
+    "facilities table": 502,
+    "hold-room crosswalk (exact)": 66,
+    "facility city (gazetteer, city level)": 29,
+    "hold-room crosswalk (approximate)": 20
+  }
+}

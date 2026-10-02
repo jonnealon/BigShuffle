@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>ICE Air airports, ranked</title>
+<!--
+  Small standalone page, built on direct request, 2026-09-26 ("also lets ranks the
+  airports in the ICE network from most to least flights. and show in a small
+  visual"), the same round as the FAA airport-data acquisition work
+  (data/build_airport_faa_data.py, data/build_airport_activity.py). A first, minimal
+  piece of the eventual airport info panel -- not the panel itself (still to be built
+  in map/index.html, see todo.md), just the ranking this specific request asked for.
+
+  Data: data/airport_activity.json?v=1790960693 (data/build_airport_activity.py) -- total legs in
+  the atlas's own study window (2025-01-20 to 2026-07-02, 528 days) per airport, and an
+  ANNUALIZED rate (total * 365.25/528), never presented as an observed single-year
+  count since the window isn't exactly a year.
+
+  SCOPE: this is ICE Air CHARTER flight volume only (the HRF/IFM_SITU monitor this
+  whole project's flight data comes from), not total airport traffic -- ranking an
+  airport highly here means it is a busy node IN THIS NETWORK, not necessarily a busy
+  airport overall. That distinction is exactly the still-open "% of flights that are
+  ICE flights" field (data/build_airport_faa_data.py's own docstring) -- this page
+  does not attempt that comparison, and says so.
+-->
+<style>
+  :root{
+    color-scheme: dark;
+    --surface: #1a1a19;
+    --panel-bg: rgba(20,20,19,0.92);
+    --panel-border: #383835;
+    --ink-primary: #ffffff;
+    --ink-secondary: #c3c2b7;
+    --ink-muted: #898781;
+    --accent: #4a90d9;
+  }
+  html,body{margin:0;padding:0;background:var(--surface);color:var(--ink-primary);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+  a{color:var(--accent);}
+  .wrap{max-width:900px;margin:0 auto;padding:28px 20px 80px;}
+  .backlink{display:inline-flex;align-items:center;gap:5px;font-size:11px;
+    color:var(--ink-muted);text-decoration:none;margin-bottom:18px;}
+  .backlink:hover{color:var(--ink-primary);}
+  h1{font-size:22px;margin:0 0 6px 0;font-weight:700;}
+  .sub{font-size:13px;color:var(--ink-secondary);line-height:1.55;max-width:720px;margin-bottom:6px;}
+  .note{font-size:11.5px;color:var(--ink-muted);line-height:1.5;max-width:720px;}
+  section{margin-top:32px;}
+  h2{font-size:14px;text-transform:uppercase;letter-spacing:0.6px;color:var(--ink-secondary);
+    border-bottom:1px solid var(--panel-border);padding-bottom:8px;margin:0 0 14px 0;}
+  .chartbox{background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:10px;
+    padding:18px 20px;}
+  .rank-row{display:flex;align-items:center;gap:10px;margin:5px 0;font-size:11.5px;}
+  .rank-num{width:22px;color:var(--ink-muted);text-align:right;flex-shrink:0;}
+  .rank-label{width:230px;flex-shrink:0;color:var(--ink-secondary);white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;}
+  .rank-bar-track{flex:1;position:relative;height:16px;}
+  .rank-bar{position:absolute;top:0;left:0;height:16px;background:var(--accent);border-radius:3px;
+    min-width:2px;}
+  .rank-bar:hover{background:#5aa4ff;}
+  .rank-val{width:70px;flex-shrink:0;text-align:right;color:var(--ink-primary);font-variant-numeric:tabular-nums;}
+  table.stattable{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:4px;}
+  table.stattable th{text-align:left;color:var(--ink-muted);font-weight:600;font-size:10px;
+    text-transform:uppercase;letter-spacing:0.4px;padding:6px 10px;border-bottom:1px solid var(--panel-border);
+    position:sticky;top:0;background:var(--panel-bg);}
+  table.stattable td{padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.05);}
+  table.stattable td.num{text-align:right;font-variant-numeric:tabular-nums;}
+  table.stattable tr:hover td{background:rgba(255,255,255,0.03);}
+  #tableWrap{max-height:520px;overflow-y:auto;background:var(--panel-bg);border:1px solid var(--panel-border);
+    border-radius:10px;padding:0 20px;}
+  #tooltip{position:fixed;pointer-events:none;background:var(--panel-bg);border:1px solid var(--panel-border);
+    border-radius:8px;padding:8px 10px;font-size:11px;line-height:1.5;color:var(--ink-primary);
+    box-shadow:0 8px 24px rgba(0,0,0,.5);display:none;z-index:20;white-space:nowrap;}
+  footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--panel-border);
+    font-size:11px;color:var(--ink-muted);line-height:1.6;}
+  .subhead{font-size:12.5px;font-weight:700;color:var(--ink-primary);margin:22px 0 8px 0;}
+  .subhead:first-child{margin-top:0;}
+  .stat-line{display:flex;justify-content:space-between;gap:14px;font-size:12px;
+    padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+  .stat-line .k{color:var(--ink-secondary);}
+  .stat-line .v{color:var(--ink-primary);font-variant-numeric:tabular-nums;text-align:right;}
+  .badge-q{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;
+    border:1.5px solid #6bb3ff;color:#6bb3ff;border-radius:50%;font-size:10px;font-weight:700;
+    margin-left:5px;cursor:help;flex-shrink:0;}
+</style>
+</head>
+<body>
+<div id="tooltip"></div>
+<div class="wrap">
+  <a class="backlink" href="../index.html">&larr; back to the map</a>
+  <h1>ICE Air airports, ranked</h1>
+  <p class="sub">Every airport in the recorded ICE Air charter network (HRF/IFM_SITU), ranked by
+    flight volume -- an annualized rate, computed over the atlas's own 528-day study window
+    (2025-01-20 to 2026-07-02), not an observed single-year count.</p>
+  <p class="note">This ranks activity <b>within the ICE Air network specifically</b>, not an
+    airport's total traffic -- a highly-ranked airport is a busy node in this network, not
+    necessarily a busy airport in general. Whether ICE flights are a large or small share of an
+    airport's overall traffic is a separate, harder question (real total-traffic counts exist
+    for towered airports via FAA ATADS, but not for non-towered or foreign ones -- see
+    <code>todo.md</code>) and is not attempted here.</p>
+
+  <section>
+    <h2>Top 25 by annualized flights/year</h2>
+    <div class="chartbox">
+      <div id="rankChart"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Full ranking (<span id="totalCount"></span> airports)</h2>
+    <div id="tableWrap">
+      <table class="stattable">
+        <thead><tr><th>#</th><th>Airport</th><th>Legs in window</th><th>Flights/year (annualized)</th></tr></thead>
+        <tbody id="fullTable"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Part 139: class and index, explained</h2>
+    <div class="chartbox">
+      <p class="sub" style="margin-bottom:14px;">
+        14 CFR Part 139 certificates an airport in two separate, independent ways: a
+        <b>Class</b> (I&ndash;IV), for the kind of scheduled/unscheduled air-carrier service it is
+        certificated to handle, and an <b>ARFF Index</b> (A&ndash;E), for the size of aircraft rescue
+        and firefighting equipment it must keep on hand, sized to the longest aircraft that
+        actually uses the airport. An airport has one of each -- they answer different questions
+        and neither implies the other.
+      </p>
+
+      <div class="subhead">Class I&ndash;IV -- what service the airport is certificated for</div>
+      <table class="stattable">
+        <thead><tr><th>Class</th><th>Certificated for</th></tr></thead>
+        <tbody>
+          <tr><td>I</td><td>Scheduled large air carrier aircraft (31+ seats), plus any other
+            air carrier operations (unscheduled large, or scheduled small)</td></tr>
+          <tr><td>II</td><td>Scheduled small air carrier aircraft (10&ndash;30 seats), plus
+            unscheduled large -- <i>not</i> permitted scheduled large</td></tr>
+          <tr><td>III</td><td>Scheduled small air carrier aircraft only</td></tr>
+          <tr><td>IV</td><td>Unscheduled large air carrier aircraft only -- no scheduled
+            service of any kind</td></tr>
+        </tbody>
+      </table>
+      <p class="note" style="margin-top:8px;">Source: FAA, <i>Classes of Airports</i>
+        <a href="https://www.faa.gov/airports/airport_safety/part139_cert/classes-of-airports"
+           target="_blank" rel="noopener">faa.gov/airports/airport_safety/part139_cert/classes-of-airports</a>,
+        accessed 2026-09-27.</p>
+
+      <div class="subhead">Index A&ndash;E -- what firefighting equipment the airport must keep on hand</div>
+      <table class="stattable">
+        <thead><tr><th>Index</th><th>Sized for aircraft length</th></tr></thead>
+        <tbody>
+          <tr><td>A</td><td>under 90 ft</td></tr>
+          <tr><td>B</td><td>90 ft to under 126 ft</td></tr>
+          <tr><td>C</td><td>126 ft to under 159 ft</td></tr>
+          <tr><td>D</td><td>159 ft to under 200 ft</td></tr>
+          <tr><td>E</td><td>200 ft and over</td></tr>
+        </tbody>
+      </table>
+      <p class="note" style="margin-top:8px;">An airport is indexed to the <i>longest</i> air
+        carrier aircraft type that regularly serves it -- except 14 CFR &sect;139.315(c): once
+        that longest aircraft type has fewer than five average daily departures, the airport may
+        instead operate at the next lower index. Source: 14 CFR &sect;139.315,
+        <a href="https://www.law.cornell.edu/cfr/text/14/139.315" target="_blank" rel="noopener">
+        law.cornell.edu/cfr/text/14/139.315</a> (Cornell LII mirror; ecfr.gov itself redirected
+        to a bot-verification page on direct fetch), accessed 2026-09-27.</p>
+
+      <div class="subhead">Does ICE Air concentrate at Class IV airports?</div>
+      <p class="sub" style="margin-bottom:10px;">Class IV airports handle no scheduled service at
+        all -- if ICE Air charter flights, which are themselves unscheduled, cluster there more
+        than air traffic in general does, that would be a real finding about this network's own
+        infrastructure footprint. Checked against a true national baseline (every Part
+        139-certificated airport in the US, not just this network's own):</p>
+      <div id="class4Stats"></div>
+      <p class="note" style="margin-top:8px;" id="class4Verdict"></p>
+
+      <div class="subhead">Aircraft larger than the airport's ARFF index anticipates
+        <span class="badge-q" title="Part 139 certificates airports, not individual flights, so this is not a claim of a violation. 14 CFR 139.315(c) allows an airport to operate at the next lower ARFF index once its longest aircraft type has fewer than five average daily departures -- this may be exactly that case. This data also cannot show whether the operator notified the airport in advance, or whether the airport's own index was temporarily raised for this operation. Worth asking about, not evidence of wrongdoing.">?</span>
+      </div>
+      <p class="sub" style="margin-bottom:10px;">Every leg-touch where the aircraft's own verified
+        length implies a higher ARFF index than the airport it landed at is certificated for --
+        checked only where both the aircraft type has a verified length
+        (<code>data/aircraft_lengths.csv</code>) and the airport has a parsed, certificated index.
+        An airport with no Part 139 certification at all is a separate, arguably more consequential
+        case this count does not speak to. Full method and caveats: <code>03-model.qmd</code>.</p>
+      <div id="mismatchStats"></div>
+      <table class="stattable" style="margin-top:10px;">
+        <thead><tr><th>#</th><th>Airport</th><th>Flagged leg-touches</th></tr></thead>
+        <tbody id="mismatchTable"></tbody>
+      </table>
+
+      <div class="subhead">Airports with no Part 139 certification at all</div>
+      <p class="sub" style="margin-bottom:10px;">A different, more basic case than the flag
+        above: an airport with no certification has no certificated index at all for
+        anything to be measured against. 14 CFR &sect;139.1(c)(2) categorically excludes
+        airports operated by the United States (military airfields) from Part 139
+        regardless of what they serve -- expected, not a finding. The airports below are
+        not that: civilian, non-federal, public-use airports genuinely without a Part 139
+        certification on record, several of them recording ICE Air aircraft configured for
+        well over the 31-seat threshold 14 CFR &sect;139.1(a)(2) sets for requiring
+        certification of unscheduled passenger-carrying air carrier service.
+        <a href="https://www.law.cornell.edu/cfr/text/14/139.1" target="_blank" rel="noopener">
+        law.cornell.edu/cfr/text/14/139.1</a>, accessed 2026-09-27.
+        <span class="badge-q" title="Whether these specific ICE Air charter flights count as a regulated &quot;air carrier&quot; operation under this rule, rather than a Public Aircraft Operation (a distinct legal category for government-owned/-operated aircraft, generally outside this framework), is a real question this data cannot answer on its own. NASR is a snapshot (2026-09-03 cycle) and could be stale for any one airport. Worth asking about directly, not evidence of wrongdoing on the strength of this data alone.">?</span>
+      </p>
+      <div id="uncertStats"></div>
+      <table class="stattable" style="margin-top:10px;">
+        <thead><tr><th>#</th><th>Airport</th><th>State</th><th>Owner type</th><th>Leg-touches</th><th>Aircraft types seen</th></tr></thead>
+        <tbody id="uncertTable"></tbody>
+      </table>
+      <p class="note" style="margin-top:8px;">Full finding, its regulatory basis, and its
+        limits: <code>03-model.qmd</code>, "The more consequential case: airports with no
+        Part 139 certification at all."</p>
+    </div>
+  </section>
+
+  <footer>
+    <b>Sources.</b> Flight data: Human Rights First, ICE Flight Monitor. FAA airport, runway,
+    and Part 139 data: FAA NASR 28-Day Subscription, 2026-09-03 cycle. Part 139 class/index
+    definitions: FAA, <i>Classes of Airports</i>; 14 CFR &sect;139.315. Built by
+    <code>data/build_airport_activity.py</code>, <code>data/build_airport_faa_data.py</code>,
+    <code>data/build_airport_legs_detail.py</code>. Full citations: <code>references.bib</code>,
+    <code>02-data.qmd</code>, <code>03-model.qmd</code>. Analysis &amp; visualization: Jon Nealon.
+  </footer>
+</div>
+
+<script>
+const tooltip = document.getElementById('tooltip');
+function showTip(html, evt){
+  tooltip.innerHTML = html; tooltip.style.display = 'block';
+  const pad = 14;
+  let left = evt.clientX + pad, top = evt.clientY + pad;
+  tooltip.style.left = left + 'px'; tooltip.style.top = top + 'px';
+}
+function hideTip(){ tooltip.style.display = 'none'; }
+function num(n){ return n == null ? '?' : Number(n).toLocaleString(); }
+
+async function main(){
+  const d = await fetch('../data/airport_activity.json?v=1790960693').then(r => r.json());
+  const rows = Object.entries(d.airports).map(([name, v]) => ({name, ...v}));
+  rows.sort((a,b) => b.flights_per_year_annualized - a.flights_per_year_annualized);
+
+  document.getElementById('totalCount').textContent = rows.length.toLocaleString();
+
+  const top25 = rows.slice(0, 25);
+  const maxVal = top25[0].flights_per_year_annualized;
+  const chart = document.getElementById('rankChart');
+  top25.forEach((r, i) => {
+    const pct = (r.flights_per_year_annualized / maxVal) * 100;
+    const row = document.createElement('div');
+    row.className = 'rank-row';
+    row.innerHTML = `<div class="rank-num">${i+1}</div>` +
+      `<div class="rank-label" title="${r.name}">${r.name}</div>` +
+      `<div class="rank-bar-track"><div class="rank-bar" style="width:${pct}%"></div></div>` +
+      `<div class="rank-val">${num(r.flights_per_year_annualized)}</div>`;
+    const bar = row.querySelector('.rank-bar');
+    bar.addEventListener('mousemove', e => showTip(
+      `<b>${r.name}</b><br>${num(r.total_legs_in_window)} legs in window<br>${num(r.flights_per_year_annualized)} flights/year (annualized)`, e));
+    bar.addEventListener('mouseleave', hideTip);
+    chart.appendChild(row);
+  });
+
+  const tbody = document.getElementById('fullTable');
+  rows.forEach((r, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${i+1}</td><td>${r.name}</td>` +
+      `<td class="num">${num(r.total_legs_in_window)}</td><td class="num">${num(r.flights_per_year_annualized)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function statLine(k, v){
+  const row = document.createElement('div');
+  row.className = 'stat-line';
+  row.innerHTML = `<div class="k">${k}</div><div class="v">${v}</div>`;
+  return row;
+}
+
+async function part139(){
+  const [faa, legs, mismatch] = await Promise.all([
+    fetch('../data/airport_faa_info.json?v=1790960693').then(r => r.json()),
+    fetch('../data/airport_legs_detail.json?v=1790960693').then(r => r.json()),
+    fetch('../data/arff_index_mismatches.json?v=1790960693').then(r => r.json()),
+  ]);
+
+  // Network's own Part 139 class mix, computed live from the same certificated-airport
+  // records the map panel reads -- not hardcoded, so a re-run of build_airport_faa_data.py
+  // updates this page automatically rather than leaving a stale figure behind.
+  const netCounts = {};
+  let netCertified = 0;
+  let class4Touches = 0;
+  let totalTouches = 0;
+  for (const [name, v] of Object.entries(faa.airports)) {
+    const p = v.part_139;
+    if (p && p.parsed) {
+      netCertified++;
+      netCounts[p.arff_class] = (netCounts[p.arff_class] || 0) + 1;
+    }
+  }
+  for (const [name, v] of Object.entries(legs.airports)) {
+    totalTouches += v.total_legs;
+    const p = faa.airports[name] && faa.airports[name].part_139;
+    if (p && p.parsed && p.arff_class === 'IV') class4Touches += v.total_legs;
+  }
+  const netClass4 = netCounts['IV'] || 0;
+  const netClass4Pct = (100 * netClass4 / netCertified).toFixed(1);
+  const class4TouchPct = (100 * class4Touches / totalTouches).toFixed(1);
+
+  const nat = faa.national_part139_class_distribution;
+  const natClass4 = nat.counts['IV'] || 0;
+  const natClass4Pct = (100 * natClass4 / nat.total).toFixed(1);
+
+  const stats = document.getElementById('class4Stats');
+  stats.appendChild(statLine('This network’s certificated airports, Class IV',
+    `${netClass4} of ${netCertified} (${netClass4Pct}%)`));
+  stats.appendChild(statLine('Share of this network’s leg-touches at Class IV airports',
+    `${class4Touches.toLocaleString()} of ${totalTouches.toLocaleString()} (${class4TouchPct}%)`));
+  stats.appendChild(statLine('National baseline: all US Part 139 airports, Class IV',
+    `${natClass4} of ${nat.total} (${natClass4Pct}%)`));
+
+  const verdictEl = document.getElementById('class4Verdict');
+  const higher = Number(netClass4Pct) > Number(natClass4Pct);
+  verdictEl.textContent = higher
+    ? `This network's Class IV share (${netClass4Pct}%) runs above the national baseline `
+      + `(${natClass4Pct}%) -- consistent with concentration at airports with no scheduled service.`
+    : `This network's Class IV share (${netClass4Pct}%) runs below the national baseline `
+      + `(${natClass4Pct}%), and Class IV airports carry a similarly small share of this `
+      + `network's own leg-touches (${class4TouchPct}%). No concentration at Class IV airports `
+      + `-- the honest result, not the one the question's framing might suggest.`;
+
+  const mstats = document.getElementById('mismatchStats');
+  mstats.appendChild(statLine('Leg-touches checkable (verified aircraft length + certificated airport index)',
+    mismatch.total_touches_checked.toLocaleString()));
+  mstats.appendChild(statLine('Flagged', `${mismatch.total_touches_flagged.toLocaleString()} (${mismatch.share_flagged_pct}%)`));
+
+  const tbody = document.getElementById('mismatchTable');
+  mismatch.by_airport.slice(0, 10).forEach((r, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${i+1}</td><td>${r.airport}</td><td class="num">${r.flagged_touches.toLocaleString()}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  // No-Part-139-certification-at-all case: split military (categorically exempt, 14 CFR
+  // 139.1(c)(2)) from civilian (a real gap this data can speak to), computed live from
+  // the same certificated-airport records above rather than hardcoded.
+  const MILITARY_OWNERSHIP = new Set(['Army owned', 'Navy owned', 'Air Force owned']);
+  let milCount = 0, milTouches = 0;
+  const civAirports = [];
+  for (const [name, v] of Object.entries(faa.airports)) {
+    const p = v.part_139;
+    if (p && p.certificated) continue;
+    const t = (legs.airports[name] && legs.airports[name].total_legs) || 0;
+    if (MILITARY_OWNERSHIP.has(v.ownership_type_label)) {
+      milCount++; milTouches += t;
+    } else {
+      civAirports.push({name, t, state: v.state, owner: v.ownership_type_label,
+        types: (legs.airports[name] && legs.airports[name].aircraft_types) || null});
+    }
+  }
+  civAirports.sort((a, b) => b.t - a.t);
+  const civTouches = civAirports.reduce((s, a) => s + a.t, 0);
+  const notCertTotal = milCount + civAirports.length;
+
+  const ustats = document.getElementById('uncertStats');
+  ustats.appendChild(statLine('NASR-matched airports with no Part 139 certification',
+    `${notCertTotal} of ${Object.keys(faa.airports).length} (${(100*notCertTotal/Object.keys(faa.airports).length).toFixed(1)}%)`));
+  ustats.appendChild(statLine('Of those, US-government/military-owned (categorically exempt, not a finding)',
+    `${milCount} airports, ${milTouches.toLocaleString()} leg-touches`));
+  ustats.appendChild(statLine('Of those, civilian/non-federal with no certification on record',
+    `${civAirports.length} airports, ${civTouches.toLocaleString()} leg-touches (${(100*civTouches/totalTouches).toFixed(1)}% of this network's own)`));
+
+  const utbody = document.getElementById('uncertTable');
+  civAirports.forEach((a, i) => {
+    const tr = document.createElement('tr');
+    const typesText = a.types
+      ? [...a.types].sort().join(', ')
+      : (legs.airports[a.name] && legs.airports[a.name].individual_legs
+          ? [...new Set(legs.airports[a.name].individual_legs.map(l => l.aircraft_type).filter(Boolean))].sort().join(', ')
+          : '—');
+    tr.innerHTML = `<td>${i+1}</td><td>${a.name}</td><td>${a.state || '—'}</td>` +
+      `<td>${a.owner || '—'}</td><td class="num">${a.t.toLocaleString()}</td><td>${typesText}</td>`;
+    utbody.appendChild(tr);
+  });
+}
+
+Promise.all([main(), part139()]).catch(e => {
+  document.body.innerHTML = '<div class="wrap"><p class="sub">Failed to load: ' + e.message +
+    '. This page uses fetch() to load JSON files under ../data/, which most browsers block ' +
+    'for local file:// pages -- serve this folder over a local HTTP server instead.</p></div>';
+});
+</script>
+</body>
+</html>

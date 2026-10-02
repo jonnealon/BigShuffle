@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Miles per migrant -- an analysis</title>
+<!--
+  Standalone analysis page, built on direct request, 2026-09-26: "do an analysis on
+  the miles. do a data viz page with averages. median, mean, etc.. all the things and
+  some graphs to show them off - or in a 3d way." Reachable from map/index.html's
+  "More views" row, same convention as population/ and network-3d/.
+
+  POPULATION: 616,764 stays, the atlas's own study window (stay_book_in_date_time >=
+  2025-01-20) -- the same population data/build_miles_moved.py computes for
+  03-model.qmd's own @sec-model-miles. Every number on this page is read from
+  data/miles_stats.json?v=1790960693 (data/build_miles_stats.py), data/miles_moved_odometer.json?v=1790960693,
+  and data/miles_moved_by_outcome.json?v=1790960693 -- all pre-computed server-side from the
+  616,764-row per-stay file (153 MB), never recomputed or estimated in the browser.
+  One master per fact: this page never contradicts @sec-model-miles because it reads
+  the same underlying build's output, not a second calculation.
+
+  PUBLIC SCOPE. Every figure here is an aggregate (a count, a median, a total) --
+  no individual case is named or traceable from this page, unlike the non-public
+  case-trace prototype (@sec-interface-privacy). Same reasoning already applied to
+  population/index.html's own public scope decision.
+
+  CHARTS: hand-rolled inline SVG, no charting library -- consistent with this
+  project's existing pages (map/index.html, population/index.html), which don't pull
+  in one either. Histogram and by-outcome bars use a single accent hue (comparing
+  categories along one fixed axis, not needing color to distinguish them per the
+  dataviz skill's own rule: color separates identity only where marks could be
+  confused as neighbors in an unordered space). The time-series line chart has two
+  series (floor vs. circuity-adjusted) and DOES need two distinguishable colors plus
+  a legend -- reuses the already-validated 3-color "Criminal history" palette from
+  population/index.html (gold #b8860b, blue #4a90d9), picked for an adjacent-pair CVD
+  check that palette already passed, rather than re-validating a new pair from
+  scratch.
+
+  COUNTY MAP: a flat, top-down deck.gl ScatterplotLayer over the same Mapbox basemap
+  style the main map uses -- one circle per county (of arrest), color encoding median
+  path length. **Originally a 3D deck.gl ColumnLayer** (extruded columns, height and
+  color both encoding the same value, pitched at 45 degrees) -- changed to flat 2D,
+  2026-09-27, on direct owner feedback: "the county averages does not need to be on a
+  3d map. in fact it messes it up a little bit." The height channel was always a
+  deliberate redundancy with color (a column's height is harder to judge precisely at a
+  glance than its color), so dropping it costs no information the color ramp doesn't
+  already carry -- and a flat, unpitched map reads the counties' real relative
+  positions more legibly than a tilted 3D view, without a tall column near the camera
+  visually occluding a shorter one further back. Sequential ramp is ColorBrewer's
+  "Blues" 5-class [@colorbrewer2002blues], deliberately a different hue from the
+  hotspot layer's Reds (map/index.html, @colorbrewer2002reds) -- distance moved and
+  arrest count are different metrics and should not share a color identity. Counties
+  below a 20-stay threshold are excluded from this map (not from the underlying figures
+  elsewhere) since a 1-2-stay county's median is not a stable enough number to draw as
+  a prominent mark next to counties with thousands of stays -- data/miles_stats.json?v=1790960693's
+  own county_columns.counties_excluded_below_threshold records how many.
+-->
+<link href="https://cdn.jsdelivr.net/npm/mapbox-gl@2.15.0/dist/mapbox-gl.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/mapbox-gl@2.15.0/dist/mapbox-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/deck.gl@8.9.0/dist.min.js"></script>
+<style>
+  :root{
+    color-scheme: dark;
+    --surface: #1a1a19;
+    --panel-bg: rgba(20,20,19,0.92);
+    --panel-border: #383835;
+    --ink-primary: #ffffff;
+    --ink-secondary: #c3c2b7;
+    --ink-muted: #898781;
+    --accent: #4a90d9;
+    --accent2: #b8860b;
+  }
+  html,body{margin:0;padding:0;background:var(--surface);color:var(--ink-primary);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+  a{color:var(--accent);}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 80px;}
+  .backlink{display:inline-flex;align-items:center;gap:5px;font-size:11px;
+    color:var(--ink-muted);text-decoration:none;margin-bottom:18px;}
+  .backlink:hover{color:var(--ink-primary);}
+  h1{font-size:24px;margin:0 0 6px 0;font-weight:700;}
+  .sub{font-size:13px;color:var(--ink-secondary);line-height:1.55;max-width:760px;margin-bottom:8px;}
+  .note{font-size:11.5px;color:var(--ink-muted);line-height:1.5;max-width:760px;}
+  section{margin-top:44px;}
+  h2{font-size:15px;text-transform:uppercase;letter-spacing:0.6px;color:var(--ink-secondary);
+    border-bottom:1px solid var(--panel-border);padding-bottom:8px;margin:0 0 16px 0;}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;}
+  .tile{background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:10px;
+    padding:14px 16px;}
+  .tile .v{font-size:22px;font-weight:700;color:var(--ink-primary);}
+  .tile .k{font-size:10.5px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.4px;margin-top:4px;}
+  .chartbox{background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:10px;
+    padding:18px 20px;position:relative;}
+  .chartbox .caption{font-size:11px;color:var(--ink-muted);margin-top:10px;line-height:1.5;}
+  svg text{fill:var(--ink-secondary);font-size:10px;font-family:inherit;}
+  svg .axis-label{fill:var(--ink-muted);}
+  .bar{fill:var(--accent);}
+  .bar:hover{fill:#5aa4ff;}
+  .legend-row{display:flex;gap:16px;font-size:11px;color:var(--ink-secondary);margin-bottom:10px;}
+  .legend-row .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;}
+  #tooltip{position:absolute;pointer-events:none;background:var(--panel-bg);border:1px solid var(--panel-border);
+    border-radius:8px;padding:8px 10px;font-size:11px;line-height:1.5;color:var(--ink-primary);
+    box-shadow:0 8px 24px rgba(0,0,0,.5);display:none;z-index:20;white-space:nowrap;}
+  table.stattable{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px;}
+  table.stattable th{text-align:left;color:var(--ink-muted);font-weight:600;font-size:10.5px;
+    text-transform:uppercase;letter-spacing:0.4px;padding:6px 10px;border-bottom:1px solid var(--panel-border);}
+  table.stattable td{padding:6px 10px;border-bottom:1px solid rgba(255,255,255,0.05);}
+  table.stattable tr:hover td{background:rgba(255,255,255,0.03);}
+  #map3dWrap{height:520px;border-radius:10px;overflow:hidden;position:relative;border:1px solid var(--panel-border);}
+  #map3d{position:absolute;inset:0;}
+  #map3dLegend{position:absolute;bottom:14px;left:14px;z-index:5;background:var(--panel-bg);
+    border:1px solid var(--panel-border);border-radius:8px;padding:10px 12px;font-size:10.5px;color:var(--ink-secondary);}
+  #map3dLegend .sw{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-2px;}
+  #map3dStatus{position:absolute;top:14px;left:14px;z-index:5;font-family:monospace;font-size:10.5px;
+    color:var(--ink-muted);background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:8px;padding:6px 10px;}
+  footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--panel-border);
+    font-size:11px;color:var(--ink-muted);line-height:1.6;}
+  #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    color:var(--ink-secondary);font-size:13px;z-index:50;background:var(--surface);}
+</style>
+</head>
+<body>
+<div id="loading">Loading&hellip;</div>
+<div id="tooltip"></div>
+<div class="wrap">
+  <a class="backlink" href="../index.html">&larr; back to the map</a>
+  <h1>Miles per migrant</h1>
+  <p class="sub">How far a person is moved through the detention system before the case ends --
+    path length (every facility-to-facility leg summed), net displacement (first facility to
+    last, straight-line), and tortuosity (the ratio of the two). Every figure below is an
+    aggregate; no individual case is shown or traceable from this page.</p>
+  <p class="note">616,764 stays, the atlas's own study window (2025-01-20 onward). Full method
+    and data-quality audit: the book's <a href="#" id="modelLink">"How far people are moved
+    through the system"</a> section and <code>notes/miles-per-migrant-profile.md</code>.</p>
+
+  <section>
+    <h2>Headline figures</h2>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <section>
+    <h2>Distribution of distance moved (path length, floor)</h2>
+    <div class="chartbox">
+      <svg id="histChart" width="100%" height="260" viewBox="0 0 1000 260" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="caption">Straight-line (WGS84 geodesic) floor, per stay -- log-scale bins, since
+        the distribution is heavily right-skewed (median 290.9 mi, a small share of stays above
+        5,000 mi). Never read the floor figure as "distance travelled" -- real road distance
+        typically runs 1.2-1.4x this.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>By outcome</h2>
+    <div class="chartbox">
+      <svg id="outcomeChart" width="100%" height="260" viewBox="0 0 1000 260" preserveAspectRatio="xMidYMid meet"></svg>
+      <table class="stattable" id="outcomeTable">
+        <thead><tr><th>Outcome</th><th>Stays</th><th>Median path (mi)</th><th>Median net (mi)</th><th>Median tortuosity</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="caption">A removed stay's median path (512.2 mi) is more than seventeen times a
+        released stay's (29.0 mi) -- people ultimately deported are moved through a much wider
+        geographic footprint on the way there than people who are released.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Miles moved, by month</h2>
+    <div class="chartbox">
+      <div class="legend-row">
+        <span><span class="sw" style="background:var(--accent2)"></span>Floor (straight-line)</span>
+        <span><span class="sw" style="background:var(--accent)"></span>Circuity-adjusted (1.3x, road legs)</span>
+      </div>
+      <svg id="lineChart" width="100%" height="260" viewBox="0 0 1000 260" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="caption" id="partialMonthCaption"></div>
+      <div class="caption" id="sensitivityCaption"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>How far, by county of arrest</h2>
+    <div id="map3dWrap">
+      <div id="map3d"></div>
+      <div id="map3dStatus"></div>
+      <div id="map3dLegend"></div>
+    </div>
+    <p class="note" id="columnCaption" style="margin-top:10px;"></p>
+  </section>
+
+  <footer>
+    <b>Sources.</b> Same underlying records as the rest of this atlas: Deportation Data Project
+    (ICE records via FOIA), county boundaries via the U.S. Census Bureau 2023 cartographic
+    boundary file. Color ramps: ColorBrewer, Cynthia A. Brewer. Full citations:
+    <code>references.bib</code>. Built by <code>data/build_miles_moved.py</code> and
+    <code>data/build_miles_stats.py</code>. Analysis &amp; visualization: Jon Nealon.
+  </footer>
+</div>
+
+<script>
+const tooltip = document.getElementById('tooltip');
+function showTip(html, evt){
+  tooltip.innerHTML = html;
+  tooltip.style.display = 'block';
+  const pad = 14;
+  let left = evt.clientX + pad, top = evt.clientY + pad;
+  tooltip.style.left = left + 'px';
+  tooltip.style.top = top + 'px';
+}
+function hideTip(){ tooltip.style.display = 'none'; }
+function num(n){ return n == null ? '?' : Number(n).toLocaleString(); }
+function fmt1(n){ return n == null ? '?' : Number(n).toLocaleString(undefined, {maximumFractionDigits:1}); }
+
+const SVGNS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs){
+  const e = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+// ---- histogram / bar chart (shared renderer, single accent hue) ----
+function drawBars(svgId, labels, values, opts){
+  opts = opts || {};
+  const svg = document.getElementById(svgId);
+  svg.innerHTML = '';
+  const W = 1000, H = 260, padL = 46, padR = 16, padT = 16, padB = 44;
+  const innerW = W - padL - padR, innerH = H - padT - padB;
+  const maxV = Math.max(...values, 1);
+  const gap = 6;
+  const bw = (innerW / values.length) - gap;
+  // axis
+  svg.appendChild(el('line', {x1:padL, y1:padT+innerH, x2:padL+innerW, y2:padT+innerH, stroke:'#383835', 'stroke-width':1}));
+  values.forEach((v, i) => {
+    const h = maxV ? (v / maxV) * innerH : 0;
+    const x = padL + i * (bw + gap);
+    const y = padT + innerH - h;
+    const rect = el('rect', {x, y, width:Math.max(bw,2), height:Math.max(h,0), rx:3, class:'bar'});
+    rect.addEventListener('mousemove', e => showTip(opts.tip ? opts.tip(labels[i], v) : `${labels[i]}: ${num(v)}`, e));
+    rect.addEventListener('mouseleave', hideTip);
+    svg.appendChild(rect);
+    if (opts.directLabel) {
+      const t = el('text', {x: x + bw/2, y: y - 6, 'text-anchor':'middle', 'font-size':'9.5px'});
+      t.textContent = opts.directLabel(v);
+      svg.appendChild(t);
+    }
+    const lbl = el('text', {x: x + bw/2, y: padT+innerH+16, 'text-anchor':'middle', class:'axis-label', 'font-size':'9px'});
+    lbl.textContent = labels[i];
+    svg.appendChild(lbl);
+  });
+}
+
+// ---- line chart, two series, with hover crosshair ----
+// partialFromIdx: index of the first period that is NOT fully in the data window
+// (this project's own convention, matching time_series_summary.json's
+// last_complete_month -- the trailing month is real data, but an incomplete count,
+// and drawing it identically to a complete month would read as a real decline).
+function drawLines(svgId, xLabels, seriesA, seriesB, colorA, colorB, partialFromIdx){
+  const svg = document.getElementById(svgId);
+  svg.innerHTML = '';
+  const W = 1000, H = 260, padL = 60, padR = 16, padT = 16, padB = 36;
+  const innerW = W - padL - padR, innerH = H - padT - padB;
+  const maxV = Math.max(...seriesA, ...seriesB, 1);
+  const n = xLabels.length;
+  const xAt = i => padL + (n > 1 ? i * (innerW / (n - 1)) : innerW/2);
+  const yAt = v => padT + innerH - (v / maxV) * innerH;
+
+  svg.appendChild(el('line', {x1:padL, y1:padT+innerH, x2:padL+innerW, y2:padT+innerH, stroke:'#383835', 'stroke-width':1}));
+  // y gridlines + labels (0, mid, max)
+  [0, 0.5, 1].forEach(f => {
+    const y = padT + innerH - f*innerH;
+    svg.appendChild(el('line', {x1:padL, y1:y, x2:padL+innerW, y2:y, stroke:'#292927', 'stroke-width':1}));
+    const t = el('text', {x: padL - 8, y: y+3, 'text-anchor':'end', 'font-size':'9px'});
+    t.textContent = (maxV*f/1e6).toFixed(1) + 'M';
+    svg.appendChild(t);
+  });
+
+  function path(series, color){
+    const cutoff = (partialFromIdx != null && partialFromIdx > 0) ? partialFromIdx : n;
+    let solid = '', dashed = '';
+    series.forEach((v,i) => {
+      const seg = (i===0?'M':'L') + xAt(i) + ',' + yAt(v) + ' ';
+      if (i <= cutoff) solid += seg;
+      if (i >= cutoff - 1 && cutoff < n) dashed += (i===cutoff-1?'M':'L') + xAt(i) + ',' + yAt(v) + ' ';
+    });
+    svg.appendChild(el('path', {d: solid, fill:'none', stroke:color, 'stroke-width':2, 'stroke-linecap':'round', 'stroke-linejoin':'round'}));
+    if (dashed) svg.appendChild(el('path', {d: dashed, fill:'none', stroke:color, 'stroke-width':2,
+      'stroke-linecap':'round', 'stroke-linejoin':'round', 'stroke-dasharray':'2,4', opacity:'0.7'}));
+  }
+  path(seriesA, colorA);
+  path(seriesB, colorB);
+
+  // hover targets + x labels (every 3rd month to avoid crowding)
+  xLabels.forEach((lbl, i) => {
+    if (i % 3 === 0 || i === n-1) {
+      const t = el('text', {x: xAt(i), y: padT+innerH+16, 'text-anchor':'middle', class:'axis-label', 'font-size':'9px'});
+      t.textContent = lbl;
+      svg.appendChild(t);
+    }
+    const hit = el('rect', {x: xAt(i) - (innerW/n)/2, y: padT, width: Math.max(innerW/n, 4), height: innerH, fill:'transparent'});
+    hit.addEventListener('mousemove', e => showTip(
+      `<b>${lbl}</b><br>Floor: ${fmt1(seriesA[i])} mi<br>Adjusted: ${fmt1(seriesB[i])} mi`, e));
+    hit.addEventListener('mouseleave', hideTip);
+    svg.appendChild(hit);
+  });
+}
+
+async function main(){
+  const [stats, odometer, byOutcome, tsum] = await Promise.all([
+    fetch('../data/miles_stats.json?v=1790960693').then(r => r.json()),
+    fetch('../data/miles_moved_odometer.json?v=1790960693').then(r => r.json()),
+    fetch('../data/miles_moved_by_outcome.json?v=1790960693').then(r => r.json()),
+    fetch('../data/time_series_summary.json?v=1790960693').then(r => r.json()),
+  ]);
+
+  document.getElementById('modelLink').href =
+    '../_book/03-model.html#sec-model-miles';
+
+  // ---- stat tiles ----
+  const s = stats.summary.path_mi_floor, net = stats.summary.net_mi, tort = stats.summary.tortuosity;
+  const tiles = [
+    ['Stays analyzed', num(stats.n_stays)],
+    ['Median path (floor)', fmt1(s.median) + ' mi'],
+    ['Mean path (floor)', fmt1(s.mean) + ' mi'],
+    ['Median net displacement', fmt1(net.median) + ' mi'],
+    ['Median tortuosity', fmt1(tort.median)],
+    ['No real net displacement', stats.same_site_share + '%'],
+    ['Total floor miles', (odometer.daily.reduce((a,d)=>a+d.miles_floor,0)/1e6).toFixed(1) + 'M mi'],
+    ['Total adjusted miles', (odometer.daily.reduce((a,d)=>a+d.miles_adjusted,0)/1e6).toFixed(1) + 'M mi'],
+  ];
+  const tilesEl = document.getElementById('tiles');
+  tiles.forEach(([k,v]) => {
+    const d = document.createElement('div'); d.className = 'tile';
+    d.innerHTML = `<div class="v">${v}</div><div class="k">${k}</div>`;
+    tilesEl.appendChild(d);
+  });
+
+  // ---- histogram ----
+  const h = stats.histograms.path_mi_floor;
+  drawBars('histChart', h.labels, h.counts, {
+    tip: (label, v) => `<b>${label} mi</b><br>${num(v)} stays`,
+  });
+
+  // ---- by outcome ----
+  const order = ['Still held', 'Bonded', 'Removed', 'Released'];
+  const rows = order.map(o => byOutcome.by_outcome.find(r => r.outcome === o));
+  drawBars('outcomeChart', rows.map(r=>r.outcome), rows.map(r=>r.median_path_mi), {
+    directLabel: v => fmt1(v),
+    tip: (label, v) => `<b>${label}</b><br>Median path: ${fmt1(v)} mi`,
+  });
+  const tbody = document.querySelector('#outcomeTable tbody');
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.outcome}</td><td>${num(r.n_stays)}</td><td>${fmt1(r.median_path_mi)}</td>` +
+                   `<td>${fmt1(r.median_net_mi)}</td><td>${fmt1(r.median_tortuosity)}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  // ---- monthly line chart ----
+  const months = odometer.monthly.map(m=>m.period);
+  const lastComplete = tsum.last_complete_month;
+  const partialFromIdx = months.findIndex(m => m > lastComplete);
+  drawLines('lineChart', months,
+    odometer.monthly.map(m=>m.miles_floor), odometer.monthly.map(m=>m.miles_adjusted),
+    '#b8860b', '#4a90d9', partialFromIdx >= 0 ? partialFromIdx : null);
+
+  if (partialFromIdx >= 0) {
+    document.getElementById('partialMonthCaption').innerHTML =
+      `<span style="color:var(--ink-secondary)">&#9670; Dashed segment (${months[partialFromIdx]} onward)</span> ` +
+      `is a partial month, not a real decline -- this project's own convention marks ` +
+      `${lastComplete} as the last fully-covered month (data pull ends ${odometer.data_release_date}).`;
+  }
+
+  const sens = odometer.circuity_sensitivity_total_adjusted_mi;
+  document.getElementById('sensitivityCaption').textContent =
+    `Circuity sensitivity: recomputing the adjusted total at the 1.2x-1.4x ends of the cited ` +
+    `road-circuity literature range gives ${(sens['1.2']/1e6).toFixed(1)}M-${(sens['1.4']/1e6).toFixed(1)}M mi ` +
+    `(reported figure uses 1.3x: ${(sens['1.3']/1e6).toFixed(1)}M mi) -- about a 2% spread, not ` +
+    `sensitive to exactly where in that range the true factor sits.`;
+
+  // ---- county map (flat 2D, not 3D -- see the file-header comment for why) ----
+  const cc = stats.county_columns;
+  document.getElementById('columnCaption').textContent =
+    `${num(cc.counties_shown)} counties shown (at least ${cc.min_stays_threshold} stays each); ` +
+    `${num(cc.counties_excluded_below_threshold)} smaller counties excluded from this view -- ` +
+    `their own median is not a stable enough number to draw as a mark next to counties with ` +
+    `thousands of stays. Color encodes median path length.`;
+
+  const BUCKET_BREAKS = [0, 100, 300, 600, 900, 1200];
+  const BUCKET_COLORS = [[239,243,255],[189,215,231],[107,174,214],[49,130,189],[8,81,156],[8,48,107]];
+  function bucketFor(v){ let b=0; for (let i=0;i<BUCKET_BREAKS.length;i++){ if (v>=BUCKET_BREAKS[i]) b=i; } return b; }
+  const legendEl = document.getElementById('map3dLegend');
+  const bucketLabels = ['0-100','100-300','300-600','600-900','900-1,200','1,200+'];
+  legendEl.innerHTML = '<div style="margin-bottom:4px;color:var(--ink-primary);">Median path (mi)</div>' +
+    BUCKET_COLORS.map((c,i) => `<div><span class="sw" style="background:rgb(${c.join(',')})"></span>${bucketLabels[i]}</div>`).join('');
+
+  const MAPBOX_TOKEN = 'pk.eyJ1IjoibmVhbG9uIiwiYSI6ImNtdHJucGx3djA2aGkyd3B5Y2RjcTd6MjcifQ.YaWrgBupdgd5-Pjo2-gpvA';
+  document.getElementById('map3dStatus').textContent = `${num(cc.counties_shown)} counties`;
+
+  // Uses deck.gl's own DeckGL wrapper (which creates and manages Mapbox internally),
+  // the same pattern map/index.html already uses successfully -- NOT a separately
+  // created mapboxgl.Map + deck.MapboxOverlay({interleaved:true}), which was tried
+  // first here (back when this was a 3D column map) and found to render every column
+  // collapsed onto a single wrong position (verified with an isolated 5-point test
+  // using well-known cities, all five landing on the same point near the Pacific
+  // Northwest coast regardless of their real coordinates) -- an interleaved-mode/
+  // WebGL-context issue in this rendering environment, not a data or
+  // position-calculation bug. Switching to the already-proven DeckGL pattern fixed it
+  // outright, and that pattern is kept even after flattening the layer itself to 2D.
+  //
+  // Flat ScatterplotLayer, not a 3D ColumnLayer -- changed 2026-09-27 on direct owner
+  // feedback ("the county averages does not need to be on a 3d map. in fact it messes
+  // it up a little bit."). pitch: 0 / bearing: 0 (a plain north-up view, not tilted)
+  // so a county's screen position is its real position, and no column near the camera
+  // can visually loom over or occlude one further back -- color alone (the same ramp
+  // as before) carries the value a column's height used to carry redundantly.
+  new deck.DeckGL({
+    container: 'map3d',
+    mapboxApiAccessToken: MAPBOX_TOKEN,
+    mapStyle: 'mapbox://styles/mapbox/dark-v11',
+    // 'dark-v11' is one of Mapbox's newer style-family releases and, verified directly
+    // against its own style JSON (api.mapbox.com/styles/v1/mapbox/dark-v11), ships with
+    // "projection": {"name": "globe"} as its OWN default -- confirmed as expected
+    // behavior, not a fluke of this one style, against Mapbox's own docs ("Most of the
+    // latest Mapbox styles use globe by default," docs.mapbox.com/mapbox-gl-js/guides/
+    // globe/), which also state plainly, in the same place: "Globe does not yet support
+    // CustomLayerInterface" -- the exact Mapbox GL JS API deck.gl's own Mapbox
+    // integration depends on to keep a WebGL overlay's camera in sync with the
+    // basemap's. With that API unsupported, deck.gl's ScatterplotLayer (this page's
+    // county dots) keeps computing screen position from its own flat Web Mercator math
+    // while the basemap itself renders as a literal 3D sphere -- the two visibly drift
+    // apart, worst at this page's own default zoom (3.4, whole-country) and easing as a
+    // reader zooms in past the point Mapbox's own globe auto-flattens toward mercator.
+    // Reported live, 2026-09-28 ("the map and the points overlay do not stay linked").
+    // `map/index.html` never hit this: its own basemap style ('satellite-v9', confirmed
+    // via the same style-JSON check to set no projection at all, i.e. plain mercator)
+    // predates Mapbox's globe-by-default styles -- but it already sets this same option
+    // defensively. Fixed here the same way: force flat Mercator so deck.gl's coordinate
+    // math and the basemap's own rendering agree, rather than switch away from this
+    // style.
+    mapOptions: { projection: 'mercator' },
+    initialViewState: { longitude: -96, latitude: 38.5, zoom: 3.4, pitch: 0, bearing: 0 },
+    controller: true,
+    layers: [
+      new deck.ScatterplotLayer({
+        id: 'miles-counties',
+        data: cc.points,
+        radiusUnits: 'meters',
+        stroked: false,
+        filled: true,
+        pickable: true,
+        getPosition: d => [d.lon, d.lat],
+        getRadius: 9000,
+        getFillColor: d => [...BUCKET_COLORS[bucketFor(d.median_path_mi)], 210],
+      }),
+    ],
+    onHover: info => {
+      if (!info.object) { hideTip(); return; }
+      const d = info.object;
+      showTip(`<b>${d.name}, ${d.state}</b><br>Median path: ${fmt1(d.median_path_mi)} mi<br>${num(d.n_stays)} stays`,
+              info.srcEvent);
+    },
+  });
+
+  document.getElementById('loading').style.display = 'none';
+}
+
+main().catch(e => {
+  document.getElementById('loading').textContent = 'Failed to load: ' + e.message +
+    '. This page uses fetch() to load ../data/*.json, which most browsers block for local ' +
+    'file:// pages -- serve this folder over a local HTTP server instead.';
+});
+</script>
+</body>
+</html>

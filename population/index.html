@@ -1,0 +1,1009 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Population -- one dot per person</title>
+<!--
+  A "unit chart": one dot per arrested individual, regrouping on click by gender,
+  custodial status, national origin, criminal history, or case outcome -- built on
+  direct request, 2026-09-25
+  ("a field of dots (one for each migrant)... when we click the buttons, they
+  re-group"), reachable from map/index.html's "More views" row per the owner's
+  own instruction there ("New buttons append inside #vizlinks as more standalone
+  visualizations are built").
+
+  POPULATION: 535,673 people -- the same study-window population
+  (apprehension_date >= 2025-01-20) as the rest of this atlas, not a broader
+  all-time figure. See data/build_population_dots.py's own docstring for the
+  full population/custodial/origin-bucket methodology.
+
+  SCALE DECISION, asked directly before building (AskUserQuestion): full
+  population rendered as a GPU point cloud, not a representative subsample --
+  the owner's choice, picked over a faster/simpler ~20,000-dot subsample. This
+  is why the renderer is raw three.js (a WebGL point cloud with CPU-computed,
+  GPU-uploaded positions -- the standard technique for 500k+ point scenes; a
+  DOM- or SVG-based dot for each of 535,673 people would not run at interactive
+  speed) rather than the 3d-force-graph wrapper the other network-3d/ pages
+  use, which is built for thousands of nodes, not hundreds of thousands.
+  Library: three.js 0.160.0, pinned, loaded from jsDelivr -- verified live
+  2026-09-25 that this exact URL resolves (HTTP 200), matching this project's
+  own CDN-pinning convention (mapbox-gl, deck.gl, 3d-force-graph).
+
+  COLOR. First version: every dot one neutral accent color in every grouping,
+  since national origin's 13 slots fail the dataviz skill's validator under an
+  all-pairs check (the check this project's existing 5-6-color category
+  palette already fails at fewer slots -- see network-3d/by-category.html's
+  own header comment). Revised 2026-09-25 on direct request ("change colors on
+  gender... change colors on national status"): re-checked against
+  ADJACENT-pairs instead, the correct check here (per the dataviz skill: bars/
+  stacks/a fixed left-to-right sequence only need adjacent separation, not
+  all-pairs, which is for scatter/bubble/small-multiples where any two marks
+  can be neighbors -- these blocks are in one fixed order, so only true
+  neighbors are ever compared). Gender got a real all-pairs-passing 3-color
+  set, explicitly avoiding the blue/pink cliché on direct instruction
+  (teal/purple/red). National origin got a 13-color adjacent-pairs-passing set
+  (searched programmatically against `dataviz`'s own validator -- alternating
+  lightness/chroma per slot, not one flat ring, since 13 evenly-spaced hues at
+  one fixed L/C failed badly; see log.md, 2026-09-25, for the search). All and
+  Custodial status stay the original neutral accent -- they don't carry
+  enough categories to need a second channel, and it keeps a future grouping
+  addable without new palette work. Position (which block, and that block's
+  width) still carries identity/count on its own regardless of color.
+
+  LAYOUT: not a physics simulation. A force simulation (what the other three
+  network-3d/ pages use) is the wrong tool at this N -- it would need to
+  settle continuously and would not hold 535,673 points at an interactive
+  frame rate. Instead each grouping is computed directly: a fixed row count,
+  columns-per-bucket = ceil(bucket_count / rows), bucket blocks placed left to
+  right with a gap between them, WIDTH exactly proportional to each bucket's
+  share of the population on the x/y plane (a "unit chart" / "waffle chart"
+  layout, not a force layout) -- so a wider block always and only means more
+  people, never an artifact of where a simulation happened to settle. Every
+  grouping's layout (and the single bounding box that fits all of them) is
+  precomputed once at load, from the MODES list, so the camera never has to
+  jump or refit when you switch buttons, or when a new grouping is later
+  added to that list -- only the dots move.
+
+  3D, added same day on direct follow-up ("would it work better if it was
+  rendered in a 3d blob" / "3d dots"): each block is extruded into a real
+  rectangular volume (width still = population share, height fixed, depth
+  fixed and equal to height so a block reads as a cube, not a paper-thin
+  sheet), with every point placed at a random depth inside its block via the
+  same deterministic per-person hash used for x/y jitter. A true sphere/blob
+  shape was considered and turned down: it would make each block's VOLUME
+  carry the count instead of its area, and volume-vs-count does not read
+  visually the way area-vs-count does, plus rotating a blob hides points
+  behind other points -- exactly the legibility this chart exists for. This
+  keeps the same width-encodes-population-share property, just adds depth and
+  lets you orbit around it. Camera: perspective + OrbitControls (drag to
+  rotate, scroll to zoom -- the same interaction as the other network-3d/
+  pages), loaded as ES modules since three.js only ships OrbitControls as an
+  ES module from r150 on (no bundled classic-script build exists any more --
+  checked directly: examples/js/... 404s, examples/jsm/... resolves).
+
+  AUTO-ROTATE, added 2026-09-25 on direct request ("I want a slow rotation to
+  be in effect, in order to see the 3 dimensionality"): OrbitControls' own
+  `autoRotate`, on by default -- stops the instant the viewer drags (an
+  OrbitControls 'start' event, which only fires on real input, not on the
+  rotation itself), and "Reset view" brings it back. Its speed number alone
+  isn't the whole story: OrbitControls assumes a fixed 60fps and advances by
+  one tick per `update()` call, not by real elapsed time, so on a slower
+  render loop it silently crawls (measured directly: ~1/10th the intended
+  speed on a loop running well under 60fps). Fixed by catching `update()` up
+  to however many 60fps-equivalent ticks actually elapsed since the last
+  frame, then re-verified by reading the camera's azimuthal angle back at
+  timed intervals -- a steady rate regardless of actual frame rate, not
+  eyeballed off a screenshot.
+
+  CUSTODIAL STATUS -- corrected twice in one round, 2026-09-25. First
+  correction: the original "ever appears in any detention stay" definition
+  turned out to include 75,255 people (14%) whose earliest stay actually
+  predated this arrest, so it was narrowed to a stint starting within 14 days
+  of the arrest. Owner, immediately after seeing that: "I thought that that
+  meant that the migrant was detained coming out of a jail or prison. and
+  that non-custodial meant picked up by ICE 'from the street'." That's a
+  different, more standard concept -- a CUSTODIAL ARREST is ICE taking
+  custody of someone already held by another agency; an AT-LARGE arrest is
+  ICE apprehending someone directly in the community -- and DDP already
+  records it directly as `apprehension_method_simple`, so the whole
+  detention-stay join was dropped in favor of that field, used as-is: four
+  categories (At-Large Arrest, Custodial Arrest, 287(g) Program, Other), not
+  the binary the button's own name implies. Full detail:
+  data/build_population_dots.py's own docstring.
+
+  GLOSSARY BOX, added same round ("Perhaps in this viz we have an additional
+  context box on the right that states what the categories mean. For
+  example, not everyone is familiar with the 287g program"): a small panel,
+  mirroring the main one but on the right, that explains what a grouping's
+  own category names mean -- today, only Custodial status has entries that
+  need it (Gender and National origin's own labels are self-explanatory), so
+  it shows only in that mode and stays hidden otherwise. Keyed by mode in a
+  plain JS object (GLOSSARY) rather than pulled from meta.json, since this is
+  page-level explanatory copy, not a fact about the data itself.
+
+  NATIONAL ORIGIN, FULLY RECURSIVE -- rebuilt 2026-09-25 on direct request
+  ("Id like to do a second stage drill down on other and keep going until
+  everyone is accounted for"). Rather than one extra fixed tier, every person
+  carries a single number: their country's global rank by count (0 = most
+  common, 200 = least common of 201 distinct countries in this pull). Level 0
+  (the "National origin" button itself) shows ranks 0-11 individually plus an
+  "Other" for rank 12+; clicking "Other" moves to level 1 (ranks 12-23 plus a
+  new "Other" for rank 24+); and so on, however deep it takes, until a
+  level's remaining ranks number 12 or fewer, at which point every remaining
+  country gets its own slice and there is no "Other" left to click --
+  everyone is accounted for structurally, not by having picked a tier count
+  that happened to be enough. Each level is a full scene replacement (the
+  same mechanic as switching between the four main buttons), computed lazily
+  and cached the first time it's reached; a single "<- Back" button always
+  steps back exactly one level. Non-subset people at any level are parked far
+  past the camera's far clipping plane, not merely hidden by opacity.
+
+  LABELS, ALL OF THEM, STAGGERED -- rebuilt 2026-09-25 on direct request ("I
+  think we can figure out a way to have the national origin labels stagger
+  spatially so they dont overlap. i want to see all the labels in 3d view").
+  The first version hid a block's label below a minimum on-screen width,
+  falling back to the always-present legend list for anything too narrow to
+  read -- correct as far as it went, but the owner wanted every label visible
+  in the 3D view itself, not just in the list. Replaced with a real label-
+  placement pass, run every frame (cheap at <=13 labels): project every
+  block's screen position, sort left to right, then greedily stack each
+  label onto the lowest vertical tier that doesn't horizontally collide with
+  another label already placed on that tier (checked against each label's own
+  measured on-screen width, not guessed). A block's label is now never
+  hidden -- it just finds whatever row of the stack has room.
+
+  CRIMINAL HISTORY, added 2026-09-26 on direct request ("I also want to have
+  the criminal charges as a selection within the 3D population breakdowns"),
+  the same day the non-public case-trace tool gained real per-person
+  conviction detail. Checked first, directly (AskUserQuestion), whether that
+  belonged here too: this page is fully public and ungated, unlike the case
+  trace, so the answer was aggregate bucket counts only, never any
+  individual's specific offense -- confirmed with the owner before building,
+  since the two features sit right next to each other in the same day's work
+  but have very different privacy profiles. Source: `apprehension_criminality`
+  on `arrests-latest.parquet` -- the same three raw ICE values as
+  `book_in_criminality` on the stints table (the case trace's own source), but
+  a DIFFERENT field (recorded once at apprehension, not per detention
+  book-in), never conflated with it in this project's own documentation.
+  Labels are rewritten, not the raw ICE strings, on the same reasoning
+  `data/build_case_trace.py`'s own `charge_detail()` already applies --
+  repeating "1 Convicted Criminal" unqualified adopts ICE's own
+  characterization as fact. Three colors, adjacent-pairs validated, chosen
+  to share no hue with Gender's own palette so the two groupings' colors are
+  never confused. A glossary entry (mirroring Custodial status's own) states
+  plainly that a conviction here is ICE's own recorded classification, not a
+  court finding, and that this aggregate view cannot say which offense --
+  only the non-public case trace can.
+
+  OUTCOME, added 2026-10-02, alongside the circuit-to-circuit flow analysis
+  (`data/build_circuit_flow_outcomes.py`, @sec-model-circuit-flow) -- the same
+  underlying question in unit-chart form: what actually happens to this
+  population. Five buckets: "Not detained" (this view's own addition, for the
+  real share of arrests that never led to a detention stint) plus the
+  identical four-way Still held/Bonded/Removed/Released classification
+  `data/build_miles_moved.py` already defines, matched to the SAME first
+  in-window arrest Gender/Custodial status/Criminal history already describe
+  for each person (see `data/build_population_dots.py`'s own header comment
+  for why that match matters). Same privacy profile as every other grouping
+  here -- an aggregate bucket count across 535,673 people, no individual
+  traceable. Five colors, adjacent-pairs validated (dataviz skill), chosen to
+  be purely categorical rather than evaluative -- Removed is not colored red,
+  on the same reasoning this project avoids implying a value judgment through
+  color choice elsewhere (the ARFF index-mismatch flag's own "query, not
+  accusation" styling, `map/index.html`). A glossary entry explains each of
+  the five labels, mirroring Custodial status's own.
+-->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+<style>
+  :root{
+    color-scheme: dark;
+    --surface: #1a1a19;
+    --panel-bg: rgba(20,20,19,0.92);
+    --panel-border: #383835;
+    --ink-primary: #ffffff;
+    --ink-secondary: #c3c2b7;
+    --ink-muted: #898781;
+    --accent: #3987e5;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html,body{margin:0;padding:0;height:100%;background:var(--surface);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden;}
+  #field{position:absolute;inset:0;}
+  #labels{position:absolute;inset:0;z-index:8;pointer-events:none;}
+  #labels .block{position:absolute;transform:translate(-50%,0);text-align:center;
+    font-size:11px;color:var(--ink-secondary);white-space:nowrap;transition:opacity .25s;
+    text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 6px rgba(0,0,0,.7);}
+  #labels .block b{display:block;color:var(--ink-primary);font-size:12px;}
+  #labels .block .pct{color:var(--ink-muted);font-size:10px;}
+  #panel{
+    position:absolute;top:16px;left:16px;z-index:10;width:300px;
+    background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:10px;
+    padding:14px 16px;color:var(--ink-primary);box-shadow:0 10px 40px rgba(0,0,0,.5);
+  }
+  #panel .backlink{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;
+    color:var(--ink-muted);text-decoration:none;margin-bottom:8px;}
+  #panel .backlink:hover{color:var(--ink-primary);}
+  #panel h1{font-size:14px;margin:0 0 4px 0;font-weight:600;}
+  #panel .sub{font-size:11px;color:var(--ink-secondary);margin-bottom:10px;line-height:1.45;}
+  #panel .row{margin:10px 0;}
+  #panel .legend{font-size:10.5px;color:var(--ink-muted);margin-top:2px;}
+  #legendList{max-height:150px;overflow-y:auto;}
+  #legendList .li{display:flex;justify-content:space-between;gap:8px;font-size:10.5px;
+    padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+  #legendList .li .n{color:var(--ink-primary);}
+  #legendList .li .p{color:var(--ink-muted);white-space:nowrap;}
+  #modebar{position:absolute;left:16px;right:16px;bottom:20px;z-index:10;
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  #modebar .glabel{font-family:monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;
+    color:var(--ink-muted);background:var(--panel-bg);border:1px solid var(--panel-border);
+    border-radius:6px;padding:7px 9px;}
+  #modebar button{font-family:inherit;font-size:12px;padding:8px 13px;
+    background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:7px;
+    color:var(--ink-primary);cursor:pointer;}
+  #modebar button:hover{background:rgba(255,255,255,0.09);}
+  #modebar button.on{border-color:var(--accent);color:var(--accent);}
+  #status{position:absolute;bottom:78px;left:16px;z-index:10;font-family:monospace;
+    font-size:10.5px;color:var(--ink-muted);}
+  #loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    color:var(--ink-secondary);font-size:13px;z-index:20;}
+  #err{position:absolute;top:16px;right:16px;z-index:20;background:#3a1414;color:#ffb3b3;
+    padding:10px 14px;border-radius:8px;font-size:12px;max-width:340px;display:none;}
+  #glossary{position:absolute;top:16px;right:16px;z-index:9;width:280px;
+    background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:10px;
+    padding:14px 16px;color:var(--ink-primary);box-shadow:0 10px 40px rgba(0,0,0,.5);
+    display:none;max-height:calc(100% - 32px);overflow-y:auto;}
+  #glossary h2{font-size:12px;margin:0 0 8px 0;font-weight:600;
+    font-family:monospace;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-muted);}
+  #glossary .term{margin:0 0 12px 0;}
+  #glossary .term:last-child{margin-bottom:0;}
+  #glossary .term b{display:block;font-size:12px;margin-bottom:3px;}
+  #glossary .term div{font-size:11px;color:var(--ink-secondary);line-height:1.45;}
+</style>
+</head>
+<body>
+<div id="field"></div>
+<div id="labels"></div>
+<div id="loading">Loading population...</div>
+<div id="err"></div>
+<div id="glossary"></div>
+
+<div id="panel">
+  <a class="backlink" href="../index.html">&larr; Back to map</a>
+  <h1>Population -- one dot per person</h1>
+  <div class="sub" id="subText">
+    Loading population count...
+  </div>
+  <div class="row">
+    <div class="legend">Position (which block a dot sits in, and that block's
+      width) always carries identity/count. Gender, National origin, and
+      Criminal history also use validated per-category colors (see this
+      file's own header comment); All and Custodial status stay one neutral
+      accent, since they don't need a second channel. Depth is random within
+      each block and carries no meaning of its own. In National origin, click
+      "Other" to keep drilling by country, level by level, until everyone is
+      accounted for.</div>
+  </div>
+  <div class="row" id="legendRow">
+    <div class="legend" style="margin-bottom:4px;">Current grouping, exact figures:</div>
+    <div id="legendList"></div>
+  </div>
+  <div class="row">
+    <div class="legend">
+      Other views:
+      <a href="../network-3d/by-category.html" style="color:var(--accent);">3D network (category)</a> &middot;
+      <a href="../network-3d/index.html" style="color:var(--accent);">3D network (betweenness)</a> &middot;
+      <a href="../network-3d/animated.html" style="color:var(--accent);">3D network (animated)</a>
+    </div>
+  </div>
+</div>
+
+<div id="status"></div>
+<div id="modebar">
+  <span class="glabel">Group by</span>
+  <button class="mode on" data-mode="all">All</button>
+  <button class="mode" data-mode="gender">Gender</button>
+  <button class="mode" data-mode="custodial">Custodial status</button>
+  <button class="mode" data-mode="origin">National origin</button>
+  <button class="mode" data-mode="criminality">Criminal history</button>
+  <button class="mode" data-mode="outcome">Outcome</button>
+  <button id="drillBack" style="display:none;">&larr; Back</button>
+  <button id="resetView">Reset view</button>
+</div>
+
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js";
+
+(async function () {
+  const errBox = document.getElementById('err');
+  function fail(msg) {
+    console.error(msg);
+    errBox.textContent = msg;
+    errBox.style.display = 'block';
+  }
+  window.addEventListener('error', (e) => fail('Error: ' + e.message));
+
+  const STRIDE = 5; // gender, custodial (apprehension method), origin rank, criminality, outcome -- see data/build_population_dots.py
+  let meta, codes, N;
+  try {
+    const [metaRes, binRes] = await Promise.all([
+      fetch('../data/population_meta.json?v=1790960693'),
+      fetch('../data/population_dots.bin'),
+    ]);
+    if (!metaRes.ok) throw new Error('population_meta.json: HTTP ' + metaRes.status);
+    if (!binRes.ok) throw new Error('population_dots.bin: HTTP ' + binRes.status);
+    meta = await metaRes.json();
+    const buf = await binRes.arrayBuffer();
+    codes = new Uint8Array(buf);
+    N = codes.length / STRIDE;
+    if (!Number.isInteger(N)) throw new Error(`population_dots.bin length not divisible by ${STRIDE}`);
+    if (N !== meta.total) throw new Error(`meta.total (${meta.total}) does not match binary (${N})`);
+  } catch (e) {
+    fail('Failed to load population data: ' + e.message);
+    return;
+  }
+
+  document.getElementById('status').textContent = `${N.toLocaleString()} people`;
+  document.getElementById('subText').textContent =
+    `${N.toLocaleString()} people arrested from ${meta.study_start} onward, the same ` +
+    `study window as the rest of this atlas. Each dot is one real person. Click a ` +
+    `grouping below to re-sort the field. Rocking slowly on its own -- drag to take ` +
+    `over, scroll to zoom.`;
+
+  const OFFSET = { gender: 0, custodial: 1, origin: 2, criminality: 3, outcome: 4 };
+  const MODES = ['all', 'gender', 'custodial', 'origin', 'criminality', 'outcome'];
+
+  // Neutral default (this project's own dark-mode categorical slot 1) for
+  // groupings where a per-category palette isn't used. Gender and national
+  // origin get real per-category colors below -- both validated with the
+  // `dataviz` skill's own script (node scripts/validate_palette.js), not
+  // eyeballed. See this file's header comment for the full reasoning and the
+  // validator output for each.
+  const DEFAULT_COLOR = '#3987e5';
+  // 3 slots, chosen to avoid the blue/pink gender cliché on direct request --
+  // all-pairs PASS (lightness band, chroma floor, CVD ΔE 10.8, normal-vision
+  // ΔE 24.0, contrast >=3:1 all in dark mode).
+  const GENDER_COLORS = ['#2a9d8f', '#8d5fd3', '#e63946']; // Male, Female, Unknown
+  // 3 slots, adjacent-pairs PASS (lightness band, chroma floor, CVD ΔE 14.5,
+  // normal-vision ΔE 24.8, contrast >=3:1 all in dark mode) -- deliberately
+  // distinct hues from GENDER_COLORS (no shared hue) so a reader who has
+  // switched between the two groupings never mistakes one for the other.
+  // Order matches CRIMINALITY_LABELS' own fixed order (least to most severe).
+  const CRIMINALITY_COLORS = ['#b8860b', '#4a90d9', '#c2447a'];
+  // 5 slots (Not detained, Still held, Bonded, Removed, Released -- OUTCOME_LABELS'
+  // own fixed order, matching data/build_miles_moved.py's convention plus this
+  // view's own "Not detained" addition). Deliberately arbitrary/categorical, not
+  // semantic (e.g. not "red = Removed") -- the same reasoning this project
+  // already applies to the hotspot/ARFF flag colors, so the palette itself never
+  // implies a value judgment about any one outcome. Adjacent-pairs PASS, dark
+  // mode (lightness band, chroma floor, worst adjacent CVD ΔE 8.4 -- in the 6-8
+  // floor band, legal only with secondary encoding, satisfied here by the
+  // always-visible "Current grouping, exact figures" legend text; normal-vision
+  // floor clear at 19.3) -- verified with the dataviz skill's own validator.
+  const OUTCOME_COLORS = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181'];
+  // 13 slots (adjacent-pairs, the correct check for a fixed left-to-right
+  // sequence of blocks -- see header comment): lightness band, chroma floor,
+  // CVD separation (ΔE 11.2, clears the 8.0 target), and the normal-vision
+  // floor (ΔE 16.7, clears the hard 15.0 gate) all PASS; contrast vs. surface
+  // WARNs for 4 of the 13 (below 3:1) -- legal only with a relief channel,
+  // which this page already ships (the always-present legend list + direct
+  // labels). Reused as-is for the "Other" drill-down's own 13 slots (never
+  // shown at the same time as the top-level view, so reuse is safe).
+  const ORIGIN_COLORS = ['#de5a8b','#a04037','#da6d00','#865a00','#959700','#387422',
+    '#00ae4d','#007a5d','#00a6bf','#1366a9','#7781f4','#744d9e','#c962bc'];
+
+  function hexToRgb01(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+  }
+
+  // Deterministic per-person jitter, stable across every mode so a given dot's
+  // "personality" doesn't reset each time it regroups -- a cheap integer hash,
+  // not Math.random(), so this is reproducible and needs no seed to be passed in.
+  function hash01(i, salt) {
+    let h = (i * 2654435761 + salt * 40503) >>> 0;
+    h = (h ^ (h >>> 15)) >>> 0;
+    return (h % 10000) / 10000;
+  }
+
+  const ROWS = Math.max(50, Math.round(Math.sqrt(N / 1.5)));
+  const SPACING = 1;
+  const GAP = SPACING * 45;
+  const JITTER = SPACING * 0.32;
+  const DEPTH = ROWS * SPACING; // block depth == block height -> reads as a cube, not a sheet
+  const SURFACE_RGB = hexToRgb01('#1a1a19'); // scene background -- receded layers fade toward this
+
+  // Places `indices` (already grouped by `getBucket`) into row-major blocks,
+  // left to right, `gap` apart, writing straight into the shared `positions`/
+  // `colors` arrays at `zOffset` depth. Shared by every top-level mode and by
+  // each layer of the National-origin recede stack below.
+  function layoutBuckets(positions, colors, alphas, indices, labels, getBucket, colorOf, gap, zOffset) {
+    const k = labels.length;
+    const buckets = Array.from({ length: k }, () => []);
+    for (const i of indices) buckets[getBucket(i)].push(i);
+    const defaultRgb = hexToRgb01(DEFAULT_COLOR);
+    const blocks = [];
+    let x = 0;
+    for (let b = 0; b < k; b++) {
+      const list = buckets[b];
+      const cols = Math.max(1, Math.ceil(list.length / ROWS));
+      const rgb = colorOf ? hexToRgb01(colorOf(b)) : defaultRgb;
+      for (let j = 0; j < list.length; j++) {
+        const i = list[j];
+        const row = j % ROWS;
+        const col = Math.floor(j / ROWS);
+        const jx = (hash01(i, 1) - 0.5) * 2 * JITTER;
+        const jy = (hash01(i, 2) - 0.5) * 2 * JITTER;
+        const jz = (hash01(i, 3) - 0.5) * DEPTH; // depth is random within the block, not gridded
+        positions[i * 3 + 0] = x + col * SPACING + jx;
+        positions[i * 3 + 1] = row * SPACING + jy;
+        positions[i * 3 + 2] = jz + zOffset;
+        colors[i * 3 + 0] = rgb[0];
+        colors[i * 3 + 1] = rgb[1];
+        colors[i * 3 + 2] = rgb[2];
+        alphas[i] = 1; // full strength by default -- a receded layer dims this below, see getOriginLevelLayout
+      }
+      const widthUnits = cols * SPACING;
+      blocks.push({
+        label: labels[b],
+        count: list.length,
+        pct: indices.length ? (100 * list.length / indices.length) : 0,
+        cx: x + widthUnits / 2,
+        width: widthUnits,
+        bucketIndex: b,
+      });
+      x += widthUnits + gap;
+    }
+    // Center this layer at its own local origin (x centered on its own total
+    // span, y centered on ROWS) so every layer -- present or receded -- lines
+    // up on the same vertical center and reads as parallel frames receding
+    // straight back, not drifting sideways as block counts change.
+    const totalWidth = x - gap;
+    const cx0 = totalWidth / 2;
+    const cy0 = (ROWS * SPACING) / 2;
+    for (const i of indices) {
+      positions[i * 3 + 0] -= cx0;
+      positions[i * 3 + 1] -= cy0;
+    }
+    for (const blk of blocks) blk.cx -= cx0;
+    return { blocks, halfWidth: totalWidth / 2, halfHeight: cy0 };
+  }
+
+  function computeLayout(mode, { colorOf = null } = {}) {
+    const labels = mode === 'all' ? ['All'] : meta.categories[mode].labels;
+    const getBucket = mode === 'all' ? (() => 0) : ((i) => codes[i * STRIDE + OFFSET[mode]]);
+    const indices = Array.from({ length: N }, (_, i) => i);
+    const positions = new Float32Array(N * 3);
+    const colors = new Float32Array(N * 3);
+    const alphas = new Float32Array(N);
+    const { blocks, halfWidth, halfHeight } = layoutBuckets(positions, colors, alphas, indices, labels, getBucket, colorOf, GAP, 0);
+    return { positions, colors, alphas, blocks, halfWidth, halfHeight };
+  }
+
+  const MODE_COLOR_FN = {
+    all: null,
+    custodial: null,
+    gender: (b) => GENDER_COLORS[b],
+    criminality: (b) => CRIMINALITY_COLORS[b],
+    outcome: (b) => OUTCOME_COLORS[b],
+  };
+
+  // ---- National origin: fully recursive drill-down, receding into depth ----
+  // Every person carries one number, their country's global rank by count
+  // (meta.categories.origin_ranked.labels, already sorted descending). Level L
+  // (0-indexed) shows ranks [L*LEVEL_SIZE, (L+1)*LEVEL_SIZE) individually,
+  // plus an "Other" for everyone ranked beyond that -- unless this level's
+  // remaining ranks number LEVEL_SIZE or fewer, in which case every remaining
+  // country gets its own slice and there is no "Other" (the recursion's
+  // natural base case).
+  //
+  // RECEDING STACK, added 2026-09-25 on direct request ("could we design this
+  // so that each time we step to the next other, the previous page recedes
+  // into the distance, so we are still visually referencing the full set as
+  // we go"): the layout for "at level L" is not just that level's own 13
+  // blocks -- it is every level from 0 through L, each level's *named*
+  // countries frozen at the position they had when that level was the front,
+  // pushed back RECEDE_STEP further per level of history, with only the
+  // current (deepest) level's own "Other" bucket left live and clickable.
+  // Nobody is ever hidden or parked off past the far clipping plane the way
+  // the first version worked -- every person is somewhere meaningful, in a
+  // layer at the depth matching how many times "Other" was clicked to reach
+  // their country.
+  //
+  // GAP GROWS WITH DEPTH, also on direct request ("as teh slices get thinner
+  // - spread them out more so we have a little more room for the nation
+  // names, as they get really bunched up the smaller the populations get"):
+  // countries at deeper levels are all similarly small, so without more
+  // breathing room their labels would need many more stacked tiers to avoid
+  // colliding (see the label-placement pass above). Each level's own gap is
+  // wider than the last.
+  //
+  // RECEDING LAYERS ALSO FADE OUT, added 2026-09-25 on direct request ("when
+  // the dots recede, they should also get a little fainter"): the color-blend
+  // toward the background (above) left a receded layer's dots fully opaque,
+  // so a dense historical layer could still read as visually solid despite
+  // its darker hue. The same per-layer `fade` fraction now also drives a real
+  // opacity reduction. THREE.PointsMaterial has no per-vertex alpha (only
+  // per-vertex RGB via vertexColors), so the renderer was switched from
+  // PointsMaterial to a small custom THREE.ShaderMaterial with a 4th
+  // per-point attribute (`alpha`), replicating PointsMaterial's own
+  // sizeAttenuation formula in the vertex shader so point size on screen is
+  // unchanged. Verified live (Playwright): zero console/shader-compile
+  // errors across every mode, and the attribute values read back at a
+  // two-deep drill matched the fade formula exactly (front layer 1.0,
+  // one-step-back 0.78, two-steps-back 0.56).
+  const ORIGIN_RANKS = meta.categories.origin_ranked.labels;
+  const LEVEL_SIZE = meta.categories.origin_ranked.level_size;
+  const RECEDE_STEP = DEPTH * 2.2;
+  const MAX_ORIGIN_LEVEL = Math.ceil(ORIGIN_RANKS.length / LEVEL_SIZE);
+  // Capped, not unbounded: the shared camera is framed once, to fit level 0
+  // (see fitRadius below) -- an ever-growing gap would eventually push a deep
+  // level's own front layer wider than that original framing, forcing a
+  // manual zoom-out. Capping the growth around level 8 (found live: level 4
+  // already read comfortably wider without needing to zoom) keeps every
+  // level readable without that.
+  function gapForLevel(level) { return GAP * (1 + Math.min(level, 8) * 0.35); }
+  const originStackLayouts = {};
+  function getOriginLevelLayout(level) {
+    if (originStackLayouts[level]) return originStackLayouts[level];
+    const positions = new Float32Array(N * 3);
+    const colors = new Float32Array(N * 3);
+    const alphas = new Float32Array(N);
+    let front = null;
+    for (let L = 0; L <= level; L++) {
+      const startRank = L * LEVEL_SIZE;
+      const remaining = ORIGIN_RANKS.length - startRank;
+      const isFinalOfL = remaining <= LEVEL_SIZE;
+      const isFront = L === level;
+      const namedCount = isFinalOfL ? remaining : LEVEL_SIZE;
+      const labels = (isFront && !isFinalOfL)
+        ? ORIGIN_RANKS.slice(startRank, startRank + LEVEL_SIZE).concat(['Other'])
+        : ORIGIN_RANKS.slice(startRank, startRank + namedCount);
+      // Historical (non-front) layers show only their own *named* ranks --
+      // their own "Other" tail already moved on to a deeper, later layer.
+      const hiExclusive = (isFront && !isFinalOfL) ? ORIGIN_RANKS.length : (startRank + namedCount);
+      const indices = [];
+      for (let i = 0; i < N; i++) {
+        const r = codes[i * STRIDE + OFFSET.origin];
+        if (r >= startRank && r < hiExclusive) indices.push(i);
+      }
+      const getBucket = (i) => {
+        const local = codes[i * STRIDE + OFFSET.origin] - startRank;
+        return (isFront && !isFinalOfL && local >= LEVEL_SIZE) ? LEVEL_SIZE : local;
+      };
+      const zOffset = -(level - L) * RECEDE_STEP;
+      const result = layoutBuckets(positions, colors, alphas, indices, labels, getBucket, (b) => ORIGIN_COLORS[b], gapForLevel(L), zOffset);
+      if (!isFront) {
+        // Fade a receded layer toward the background per step back -- both its
+        // color (blended toward the surface color) and its opacity (dimmed
+        // toward transparent), reinforcing "recede" visually and not just
+        // spatially/by perspective. Same `fade` fraction drives both, added
+        // 2026-09-25 on direct request ("when the dots recede, they should
+        // also get a little fainter"): color-blending alone still left
+        // receded layers fully opaque, so a dense historical layer could read
+        // as solid as the live front layer despite the darker hue.
+        const fade = Math.min(0.75, (level - L) * 0.22);
+        for (const i of indices) {
+          colors[i * 3 + 0] = colors[i * 3 + 0] * (1 - fade) + SURFACE_RGB[0] * fade;
+          colors[i * 3 + 1] = colors[i * 3 + 1] * (1 - fade) + SURFACE_RGB[1] * fade;
+          colors[i * 3 + 2] = colors[i * 3 + 2] * (1 - fade) + SURFACE_RGB[2] * fade;
+          alphas[i] = 1 - fade;
+        }
+      } else {
+        front = result;
+      }
+    }
+    const layout = { positions, colors, alphas, blocks: front.blocks, halfWidth: front.halfWidth, halfHeight: front.halfHeight, level };
+    originStackLayouts[level] = layout;
+    return layout;
+  }
+
+  const layouts = {};
+  let maxHalfWidth = 0, maxHalfHeight = 0;
+  for (const mode of MODES) {
+    layouts[mode] = mode === 'origin' ? getOriginLevelLayout(0) : computeLayout(mode, { colorOf: MODE_COLOR_FN[mode] });
+    maxHalfWidth = Math.max(maxHalfWidth, layouts[mode].halfWidth);
+    maxHalfHeight = Math.max(maxHalfHeight, layouts[mode].halfHeight);
+  }
+
+  // Direct-link support, added 2026-09-25 so National origin can get its own
+  // button on map/index.html's "More views" row (?mode=origin) instead of
+  // always opening on "All" and making the viewer click again.
+  const requestedMode = new URLSearchParams(location.search).get('mode');
+  const initialMode = MODES.includes(requestedMode) ? requestedMode : 'all';
+
+  // ---- three.js scene ----
+  const container = document.getElementById('field');
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  container.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x1a1a19);
+
+  // Perspective camera + OrbitControls: drag to rotate, scroll to zoom, right-
+  // drag (or ctrl/shift+drag) to pan -- the same interaction vocabulary as
+  // network-3d/index.html's own force-graph camera. Distance is set to frame
+  // the largest of the four groupings' bounding boxes, so switching buttons
+  // never needs the camera to jump -- only the points move. The far clipping
+  // plane and max zoom-out both also have to clear the deepest possible
+  // National-origin recede stack (MAX_ORIGIN_LEVEL layers, RECEDE_STEP apart),
+  // not just the front layer, or the receded history would be clipped away.
+  const fitRadius = Math.sqrt(maxHalfWidth * maxHalfWidth + maxHalfHeight * maxHalfHeight + (DEPTH / 2) * (DEPTH / 2));
+  const maxRecedeDepth = MAX_ORIGIN_LEVEL * RECEDE_STEP;
+  const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, fitRadius * 20 + maxRecedeDepth);
+  const startDistance = fitRadius / Math.sin((50 * Math.PI / 180) / 2) * 1.05;
+  camera.position.set(0, 0, startDistance);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = fitRadius * 0.03;
+  controls.maxDistance = startDistance * 2.2 + maxRecedeDepth;
+
+  // Default motion: a slow, bounded rock -- NOT a full 360 spin. First built as
+  // OrbitControls' own continuous autoRotate, replaced same day on direct
+  // request: "do not rotate 360 degrees. instead, r[o]ck back and forth very
+  // slowly in a infinity loop fashion so that we can appreciate the 3d'ness
+  // of it all. while keeping the labels relatively in similar positions." A
+  // full spin eventually points the camera at the back of every block (where
+  // there is nothing to see) and drags every label far from where it
+  // started; a bounded rock never does either. Traces a real figure-eight
+  // (a Lissajous curve, azimuth and polar angle oscillating at a 2:1
+  // frequency ratio) rather than simple side-to-side rotation, so both
+  // left-right AND up-down parallax are visible, not just one axis.
+  // OrbitControls has no public setter for its own azimuth/polar angle, so
+  // this drives `camera.position` directly each frame (confirmed safe by
+  // reading OrbitControls' own update() source: it re-derives its internal
+  // spherical state from the *live* `camera.position` on every call, never
+  // from a cached value, so externally-set positions and ordinary
+  // drag-to-rotate can hand off to each other with no snap) and simply stops
+  // touching it the instant the viewer drags -- the same 'start' event as
+  // before, and "Reset view" brings the rock back along with the default
+  // camera.
+  const ROCK_AZIMUTH_AMPLITUDE = 15 * Math.PI / 180; // was 25 -- "too much", per direct feedback 2026-09-25
+  const ROCK_POLAR_AMPLITUDE = 10 * Math.PI / 180;
+  const ROCK_PERIOD_SEC = 26; // "very slowly"
+  const BASE_POLAR = Math.PI / 2; // the default view: level with the field, looking straight in
+  let rocking = true;
+  let rockStart = performance.now();
+  controls.addEventListener('start', () => { rocking = false; });
+  function applyRock(now) {
+    const t = (now - rockStart) / 1000 * (2 * Math.PI / ROCK_PERIOD_SEC);
+    const theta = ROCK_AZIMUTH_AMPLITUDE * Math.sin(t);
+    const phi = BASE_POLAR + ROCK_POLAR_AMPLITUDE * Math.sin(2 * t + Math.PI / 2);
+    const radius = camera.position.length(); // preserves the current zoom level
+    camera.position.setFromSphericalCoords(radius, phi, theta);
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  const startLayout = layouts[initialMode];
+  const posAttr = new THREE.BufferAttribute(startLayout.positions.slice(), 3);
+  const colorAttr = new THREE.BufferAttribute(startLayout.colors.slice(), 3);
+  const alphaAttr = new THREE.BufferAttribute(startLayout.alphas.slice(), 1);
+  geometry.setAttribute('position', posAttr);
+  geometry.setAttribute('color', colorAttr);
+  geometry.setAttribute('alpha', alphaAttr);
+
+  // Custom shader, not the stock THREE.PointsMaterial -- added 2026-09-25 so
+  // the National-origin recede stack's historical layers can dim toward
+  // transparent, not just toward the background color. PointsMaterial only
+  // takes vertex colors (RGB) per point; per-vertex alpha needs its own
+  // attribute and a shader that reads it, which PointsMaterial has no hook
+  // for. gl_PointSize replicates PointsMaterial's own sizeAttenuation formula
+  // (uScale tied to the canvas's drawing-buffer height, updated in resize()
+  // below) so point size on screen is unchanged from before this change.
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      uSize: { value: 3.2 },
+      uScale: { value: 1 },
+      uOpacity: { value: 0.85 }, // the base opacity every non-faded point renders at, same as the old PointsMaterial's opacity
+    },
+    vertexShader: `
+      attribute vec3 color;
+      attribute float alpha;
+      varying vec3 vColor;
+      varying float vAlpha;
+      uniform float uSize;
+      uniform float uScale;
+      void main() {
+        vColor = color;
+        vAlpha = alpha;
+        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+        gl_PointSize = uSize * (uScale / -mvPosition.z);
+        gl_Position = projectionMatrix * mvPosition;
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vColor;
+      varying float vAlpha;
+      uniform float uOpacity;
+      void main() {
+        gl_FragColor = vec4(vColor, vAlpha * uOpacity);
+      }
+    `,
+    transparent: true,
+  });
+  const points = new THREE.Points(geometry, material);
+  scene.add(points);
+
+  function resize() {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    material.uniforms.uScale.value = renderer.domElement.height * 0.5;
+    material.uniforms.uSize.value = 3.2 * renderer.getPixelRatio();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  document.getElementById('loading').style.display = 'none';
+
+  document.getElementById('resetView').addEventListener('click', () => {
+    controls.reset();
+    camera.position.set(0, 0, startDistance);
+    rocking = true;
+    rockStart = performance.now();
+  });
+
+  // ---- label overlay ----
+  // On-canvas labels are anchored to each block's real 3D world center (just
+  // below and in front of it) and re-projected to screen space every frame --
+  // a fixed screen position (as a flat 2D chart could use) doesn't make sense
+  // once the camera orbits freely around a real 3D volume. Every label is
+  // always shown (added 2026-09-25, replacing an earlier width-based hide --
+  // "i want to see all the labels in 3d view"): a real placement pass runs
+  // every frame instead, stacking labels onto vertical tiers so narrow,
+  // closely-spaced blocks' labels don't overlap (see positionLabels below).
+  // The always-present legend list in the panel is a second, zoom-independent
+  // reference for the exact figures either way.
+  const labelsEl = document.getElementById('labels');
+  const legendListEl = document.getElementById('legendList');
+  let labelAnchors = [];
+  // `onClickBlock(blk)`: if given, called per block to decide whether that
+  // block's label is clickable (return a handler, or null/undefined for
+  // "not clickable") -- used for National origin's "Other" slice.
+  function renderLabels(blocks, onClickBlock = null) {
+    labelsEl.innerHTML = '';
+    legendListEl.innerHTML = '';
+    labelAnchors = [];
+    for (const blk of blocks) {
+      const div = document.createElement('div');
+      div.className = 'block';
+      const handler = onClickBlock && onClickBlock(blk);
+      div.innerHTML = `<b>${blk.label}${handler ? ' →' : ''}</b>${blk.count.toLocaleString()} &middot; <span class="pct">${blk.pct.toFixed(1)}%</span>`;
+      if (handler) {
+        div.style.pointerEvents = 'auto';
+        div.style.cursor = 'pointer';
+        div.title = `See the breakdown within "${blk.label}"`;
+        div.addEventListener('click', handler);
+      }
+      labelsEl.appendChild(div);
+      const width = div.getBoundingClientRect().width; // measured now, before any position is set
+      const y = -ROWS * SPACING / 2 - 4;
+      labelAnchors.push({
+        div,
+        width,
+        center: new THREE.Vector3(blk.cx, y, DEPTH / 2),
+      });
+
+      const li = document.createElement('div');
+      li.className = 'li';
+      li.innerHTML = `<span>${blk.label}</span><span class="n">${blk.count.toLocaleString()} <span class="p">(${blk.pct.toFixed(1)}%)</span></span>`;
+      if (handler) { li.style.cursor = 'pointer'; li.title = div.title; li.addEventListener('click', handler); }
+      legendListEl.appendChild(li);
+    }
+  }
+  const proj = new THREE.Vector3();
+  const TIER_HEIGHT = 34; // px between stacked label rows -- must clear a full
+    // 2-line label (name + count/pct, ~28px tall); 20px let adjacent tiers
+    // visually bleed into each other, found live on the first screenshot.
+  const LABEL_GAP = 8; // px of breathing room between two labels on the same row
+  function positionLabels() {
+    const items = [];
+    for (const a of labelAnchors) {
+      proj.copy(a.center).project(camera);
+      const behind = proj.z > 1;
+      const cx = (proj.x * 0.5 + 0.5) * window.innerWidth;
+      const cy = (-proj.y * 0.5 + 0.5) * window.innerHeight;
+      items.push({ a, behind, cx, cy });
+    }
+    // Greedy placement: work left to right, put each label on the lowest
+    // tier whose last-placed label doesn't overlap this one horizontally.
+    const visible = items.filter((it) => !it.behind).sort((p, q) => p.cx - q.cx);
+    const tierRightEdge = [];
+    for (const it of visible) {
+      const half = it.a.width / 2;
+      let tier = 0;
+      while (tierRightEdge[tier] !== undefined && it.cx - half < tierRightEdge[tier] + LABEL_GAP) tier++;
+      tierRightEdge[tier] = it.cx + half;
+      it.tier = tier;
+    }
+    for (const it of items) {
+      if (it.behind) { it.a.div.style.opacity = '0'; continue; }
+      it.a.div.style.opacity = '1';
+      it.a.div.style.left = it.cx + 'px';
+      it.a.div.style.top = (it.cy + it.tier * TIER_HEIGHT) + 'px';
+    }
+  }
+
+  // ---- smooth tween between two precomputed layouts (positions + colors) ----
+  // Shared by ordinary mode switches and the "Other" drill-down/back, so both
+  // animate the same way.
+  let animId = null;
+  function ease(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+  function tweenTo(layout, duration = 1100) {
+    const fromPos = posAttr.array.slice();
+    const toPos = layout.positions;
+    const fromCol = colorAttr.array.slice();
+    const toCol = layout.colors;
+    const fromAlpha = alphaAttr.array.slice();
+    const toAlpha = layout.alphas;
+    const t0 = performance.now();
+    if (animId) cancelAnimationFrame(animId);
+    function step(now) {
+      const t = Math.min(1, (now - t0) / duration);
+      const e = ease(t);
+      const pa = posAttr.array, ca = colorAttr.array, aa = alphaAttr.array;
+      for (let idx = 0; idx < pa.length; idx++) pa[idx] = fromPos[idx] + (toPos[idx] - fromPos[idx]) * e;
+      for (let idx = 0; idx < ca.length; idx++) ca[idx] = fromCol[idx] + (toCol[idx] - fromCol[idx]) * e;
+      for (let idx = 0; idx < aa.length; idx++) aa[idx] = fromAlpha[idx] + (toAlpha[idx] - fromAlpha[idx]) * e;
+      posAttr.needsUpdate = true;
+      colorAttr.needsUpdate = true;
+      alphaAttr.needsUpdate = true;
+      animId = (t < 1) ? requestAnimationFrame(step) : null;
+    }
+    animId = requestAnimationFrame(step);
+  }
+
+  // ---- top-level mode buttons ----
+  let currentMode = initialMode;
+  let originLevel = 0; // only meaningful while currentMode === 'origin'
+  const drillBackBtn = document.getElementById('drillBack');
+  function setMode(mode) {
+    const wasDrilled = originLevel > 0;
+    originLevel = 0;
+    drillBackBtn.style.display = 'none';
+    if (mode !== currentMode || wasDrilled) {
+      document.querySelectorAll('#modebar button.mode').forEach(b => {
+        b.classList.toggle('on', b.dataset.mode === mode);
+      });
+      tweenTo(layouts[mode]);
+      currentMode = mode;
+    }
+    showLevel(mode === 'origin' ? layouts.origin : layouts[mode]);
+  }
+
+  // ---- National origin: click "Other" to go one level deeper, "<- Back" to
+  // go one level up. Recurses however deep it needs to (see
+  // getOriginLevelLayout) -- there's no fixed number of stops.
+  function originOtherClickable(blk) {
+    return (currentMode === 'origin' && blk.label === 'Other') ? () => drillDeeper() : null;
+  }
+  function showLevel(layout) {
+    renderLabels(layout.blocks, currentMode === 'origin' ? originOtherClickable : null);
+    renderGlossary(currentMode);
+  }
+
+  // ---- context box: what a grouping's own category names mean ----
+  // Added 2026-09-25 on direct request ("not everyone is familiar with the
+  // 287g program"). Keyed by mode -- Custodial status and (added 2026-09-26)
+  // Criminal history have entries that need explaining; Gender and National
+  // origin's labels are self-explanatory, and the box simply stays hidden for
+  // those.
+  const GLOSSARY = {
+    custodial: {
+      'Custodial Arrest': 'This person was already being held by another law ' +
+        'enforcement agency -- a local jail, or a state or federal prison -- ' +
+        'when ICE identified them (often through a jail-screening program) ' +
+        'and took custody, typically via a detainer, rather than arresting ' +
+        'them out in the community.',
+      'At-Large Arrest': 'ICE or CBP apprehended this person directly, out in ' +
+        'the community -- not while they were already being held by another ' +
+        'agency. Includes agents locating someone through investigation, ' +
+        'as well as probation/parole and worksite-enforcement actions.',
+      '287(g) Program': 'State or local police officers, deputized under a ' +
+        'formal agreement with ICE (Section 287(g) of the Immigration and ' +
+        'Nationality Act), carrying out immigration-enforcement functions ' +
+        'themselves rather than ICE doing so directly.',
+      'Other': 'Smaller apprehension channels DDP records separately -- ' +
+        'encounters at ports of entry, border and interior patrol, and ' +
+        'task-force referrals -- none large enough on its own to warrant ' +
+        'its own slice here.',
+    },
+    criminality: {
+      'No criminal charge or conviction recorded': 'The largest group. This is a ' +
+        'positive fact about the person, not a gap in the data -- ICE has no ' +
+        'criminal charge or conviction on file for them at the time of this arrest.',
+      'Pending criminal charge (not yet convicted)': 'ICE recorded that a criminal ' +
+        'charge exists against this person. A charge is an allegation, not a ' +
+        'finding of guilt -- most of this group (about 98.5%) has a charge on ' +
+        'file with no record of what the charge is for.',
+      'Convicted (has a recorded conviction)': 'ICE recorded a criminal conviction ' +
+        'for this person. This grouping only says that a conviction exists, not ' +
+        'what it was for or how serious it was -- an individual case trace (a ' +
+        'separate, non-public tool) can show the specific offense recorded; this ' +
+        'aggregate view cannot. Every field here is ICE’s own classification, ' +
+        'recorded at the time of arrest, not a court record.',
+    },
+    outcome: {
+      'Not detained': 'This person’s arrest did not lead to a detention stint at ' +
+        'all, as of this data’s own pull date -- not everyone arrested is held.',
+      'Still held': 'This person was still in detention, with no recorded release, ' +
+        'as of this data’s own pull date (2026-08-26). Not a final outcome -- ' +
+        'some share of this group will eventually be Removed, Bonded, or Released.',
+      'Bonded': 'Released on an immigration bond, set either by an immigration ' +
+        'judge or by ICE’s own field office.',
+      'Removed': 'ICE recorded this person as removed (deported) from the country.',
+      'Released': 'Case closed without removal and without a bond -- recognizance, ' +
+        'parole, supervision, immigration-judge relief, voluntary departure/return, ' +
+        'a court order, or another closed reason not broken out separately here.',
+    },
+  };
+  const glossaryEl = document.getElementById('glossary');
+  function renderGlossary(mode) {
+    const terms = GLOSSARY[mode];
+    if (!terms) { glossaryEl.style.display = 'none'; return; }
+    glossaryEl.innerHTML = '<h2>What these mean</h2>' + Object.entries(terms)
+      .map(([term, def]) => `<div class="term"><b>${term}</b><div>${def}</div></div>`)
+      .join('');
+    glossaryEl.style.display = 'block';
+  }
+  function drillDeeper() {
+    originLevel += 1;
+    drillBackBtn.style.display = 'inline-block';
+    const layout = getOriginLevelLayout(originLevel);
+    tweenTo(layout);
+    showLevel(layout);
+  }
+  drillBackBtn.addEventListener('click', () => {
+    originLevel = Math.max(0, originLevel - 1);
+    if (originLevel === 0) drillBackBtn.style.display = 'none';
+    const layout = getOriginLevelLayout(originLevel);
+    tweenTo(layout);
+    showLevel(layout);
+  });
+
+  document.querySelectorAll('#modebar button.mode').forEach(b => {
+    b.addEventListener('click', () => setMode(b.dataset.mode));
+  });
+
+  document.querySelectorAll('#modebar button.mode').forEach(b => {
+    b.classList.toggle('on', b.dataset.mode === initialMode);
+  });
+  showLevel(layouts[initialMode]);
+
+  // OrbitControls' own autoRotate (and its damping decay) assume a fixed 60fps
+  // and advance by one "tick" per update() call, not by real elapsed time --
+  // so on a slower render loop (seen directly: a headless run measured ~6fps
+  // and the rotation crawled at 1/10th the intended speed) drag-damping decay
+  // would silently crawl too. Compensated for real elapsed time here rather
+  // than just hoping: catch update() up to however many 60fps-equivalent
+  // "ticks" actually elapsed since the last rendered frame. (The rock/figure-
+  // eight motion above doesn't need this -- applyRock() already computes its
+  // position directly from real elapsed wall-clock time, not from a per-call
+  // tick, so it was never subject to the same crawl in the first place.)
+  let lastT = performance.now();
+  function animate() {
+    requestAnimationFrame(animate);
+    const now = performance.now();
+    if (rocking) applyRock(now);
+    const steps = Math.min(10, Math.max(1, Math.round((now - lastT) / (1000 / 60))));
+    lastT = now;
+    for (let s = 0; s < steps; s++) controls.update();
+    positionLabels();
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

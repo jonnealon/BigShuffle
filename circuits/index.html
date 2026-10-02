@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Circuit-to-circuit flow and outcome</title>
+<!--
+  Small standalone analysis page, built on direct request, 2026-10-02, right after
+  the book chapter and methods-paper write-up of the same finding
+  (03-model.qmd @sec-model-circuit-flow; paper/02-methods.qmd @sec-paper-jurisdiction-shift).
+  Owner: "can you give me the results of the circuit to circuit flow in a page with
+  visualizations?" Same convention as airports/index.html and miles/index.html:
+  standalone, dark-themed, not wired into `quarto render`, reachable from the map's
+  "More views" row, reads a single pre-computed JSON file and does all computation
+  client-side from it -- nothing recomputed from the raw DDP pull in the browser.
+
+  DATA: data/circuit_flow_outcomes.json?v=1790960693 (data/build_circuit_flow_outcomes.py). Method,
+  population, and every caveat are described there and in the book chapter -- this page
+  states them too (see the "Caveats" section below), not only cross-references them,
+  since a reader may land here directly from the map's "More views" row without having
+  read the chapter first.
+
+  CHARTS: hand-rolled, div-width bars (not inline SVG, not a charting library) --
+  matching airports/index.html's own `.rank-bar` pattern exactly, since every chart
+  here is a simple horizontal magnitude comparison, the same job that pattern already
+  serves well. The one new pattern is a two-series grouped bar (Chart 2, "every origin
+  shows the same gap") -- two color-coded bars per origin-circuit row, reusing the
+  already-validated gold/blue pair from miles/index.html's own monthly time series
+  (`#b8860b`/`#4a90d9`), a deliberate reuse rather than a new, unvalidated pair, since
+  that pair already cleared an adjacent-pair CVD check in this project.
+
+  COLOR: Chart 1 (a single magnitude series, "share of circuit-changing volume by
+  destination") uses one accent hue, `--accent` (`#4a90d9`) -- no categorical palette
+  needed for a single-series bar chart, per the dataviz skill's own rule. Chart 2
+  (two series: stayed vs. moved to the concentrated destination) needs two
+  distinguishable colors, reusing the validated gold/blue pair above rather than
+  picking a fresh one. The facility bar chart reuses the single accent hue again (also
+  one series). Nothing here is colored to imply a value judgment (removal is not red,
+  matching the restraint already applied to the ARFF flag and the population view's
+  own Outcome grouping).
+-->
+<style>
+  :root{
+    color-scheme: dark;
+    --surface: #1a1a19;
+    --panel-bg: rgba(20,20,19,0.92);
+    --panel-border: #383835;
+    --ink-primary: #ffffff;
+    --ink-secondary: #c3c2b7;
+    --ink-muted: #898781;
+    --accent: #4a90d9;
+  }
+  html,body{margin:0;padding:0;background:var(--surface);color:var(--ink-primary);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+  a{color:var(--accent);}
+  .wrap{max-width:960px;margin:0 auto;padding:28px 20px 80px;}
+  .backlink{display:inline-flex;align-items:center;gap:5px;font-size:11px;
+    color:var(--ink-muted);text-decoration:none;margin-bottom:18px;}
+  .backlink:hover{color:var(--ink-primary);}
+  h1{font-size:22px;margin:0 0 6px 0;font-weight:700;}
+  .sub{font-size:13px;color:var(--ink-secondary);line-height:1.55;max-width:760px;margin-bottom:6px;}
+  .note{font-size:11.5px;color:var(--ink-muted);line-height:1.5;max-width:760px;}
+  section{margin-top:32px;}
+  h2{font-size:14px;text-transform:uppercase;letter-spacing:0.6px;color:var(--ink-secondary);
+    border-bottom:1px solid var(--panel-border);padding-bottom:8px;margin:0 0 14px 0;}
+  .chartbox{background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:10px;
+    padding:18px 20px;}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:10px;}
+  .tile{background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:10px;
+    padding:14px 16px;}
+  .tile .v{font-size:22px;font-weight:700;color:var(--ink-primary);}
+  .tile .k{font-size:10.5px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.4px;margin-top:4px;}
+  .rank-row{display:flex;align-items:center;gap:10px;margin:5px 0;font-size:11.5px;}
+  .rank-row.spotlight .rank-label{color:#6bb3ff;font-weight:700;}
+  .rank-row.spotlight .rank-bar{background:#6bb3ff;}
+  .rank-row.spotlight .rank-val{color:#6bb3ff;font-weight:700;}
+  .rank-num{width:22px;color:var(--ink-muted);text-align:right;flex-shrink:0;}
+  .rank-label{width:200px;flex-shrink:0;color:var(--ink-secondary);white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;}
+  .rank-bar-track{flex:1;position:relative;height:16px;}
+  .rank-bar{position:absolute;top:0;left:0;height:16px;background:var(--accent);border-radius:3px;
+    min-width:2px;}
+  .rank-bar:hover{background:#5aa4ff;}
+  .rank-val{width:120px;flex-shrink:0;text-align:right;color:var(--ink-primary);font-variant-numeric:tabular-nums;}
+  .grp-row{margin:10px 0 14px 0;font-size:11.5px;}
+  .grp-label{color:var(--ink-secondary);margin-bottom:4px;display:flex;justify-content:space-between;}
+  .grp-bar-line{display:flex;align-items:center;gap:8px;margin:2px 0;}
+  .grp-swatch{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+  .grp-bar-track{flex:1;position:relative;height:13px;}
+  .grp-bar{position:absolute;top:0;left:0;height:13px;border-radius:3px;min-width:2px;}
+  .grp-val{width:140px;flex-shrink:0;text-align:right;color:var(--ink-primary);font-variant-numeric:tabular-nums;}
+  .grp-legend{display:flex;gap:16px;font-size:11px;color:var(--ink-secondary);margin-bottom:14px;}
+  .grp-legend span{display:inline-flex;align-items:center;gap:5px;}
+  table.stattable{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:4px;}
+  table.stattable th{text-align:left;color:var(--ink-muted);font-weight:600;font-size:10px;
+    text-transform:uppercase;letter-spacing:0.4px;padding:6px 10px;border-bottom:1px solid var(--panel-border);
+    position:sticky;top:0;background:var(--panel-bg);cursor:pointer;}
+  table.stattable th:hover{color:var(--ink-primary);}
+  table.stattable td{padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.05);}
+  table.stattable td.num{text-align:right;font-variant-numeric:tabular-nums;}
+  table.stattable tr:hover td{background:rgba(255,255,255,0.03);}
+  table.stattable tr.spotlight td{background:rgba(107,179,255,0.08);}
+  #pairTableWrap,#facTableWrap{max-height:420px;overflow-y:auto;background:var(--panel-bg);
+    border:1px solid var(--panel-border);border-radius:10px;padding:0 20px;}
+  #tooltip{position:fixed;pointer-events:none;background:var(--panel-bg);border:1px solid var(--panel-border);
+    border-radius:8px;padding:8px 10px;font-size:11px;line-height:1.5;color:var(--ink-primary);
+    box-shadow:0 8px 24px rgba(0,0,0,.5);display:none;z-index:20;white-space:nowrap;}
+  footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--panel-border);
+    font-size:11px;color:var(--ink-muted);line-height:1.6;}
+  .subhead{font-size:12.5px;font-weight:700;color:var(--ink-primary);margin:22px 0 8px 0;}
+  .subhead:first-child{margin-top:0;}
+  .badge-q{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;
+    border:1.5px solid #6bb3ff;color:#6bb3ff;border-radius:50%;font-size:10px;font-weight:700;
+    margin-left:5px;cursor:help;flex-shrink:0;}
+  .caveat-list{margin:0;padding-left:18px;font-size:12px;color:var(--ink-secondary);line-height:1.6;}
+  .spotlight-box{background:rgba(107,179,255,0.06);border:1px solid #2c4a6b;border-radius:10px;
+    padding:16px 18px;margin-top:10px;}
+  #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    color:var(--ink-secondary);font-size:13px;z-index:50;background:var(--surface);}
+</style>
+</head>
+<body>
+<div id="loading">Loading…</div>
+<div id="tooltip"></div>
+<div class="wrap">
+  <a class="backlink" href="../index.html">&larr; back to the map</a>
+  <h1>Circuit-to-circuit flow and outcome</h1>
+  <p class="sub">Does a case's outcome track where it was arrested, or where it ends up being
+    decided? For every detained stay in the study window, this compares the federal judicial
+    circuit of arrest against the circuit of the facility where the stay concluded, and checks
+    whether crossing from one to the other predicts removal.</p>
+  <p class="note">Full method, population, and every caveat: the book's <a href="../_book/03-model.html#sec-model-circuit-flow">
+    "Circuit-to-circuit flow"</a> chapter section and <code>data/build_circuit_flow_outcomes.py</code>.
+    This page restates the essentials, not a substitute for either. (The book link only
+    resolves when the project has been rendered with <code>quarto render</code> and is
+    served from this same project root -- it is not part of the standalone map/viz
+    publish and will 404 on the published GitHub Pages copy.)</p>
+
+  <section>
+    <h2>Headline figures</h2>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <section>
+    <h2>Where a circuit-changing case concludes</h2>
+    <div class="chartbox">
+      <p class="sub" style="margin-bottom:12px;">Share of every circuit-changing stay, by which
+        circuit it concluded in. One destination dominates -- not a plurality, a supermajority.</p>
+      <div id="destChart"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Every origin circuit shows the same gap</h2>
+    <div class="chartbox">
+      <p class="sub" style="margin-bottom:6px;">For each origin circuit with enough volume in
+        both groups: the share of <i>resolved</i> stays (Removed, Bonded, or Released -- "Still
+        held" excluded, since it is not yet a final outcome) ending in removal, split by whether
+        the case stayed in its own circuit or concluded in the concentrated destination circuit
+        above.</p>
+      <div class="grp-legend">
+        <span><span class="grp-swatch" style="background:#b8860b;"></span>Case stayed in its own circuit</span>
+        <span><span class="grp-swatch" style="background:#4a90d9;"></span>Case concluded in the concentrated destination circuit</span>
+      </div>
+      <div id="originChart"></div>
+      <p class="note" style="margin-top:10px;">Only origin circuits with at least 20 resolved
+        stays in <i>both</i> groups are shown, so a thin comparison is never drawn as if it were
+        as solid as a thick one.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Every circuit pair (<span id="pairCount"></span> pairs, &ge;20 stays each)</h2>
+    <div id="pairTableWrap">
+      <table class="stattable">
+        <thead><tr>
+          <th data-sort="origin_circuit">Origin</th><th data-sort="final_circuit">Final circuit</th>
+          <th data-sort="n" class="num">Stays</th><th data-sort="changed">Circuit changed?</th>
+          <th data-sort="removed_pct" class="num">Removed %</th>
+          <th data-sort="removed_resolved_pct" class="num">Removed % (of resolved)</th>
+        </tr></thead>
+        <tbody id="pairTable"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Facilities where circuit-shifting concentrates</h2>
+    <div class="chartbox">
+      <p class="sub" style="margin-bottom:12px;">Top 20 among facilities with at least 100
+        touching stays (both circuits known) -- a higher bar than the full table below, chosen
+        so a handful of small facilities hitting 100% on 25-50 stays don't crowd out the real,
+        high-volume pattern. The share shown is of stays concluding in a different circuit than
+        the one they were arrested in, against the <span id="baselineInline"></span> network
+        baseline.
+        <span class="badge-q" title="A facility's own circuit-shift rate is a pattern worth asking about, not a finding of wrongdoing. This data cannot distinguish deliberate routing from a facility simply being near a capacity- or logistics-driven corridor into the concentrated destination circuit -- both predict the identical pattern, and nothing here settles which explanation is correct.">?</span>
+      </p>
+      <div id="facChart"></div>
+    </div>
+
+    <div class="spotlight-box" id="spotlightBox"></div>
+
+    <div class="subhead" style="margin-top:22px;">Full facility table (<span id="facCount"></span> facilities)</div>
+    <div id="facTableWrap">
+      <table class="stattable">
+        <thead><tr>
+          <th data-sort="fac">Facility</th><th data-sort="n_stays_touching" class="num">Touching stays</th>
+          <th data-sort="pct_circuit_changed" class="num">% circuit changed</th>
+          <th data-sort="top_destination_circuit_if_changed">Top destination if changed</th>
+          <th data-sort="removed_resolved_changed" class="num">Removed % (resolved), changed</th>
+          <th data-sort="removed_resolved_unchanged" class="num">Removed % (resolved), unchanged</th>
+        </tr></thead>
+        <tbody id="facTable"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Caveats</h2>
+    <div class="chartbox">
+      <ul class="caveat-list">
+        <li><b>"Final circuit" is a proxy for the adjudicating circuit, not a record of it.</b>
+          It is the circuit of the last facility in a stay -- the most plausible stand-in for
+          where a video hearing's jurisdiction attaches, but an assumption, not a confirmed
+          fact about any specific case.</li>
+        <li><b>This does not establish intent.</b> A transfer log cannot distinguish deliberate
+          venue selection from a bed-space or logistics policy that happens to concentrate
+          capacity in the destination circuit's own states -- both predict the identical
+          observed flow.</li>
+        <li><b>Origin circuit relies on arrest state, not county</b> -- coarser than the
+          county-level arrest geocoding used elsewhere in this project, since DDP does not
+          provide a finer apprehension-circuit field directly.</li>
+        <li><b>Coverage gap:</b> an arrest in a foreign country, an unmapped U.S. territory
+          (Guam, the U.S. Virgin Islands), "Armed Forces -...", or "Other" gets no origin
+          circuit and is excluded from every chart and table here, not guessed.</li>
+        <li><b>A facility's own circuit-shift rate is reported as a pattern to ask about, not a
+          finding of wrongdoing</b> -- the same framing this project already applies to the ARFF
+          index-mismatch flag and the no-Part-139-certification finding.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <b>Sources.</b> Detention and arrest records: Deportation Data Project. Circuit assignment:
+    28 U.S.C. &sect;41, and DDP's own pre-computed
+    <code>federal_court_circuit_of_confinement</code> field. Built by
+    <code>data/build_circuit_flow_outcomes.py</code>. Full citations: <code>references.bib</code>,
+    <code>02-data.qmd</code>, <code>03-model.qmd</code>. Analysis &amp; visualization: Jon Nealon.
+  </footer>
+</div>
+
+<script>
+const tooltip = document.getElementById('tooltip');
+function showTip(html, evt){
+  tooltip.innerHTML = html; tooltip.style.display = 'block';
+  const pad = 14;
+  tooltip.style.left = (evt.clientX + pad) + 'px'; tooltip.style.top = (evt.clientY + pad) + 'px';
+}
+function hideTip(){ tooltip.style.display = 'none'; }
+function num(n){ return n == null ? '—' : Number(n).toLocaleString(); }
+function pct(n){ return n == null ? '—' : n + '%'; }
+
+function tile(v, k){
+  const el = document.createElement('div');
+  el.className = 'tile';
+  el.innerHTML = `<div class="v">${v}</div><div class="k">${k}</div>`;
+  return el;
+}
+
+async function main(){
+  const d = await fetch('../data/circuit_flow_outcomes.json?v=1790960693').then(r => r.json());
+  const nb = d.network_baseline;
+  const pairs = d.circuit_pairs;
+  const facs = d.facility_circuit_shift;
+  const spot = d.spotlight;
+
+  // ---- headline tiles ----
+  const tiles = document.getElementById('tiles');
+  tiles.appendChild(tile(nb.pct_circuit_changed + '%', 'Stays ending in a different circuit than arrest'));
+  tiles.appendChild(tile(nb.outcomes_by_circuit_change.circuit_unchanged.removed_share_of_resolved.pct + '%',
+    'Removed, of resolved — circuit unchanged'));
+  tiles.appendChild(tile(nb.outcomes_by_circuit_change.circuit_changed.removed_share_of_resolved.pct + '%',
+    'Removed, of resolved — circuit changed'));
+
+  // Share of all circuit-changing stays ending in the single dominant destination circuit
+  const changedPairs = pairs.filter(p => p.circuit_changed);
+  const totalChanged = changedPairs.reduce((s, p) => s + p.n, 0);
+  const destTotals = {};
+  changedPairs.forEach(p => { destTotals[p.final_circuit] = (destTotals[p.final_circuit] || 0) + p.n; });
+  const destSorted = Object.entries(destTotals).sort((a, b) => b[1] - a[1]);
+  const topDest = destSorted[0][0];
+  const topDestShare = (100 * destSorted[0][1] / totalChanged).toFixed(1);
+  tiles.appendChild(tile(topDestShare + '%', `Of all circuit-changing stays end in the ${topDest}`));
+
+  document.getElementById('baselineInline').textContent = nb.pct_circuit_changed + '%';
+
+  // ---- Chart 1: destination share, all 12 circuits ----
+  const destChart = document.getElementById('destChart');
+  const maxDest = destSorted[0][1];
+  destSorted.forEach(([circuit, n], i) => {
+    const sharePct = (100 * n / totalChanged).toFixed(1);
+    const row = document.createElement('div');
+    row.className = 'rank-row';
+    row.innerHTML = `<div class="rank-num">${i + 1}</div>` +
+      `<div class="rank-label" title="${circuit}">${circuit}</div>` +
+      `<div class="rank-bar-track"><div class="rank-bar" style="width:${100 * n / maxDest}%"></div></div>` +
+      `<div class="rank-val">${num(n)} (${sharePct}%)</div>`;
+    const bar = row.querySelector('.rank-bar');
+    bar.addEventListener('mousemove', e => showTip(
+      `<b>${circuit}</b><br>${num(n)} of ${num(totalChanged)} circuit-changing stays (${sharePct}%)`, e));
+    bar.addEventListener('mouseleave', hideTip);
+    destChart.appendChild(row);
+  });
+
+  // ---- Chart 2: per-origin, stayed vs. moved to the dominant destination ----
+  const byOrigin = {};
+  pairs.forEach(p => { (byOrigin[p.origin_circuit] = byOrigin[p.origin_circuit] || {})[p.final_circuit] = p; });
+  const originChart = document.getElementById('originChart');
+  const MIN_RESOLVED = 20;
+  Object.keys(byOrigin).forEach(origin => {
+    if (origin === topDest) return; // "stayed" vs "moved to topDest" isn't meaningful for topDest's own arrests
+    const same = byOrigin[origin][origin];
+    const moved = byOrigin[origin][topDest];
+    if (!same || !moved) return;
+    const sameN = same.outcomes.removed_share_of_resolved.n_resolved;
+    const movedN = moved.outcomes.removed_share_of_resolved.n_resolved;
+    if (sameN < MIN_RESOLVED || movedN < MIN_RESOLVED) return;
+    const sameP = same.outcomes.removed_share_of_resolved.pct;
+    const movedP = moved.outcomes.removed_share_of_resolved.pct;
+    const row = document.createElement('div');
+    row.className = 'grp-row';
+    row.innerHTML =
+      `<div class="grp-label"><span>${origin}</span></div>` +
+      `<div class="grp-bar-line"><span class="grp-swatch" style="background:#b8860b;"></span>` +
+      `<div class="grp-bar-track"><div class="grp-bar" style="width:${sameP}%;background:#b8860b;"></div></div>` +
+      `<div class="grp-val">${sameP}% (n=${num(sameN)})</div></div>` +
+      `<div class="grp-bar-line"><span class="grp-swatch" style="background:#4a90d9;"></span>` +
+      `<div class="grp-bar-track"><div class="grp-bar" style="width:${movedP}%;background:#4a90d9;"></div></div>` +
+      `<div class="grp-val">${movedP}% (n=${num(movedN)})</div></div>`;
+    originChart.appendChild(row);
+  });
+
+  // ---- full circuit-pair table ----
+  document.getElementById('pairCount').textContent = pairs.length;
+  const pairRows = pairs.map(p => ({
+    origin_circuit: p.origin_circuit, final_circuit: p.final_circuit, n: p.n,
+    changed: p.circuit_changed ? 'Yes' : 'No',
+    removed_pct: p.outcomes.breakdown.Removed.pct,
+    removed_resolved_pct: p.outcomes.removed_share_of_resolved.pct,
+  }));
+  function renderPairTable(rows){
+    const tbody = document.getElementById('pairTable');
+    tbody.innerHTML = '';
+    rows.forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${r.origin_circuit}</td><td>${r.final_circuit}</td>` +
+        `<td class="num">${num(r.n)}</td><td>${r.changed}</td>` +
+        `<td class="num">${pct(r.removed_pct)}</td><td class="num">${pct(r.removed_resolved_pct)}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+  let pairSort = { key: 'n', dir: -1 };
+  function sortAndRenderPairs(){
+    const k = pairSort.key, dir = pairSort.dir;
+    const sorted = [...pairRows].sort((a, b) => {
+      const av = a[k], bv = b[k];
+      if (typeof av === 'string') return dir * av.localeCompare(bv);
+      return dir * (av - bv);
+    });
+    renderPairTable(sorted);
+  }
+  document.querySelectorAll('#pairTableWrap th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.sort;
+      pairSort.dir = (pairSort.key === key) ? -pairSort.dir : -1;
+      pairSort.key = key;
+      sortAndRenderPairs();
+    });
+  });
+  sortAndRenderPairs();
+
+  // ---- facility bar chart (top 20 by pct_circuit_changed, among higher-volume
+  // facilities only -- the full table's own 20-stay threshold lets a handful of
+  // small facilities hit 100% on very little evidence (n=25-50), which would
+  // dominate this chart and bury the real, high-volume pattern underneath. A
+  // separate, higher CHART_MIN_N keeps the headline visual meaningful; the full
+  // table below still shows everything down to 20 stays, sortable, for a reader
+  // who wants the small-n tail too.) ----
+  const CHART_MIN_N = 100;
+  const facChart = document.getElementById('facChart');
+  const top20 = facs.filter(f => f.n_stays_touching >= CHART_MIN_N)
+    .sort((a, b) => b.pct_circuit_changed - a.pct_circuit_changed).slice(0, 20);
+  top20.forEach((f, i) => {
+    const row = document.createElement('div');
+    row.className = 'rank-row' + (f.fac === spot.facility ? ' spotlight' : '');
+    row.innerHTML = `<div class="rank-num">${i + 1}</div>` +
+      `<div class="rank-label" title="${f.fac}">${f.fac}</div>` +
+      `<div class="rank-bar-track"><div class="rank-bar" style="width:${f.pct_circuit_changed}%"></div></div>` +
+      `<div class="rank-val">${f.pct_circuit_changed}% (n=${num(f.n_stays_touching)})</div>`;
+    const bar = row.querySelector('.rank-bar');
+    bar.addEventListener('mousemove', e => showTip(
+      `<b>${f.fac}</b><br>${f.pct_circuit_changed}% of ${num(f.n_stays_touching)} touching stays end in a different circuit` +
+      (f.top_destination_circuit_if_changed ? `<br>Top destination if changed: ${f.top_destination_circuit_if_changed} (${f.top_destination_circuit_share_of_changed}%)` : ''),
+      e));
+    bar.addEventListener('mouseleave', hideTip);
+    facChart.appendChild(row);
+  });
+
+  // ---- spotlight box ----
+  if (spot) {
+    const box = document.getElementById('spotlightBox');
+    const destDist = Object.entries(spot.final_circuit_distribution_when_changed)
+      .sort((a, b) => b[1] - a[1]).map(([c, n]) => `${c}: ${num(n)}`).join(', ');
+    box.innerHTML =
+      `<div class="subhead" style="margin-top:0;">Spotlight: ${spot.facility}</div>` +
+      `<p class="sub" style="margin-bottom:10px;">${num(spot.n_stays_touching)} touching stays; ` +
+      `${spot.pct_circuit_changed}% end in a different circuit (network baseline ${spot.network_baseline_pct_circuit_changed}%). ` +
+      `Final circuit when changed: ${destDist}.</p>` +
+      `<div class="grp-legend">` +
+      `<span><span class="grp-swatch" style="background:#b8860b;"></span>Circuit unchanged</span>` +
+      `<span><span class="grp-swatch" style="background:#4a90d9;"></span>Circuit changed</span></div>` +
+      `<div class="grp-row">` +
+      `<div class="grp-bar-line"><span class="grp-swatch" style="background:#b8860b;"></span>` +
+      `<div class="grp-bar-track"><div class="grp-bar" style="width:${spot.outcomes_circuit_unchanged.removed_share_of_resolved.pct}%;background:#b8860b;"></div></div>` +
+      `<div class="grp-val">${spot.outcomes_circuit_unchanged.removed_share_of_resolved.pct}% removed, of resolved</div></div>` +
+      `<div class="grp-bar-line"><span class="grp-swatch" style="background:#4a90d9;"></span>` +
+      `<div class="grp-bar-track"><div class="grp-bar" style="width:${spot.outcomes_circuit_changed.removed_share_of_resolved.pct}%;background:#4a90d9;"></div></div>` +
+      `<div class="grp-val">${spot.outcomes_circuit_changed.removed_share_of_resolved.pct}% removed, of resolved</div></div>` +
+      `</div>`;
+  }
+
+  // ---- full facility table ----
+  document.getElementById('facCount').textContent = facs.length;
+  const facRows = facs.map(f => ({
+    fac: f.fac, n_stays_touching: f.n_stays_touching, pct_circuit_changed: f.pct_circuit_changed,
+    top_destination_circuit_if_changed: f.top_destination_circuit_if_changed || '—',
+    removed_resolved_changed: f.removed_share_of_resolved_circuit_changed,
+    removed_resolved_unchanged: f.removed_share_of_resolved_circuit_unchanged,
+  }));
+  function renderFacTable(rows){
+    const tbody = document.getElementById('facTable');
+    tbody.innerHTML = '';
+    rows.forEach(r => {
+      const tr = document.createElement('tr');
+      if (r.fac === spot.facility) tr.className = 'spotlight';
+      tr.innerHTML = `<td>${r.fac}</td><td class="num">${num(r.n_stays_touching)}</td>` +
+        `<td class="num">${pct(r.pct_circuit_changed)}</td><td>${r.top_destination_circuit_if_changed}</td>` +
+        `<td class="num">${pct(r.removed_resolved_changed)}</td><td class="num">${pct(r.removed_resolved_unchanged)}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+  let facSort = { key: 'pct_circuit_changed', dir: -1 };
+  function sortAndRenderFacs(){
+    const k = facSort.key, dir = facSort.dir;
+    const sorted = [...facRows].sort((a, b) => {
+      const av = a[k], bv = b[k];
+      if (typeof av === 'string') return dir * av.localeCompare(bv);
+      return dir * ((av ?? -1) - (bv ?? -1));
+    });
+    renderFacTable(sorted);
+  }
+  document.querySelectorAll('#facTableWrap th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.sort;
+      facSort.dir = (facSort.key === key) ? -facSort.dir : -1;
+      facSort.key = key;
+      sortAndRenderFacs();
+    });
+  });
+  sortAndRenderFacs();
+
+  document.getElementById('loading').style.display = 'none';
+}
+
+main().catch(e => {
+  document.getElementById('loading').textContent = 'Failed to load: ' + e.message +
+    '. This page uses fetch() to load ../data/circuit_flow_outcomes.json?v=1790960693, which most browsers ' +
+    'block for local file:// pages -- serve this folder over a local HTTP server instead.';
+});
+</script>
+</body>
+</html>
