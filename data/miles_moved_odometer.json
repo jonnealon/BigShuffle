@@ -1,0 +1,4104 @@
+{
+  "generated_by": "data/build_miles_moved.py",
+  "data_release_date": "2026-08-26",
+  "study_start": "2025-01-20",
+  "unit": "miles",
+  "date_convention": "Arrival-dated -- a leg is attributed to the date the destination stint's own book_in_date_time falls on, matching build_edge_bins.py's own convention for this project's timeline.",
+  "floor_caveat": "Straight-line (WGS84 geodesic) distance is a FLOOR for road travel, not an estimate -- real road distance typically runs 1.2-1.4x the straight line. Never present this figure as 'distance travelled.'",
+  "adjusted_caveat": "Circuity-adjusted estimate: legs the existing travel-mode inference (data/transfer_modes.json) classifies as road-like are multiplied by CIRCUITY_FACTOR=1.3 (a stated point estimate, not independently re-derived); air-like legs are left unadjusted, since a flight already approximates a great-circle path. Legs with no mode match are also left unadjusted (reported separately as 'undetermined_km' coverage), not guessed.",
+  "excludes_arrest_leg": true,
+  "arrest_leg_caveat": "The arrest-to-first-detention leg is EXCLUDED from path_km_floor/adjusted above -- its coordinates are a Census Gazetteer city-internal point, coarser than most facility-to-facility legs, which mostly resolve to a real address. See path_km_floor_with_arrest for the alternative total.",
+  "circuity_factor": 1.3,
+  "circuity_sensitivity_total_adjusted_mi": {
+    "1.2": 399685285.0,
+    "1.3": 403895313.0,
+    "1.4": 408105342.0
+  },
+  "circuity_sensitivity_caveat": "Total adjusted miles recomputed at the 1.2x and 1.4x ends of the same road-circuity literature range CIRCUITY_FACTOR's 1.3x midpoint is drawn from, road-classified legs only, air-like and undetermined legs unchanged -- shows how much the adjusted total actually moves with this assumption.",
+  "same_site_km_threshold": 2.0,
+  "daily": [
+    {
+      "period": "2025-01-20",
+      "miles_floor": 3297.3,
+      "miles_adjusted": 4148.1,
+      "n_legs": 53,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-01-21",
+      "miles_floor": 16565.5,
+      "miles_adjusted": 19142.0,
+      "n_legs": 169,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-01-22",
+      "miles_floor": 23218.5,
+      "miles_adjusted": 27277.6,
+      "n_legs": 261,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-01-23",
+      "miles_floor": 43537.0,
+      "miles_adjusted": 49234.6,
+      "n_legs": 445,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-01-24",
+      "miles_floor": 65518.4,
+      "miles_adjusted": 76004.7,
+      "n_legs": 534,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-01-25",
+      "miles_floor": 16623.6,
+      "miles_adjusted": 17970.8,
+      "n_legs": 150,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-01-26",
+      "miles_floor": 44052.2,
+      "miles_adjusted": 52497.4,
+      "n_legs": 625,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-01-27",
+      "miles_floor": 120360.4,
+      "miles_adjusted": 142422.8,
+      "n_legs": 1082,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-01-28",
+      "miles_floor": 179974.6,
+      "miles_adjusted": 191478.0,
+      "n_legs": 917,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-01-29",
+      "miles_floor": 144318.6,
+      "miles_adjusted": 163903.3,
+      "n_legs": 1038,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-01-30",
+      "miles_floor": 186803.5,
+      "miles_adjusted": 199703.4,
+      "n_legs": 1010,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-01-31",
+      "miles_floor": 381903.4,
+      "miles_adjusted": 399788.3,
+      "n_legs": 1296,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-01",
+      "miles_floor": 110615.5,
+      "miles_adjusted": 117084.6,
+      "n_legs": 521,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-02",
+      "miles_floor": 233543.9,
+      "miles_adjusted": 235786.1,
+      "n_legs": 477,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-03",
+      "miles_floor": 154038.2,
+      "miles_adjusted": 166255.4,
+      "n_legs": 830,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-04",
+      "miles_floor": 192748.6,
+      "miles_adjusted": 207569.5,
+      "n_legs": 1123,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-05",
+      "miles_floor": 202574.8,
+      "miles_adjusted": 216563.4,
+      "n_legs": 1019,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-06",
+      "miles_floor": 146584.0,
+      "miles_adjusted": 158209.2,
+      "n_legs": 980,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-07",
+      "miles_floor": 185805.0,
+      "miles_adjusted": 200855.5,
+      "n_legs": 1314,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-08",
+      "miles_floor": 154983.5,
+      "miles_adjusted": 160954.6,
+      "n_legs": 570,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-09",
+      "miles_floor": 81377.9,
+      "miles_adjusted": 92290.9,
+      "n_legs": 388,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-10",
+      "miles_floor": 99347.6,
+      "miles_adjusted": 112927.1,
+      "n_legs": 865,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-11",
+      "miles_floor": 315536.7,
+      "miles_adjusted": 325969.1,
+      "n_legs": 1240,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-12",
+      "miles_floor": 238209.9,
+      "miles_adjusted": 255965.1,
+      "n_legs": 1154,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-13",
+      "miles_floor": 392267.4,
+      "miles_adjusted": 404748.9,
+      "n_legs": 1382,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-14",
+      "miles_floor": 396584.6,
+      "miles_adjusted": 416425.9,
+      "n_legs": 1435,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-15",
+      "miles_floor": 274436.8,
+      "miles_adjusted": 283717.2,
+      "n_legs": 661,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-16",
+      "miles_floor": 21922.8,
+      "miles_adjusted": 24999.4,
+      "n_legs": 280,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-17",
+      "miles_floor": 268411.6,
+      "miles_adjusted": 276681.7,
+      "n_legs": 786,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-18",
+      "miles_floor": 329000.1,
+      "miles_adjusted": 347650.2,
+      "n_legs": 1812,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-19",
+      "miles_floor": 373291.8,
+      "miles_adjusted": 393419.4,
+      "n_legs": 1566,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-20",
+      "miles_floor": 207474.1,
+      "miles_adjusted": 223178.0,
+      "n_legs": 1374,
+      "undetermined_miles": 415.6
+    },
+    {
+      "period": "2025-02-21",
+      "miles_floor": 345341.1,
+      "miles_adjusted": 369111.2,
+      "n_legs": 1541,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-22",
+      "miles_floor": 213646.1,
+      "miles_adjusted": 225438.7,
+      "n_legs": 831,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-23",
+      "miles_floor": 241604.8,
+      "miles_adjusted": 260318.5,
+      "n_legs": 605,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-24",
+      "miles_floor": 193219.1,
+      "miles_adjusted": 210659.4,
+      "n_legs": 1211,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-25",
+      "miles_floor": 503589.4,
+      "miles_adjusted": 515697.7,
+      "n_legs": 1533,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-26",
+      "miles_floor": 408431.6,
+      "miles_adjusted": 434151.4,
+      "n_legs": 1693,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-27",
+      "miles_floor": 227289.4,
+      "miles_adjusted": 243993.2,
+      "n_legs": 1443,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02-28",
+      "miles_floor": 267411.4,
+      "miles_adjusted": 284677.5,
+      "n_legs": 1512,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-01",
+      "miles_floor": 284208.0,
+      "miles_adjusted": 305672.4,
+      "n_legs": 887,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-02",
+      "miles_floor": 296343.1,
+      "miles_adjusted": 301297.2,
+      "n_legs": 627,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-03",
+      "miles_floor": 273058.8,
+      "miles_adjusted": 291971.1,
+      "n_legs": 1451,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-04",
+      "miles_floor": 355586.4,
+      "miles_adjusted": 369012.1,
+      "n_legs": 1515,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-05",
+      "miles_floor": 367843.3,
+      "miles_adjusted": 385183.3,
+      "n_legs": 1394,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-06",
+      "miles_floor": 345981.1,
+      "miles_adjusted": 357692.3,
+      "n_legs": 1197,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-07",
+      "miles_floor": 444821.8,
+      "miles_adjusted": 467731.4,
+      "n_legs": 1671,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-08",
+      "miles_floor": 343622.8,
+      "miles_adjusted": 355420.4,
+      "n_legs": 919,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-09",
+      "miles_floor": 284926.1,
+      "miles_adjusted": 291269.5,
+      "n_legs": 664,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-10",
+      "miles_floor": 284705.4,
+      "miles_adjusted": 300911.1,
+      "n_legs": 1302,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-11",
+      "miles_floor": 349520.9,
+      "miles_adjusted": 366481.2,
+      "n_legs": 1596,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-12",
+      "miles_floor": 429001.2,
+      "miles_adjusted": 446918.0,
+      "n_legs": 1485,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-13",
+      "miles_floor": 548745.4,
+      "miles_adjusted": 575423.5,
+      "n_legs": 1453,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-14",
+      "miles_floor": 246610.1,
+      "miles_adjusted": 267604.1,
+      "n_legs": 1611,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-15",
+      "miles_floor": 223572.8,
+      "miles_adjusted": 232095.0,
+      "n_legs": 631,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-16",
+      "miles_floor": 112495.7,
+      "miles_adjusted": 118232.1,
+      "n_legs": 550,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-17",
+      "miles_floor": 623026.7,
+      "miles_adjusted": 638605.0,
+      "n_legs": 1357,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-18",
+      "miles_floor": 583380.3,
+      "miles_adjusted": 596191.9,
+      "n_legs": 1745,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-19",
+      "miles_floor": 311021.1,
+      "miles_adjusted": 327932.9,
+      "n_legs": 1235,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-20",
+      "miles_floor": 628338.6,
+      "miles_adjusted": 640909.7,
+      "n_legs": 1648,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-21",
+      "miles_floor": 299375.9,
+      "miles_adjusted": 318765.8,
+      "n_legs": 1352,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-22",
+      "miles_floor": 317893.2,
+      "miles_adjusted": 324734.4,
+      "n_legs": 743,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-23",
+      "miles_floor": 348954.4,
+      "miles_adjusted": 354576.9,
+      "n_legs": 780,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-24",
+      "miles_floor": 763191.7,
+      "miles_adjusted": 779522.0,
+      "n_legs": 1743,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-25",
+      "miles_floor": 630713.4,
+      "miles_adjusted": 647136.0,
+      "n_legs": 1696,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-26",
+      "miles_floor": 635122.3,
+      "miles_adjusted": 660660.9,
+      "n_legs": 1824,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-27",
+      "miles_floor": 390933.0,
+      "miles_adjusted": 405767.0,
+      "n_legs": 1629,
+      "undetermined_miles": 67.8
+    },
+    {
+      "period": "2025-03-28",
+      "miles_floor": 424556.4,
+      "miles_adjusted": 447924.2,
+      "n_legs": 1671,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-29",
+      "miles_floor": 318618.6,
+      "miles_adjusted": 324849.8,
+      "n_legs": 714,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-30",
+      "miles_floor": 280189.3,
+      "miles_adjusted": 283861.0,
+      "n_legs": 541,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-03-31",
+      "miles_floor": 448694.6,
+      "miles_adjusted": 464815.4,
+      "n_legs": 1634,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-01",
+      "miles_floor": 462874.2,
+      "miles_adjusted": 479691.9,
+      "n_legs": 1882,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-02",
+      "miles_floor": 541107.8,
+      "miles_adjusted": 563109.4,
+      "n_legs": 1753,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-03",
+      "miles_floor": 580850.3,
+      "miles_adjusted": 595615.6,
+      "n_legs": 1874,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-04",
+      "miles_floor": 458840.3,
+      "miles_adjusted": 482551.7,
+      "n_legs": 1860,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-05",
+      "miles_floor": 299878.4,
+      "miles_adjusted": 305854.2,
+      "n_legs": 702,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-06",
+      "miles_floor": 363185.8,
+      "miles_adjusted": 370463.4,
+      "n_legs": 747,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-07",
+      "miles_floor": 280025.5,
+      "miles_adjusted": 299887.5,
+      "n_legs": 1391,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-08",
+      "miles_floor": 626389.8,
+      "miles_adjusted": 642613.3,
+      "n_legs": 1685,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-09",
+      "miles_floor": 520431.6,
+      "miles_adjusted": 537454.5,
+      "n_legs": 1739,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-10",
+      "miles_floor": 541821.5,
+      "miles_adjusted": 572852.5,
+      "n_legs": 1645,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-11",
+      "miles_floor": 577821.3,
+      "miles_adjusted": 602314.3,
+      "n_legs": 1962,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-12",
+      "miles_floor": 412923.5,
+      "miles_adjusted": 417383.7,
+      "n_legs": 832,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-13",
+      "miles_floor": 453046.1,
+      "miles_adjusted": 470482.8,
+      "n_legs": 892,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-14",
+      "miles_floor": 266722.2,
+      "miles_adjusted": 282657.7,
+      "n_legs": 1392,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-15",
+      "miles_floor": 777547.1,
+      "miles_adjusted": 798872.1,
+      "n_legs": 1919,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-16",
+      "miles_floor": 532615.8,
+      "miles_adjusted": 551059.5,
+      "n_legs": 1769,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-17",
+      "miles_floor": 417212.0,
+      "miles_adjusted": 438541.1,
+      "n_legs": 1490,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-18",
+      "miles_floor": 498341.7,
+      "miles_adjusted": 521836.9,
+      "n_legs": 1995,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-19",
+      "miles_floor": 362447.9,
+      "miles_adjusted": 367283.1,
+      "n_legs": 768,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-20",
+      "miles_floor": 188341.8,
+      "miles_adjusted": 192377.7,
+      "n_legs": 442,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-21",
+      "miles_floor": 275729.6,
+      "miles_adjusted": 290730.8,
+      "n_legs": 1399,
+      "undetermined_miles": 43.0
+    },
+    {
+      "period": "2025-04-22",
+      "miles_floor": 542051.5,
+      "miles_adjusted": 561816.9,
+      "n_legs": 1902,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-23",
+      "miles_floor": 768515.8,
+      "miles_adjusted": 791359.8,
+      "n_legs": 2057,
+      "undetermined_miles": 43.0
+    },
+    {
+      "period": "2025-04-24",
+      "miles_floor": 540042.6,
+      "miles_adjusted": 559225.1,
+      "n_legs": 1999,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-25",
+      "miles_floor": 676982.8,
+      "miles_adjusted": 711988.6,
+      "n_legs": 2193,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-26",
+      "miles_floor": 413104.1,
+      "miles_adjusted": 421234.4,
+      "n_legs": 972,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-27",
+      "miles_floor": 211160.9,
+      "miles_adjusted": 214845.5,
+      "n_legs": 670,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-04-28",
+      "miles_floor": 291644.5,
+      "miles_adjusted": 306890.1,
+      "n_legs": 1355,
+      "undetermined_miles": 281.1
+    },
+    {
+      "period": "2025-04-29",
+      "miles_floor": 758056.9,
+      "miles_adjusted": 776213.4,
+      "n_legs": 2045,
+      "undetermined_miles": 40.4
+    },
+    {
+      "period": "2025-04-30",
+      "miles_floor": 568519.5,
+      "miles_adjusted": 587193.7,
+      "n_legs": 1822,
+      "undetermined_miles": 43.0
+    },
+    {
+      "period": "2025-05-01",
+      "miles_floor": 370834.6,
+      "miles_adjusted": 388216.3,
+      "n_legs": 1620,
+      "undetermined_miles": 80.9
+    },
+    {
+      "period": "2025-05-02",
+      "miles_floor": 342278.4,
+      "miles_adjusted": 368322.0,
+      "n_legs": 1748,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-05-03",
+      "miles_floor": 308561.2,
+      "miles_adjusted": 316476.1,
+      "n_legs": 784,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-05-04",
+      "miles_floor": 335373.1,
+      "miles_adjusted": 344874.9,
+      "n_legs": 628,
+      "undetermined_miles": 54.6
+    },
+    {
+      "period": "2025-05-05",
+      "miles_floor": 355543.6,
+      "miles_adjusted": 384232.2,
+      "n_legs": 1566,
+      "undetermined_miles": 40.4
+    },
+    {
+      "period": "2025-05-06",
+      "miles_floor": 650186.6,
+      "miles_adjusted": 668936.7,
+      "n_legs": 1911,
+      "undetermined_miles": 163.9
+    },
+    {
+      "period": "2025-05-07",
+      "miles_floor": 445450.9,
+      "miles_adjusted": 468307.0,
+      "n_legs": 1738,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-05-08",
+      "miles_floor": 632816.7,
+      "miles_adjusted": 649232.6,
+      "n_legs": 1667,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-05-09",
+      "miles_floor": 521473.7,
+      "miles_adjusted": 553376.6,
+      "n_legs": 2112,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-05-10",
+      "miles_floor": 158132.0,
+      "miles_adjusted": 162153.1,
+      "n_legs": 547,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-05-11",
+      "miles_floor": 324960.5,
+      "miles_adjusted": 327470.2,
+      "n_legs": 665,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-05-12",
+      "miles_floor": 387850.1,
+      "miles_adjusted": 406337.5,
+      "n_legs": 1552,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-05-13",
+      "miles_floor": 613195.2,
+      "miles_adjusted": 634034.1,
+      "n_legs": 1941,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-05-14",
+      "miles_floor": 864379.7,
+      "miles_adjusted": 897878.7,
+      "n_legs": 2272,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-05-15",
+      "miles_floor": 756666.3,
+      "miles_adjusted": 777254.5,
+      "n_legs": 1978,
+      "undetermined_miles": 118.9
+    },
+    {
+      "period": "2025-05-16",
+      "miles_floor": 611325.2,
+      "miles_adjusted": 640063.8,
+      "n_legs": 2287,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-05-17",
+      "miles_floor": 360187.5,
+      "miles_adjusted": 368439.5,
+      "n_legs": 936,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-05-18",
+      "miles_floor": 381674.3,
+      "miles_adjusted": 388003.6,
+      "n_legs": 836,
+      "undetermined_miles": 54.4
+    },
+    {
+      "period": "2025-05-19",
+      "miles_floor": 302642.7,
+      "miles_adjusted": 325891.3,
+      "n_legs": 1564,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-05-20",
+      "miles_floor": 545280.9,
+      "miles_adjusted": 569252.0,
+      "n_legs": 2107,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-05-21",
+      "miles_floor": 427920.5,
+      "miles_adjusted": 449577.2,
+      "n_legs": 1806,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-05-22",
+      "miles_floor": 407108.5,
+      "miles_adjusted": 428007.5,
+      "n_legs": 1862,
+      "undetermined_miles": 54.6
+    },
+    {
+      "period": "2025-05-23",
+      "miles_floor": 534782.5,
+      "miles_adjusted": 570301.7,
+      "n_legs": 2074,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-05-24",
+      "miles_floor": 790451.9,
+      "miles_adjusted": 806387.1,
+      "n_legs": 1664,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-05-25",
+      "miles_floor": 1073519.4,
+      "miles_adjusted": 1087168.7,
+      "n_legs": 1560,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-05-26",
+      "miles_floor": 354149.3,
+      "miles_adjusted": 370605.2,
+      "n_legs": 1268,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-05-27",
+      "miles_floor": 449721.7,
+      "miles_adjusted": 475141.9,
+      "n_legs": 1887,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-05-28",
+      "miles_floor": 560136.9,
+      "miles_adjusted": 587698.9,
+      "n_legs": 2341,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-05-29",
+      "miles_floor": 709514.6,
+      "miles_adjusted": 732627.9,
+      "n_legs": 2174,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-05-30",
+      "miles_floor": 820383.6,
+      "miles_adjusted": 855048.9,
+      "n_legs": 2500,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-05-31",
+      "miles_floor": 712151.8,
+      "miles_adjusted": 722317.0,
+      "n_legs": 1438,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-01",
+      "miles_floor": 768393.6,
+      "miles_adjusted": 776563.5,
+      "n_legs": 1316,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-02",
+      "miles_floor": 706630.2,
+      "miles_adjusted": 728892.7,
+      "n_legs": 1967,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-03",
+      "miles_floor": 754731.8,
+      "miles_adjusted": 780590.1,
+      "n_legs": 2651,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-04",
+      "miles_floor": 1193411.6,
+      "miles_adjusted": 1227030.7,
+      "n_legs": 3255,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-05",
+      "miles_floor": 960110.4,
+      "miles_adjusted": 983107.7,
+      "n_legs": 2536,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-06",
+      "miles_floor": 828995.3,
+      "miles_adjusted": 881248.1,
+      "n_legs": 2732,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-07",
+      "miles_floor": 630606.1,
+      "miles_adjusted": 650934.0,
+      "n_legs": 1725,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-08",
+      "miles_floor": 1168450.8,
+      "miles_adjusted": 1208755.9,
+      "n_legs": 1936,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-09",
+      "miles_floor": 550442.6,
+      "miles_adjusted": 573931.0,
+      "n_legs": 1860,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-10",
+      "miles_floor": 676908.8,
+      "miles_adjusted": 704267.8,
+      "n_legs": 2327,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-11",
+      "miles_floor": 853358.0,
+      "miles_adjusted": 885238.1,
+      "n_legs": 2575,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-12",
+      "miles_floor": 671242.8,
+      "miles_adjusted": 693765.6,
+      "n_legs": 2246,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-13",
+      "miles_floor": 1049734.7,
+      "miles_adjusted": 1084315.9,
+      "n_legs": 2855,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-14",
+      "miles_floor": 640424.9,
+      "miles_adjusted": 650571.0,
+      "n_legs": 1624,
+      "undetermined_miles": 741.2
+    },
+    {
+      "period": "2025-06-15",
+      "miles_floor": 854229.6,
+      "miles_adjusted": 866481.1,
+      "n_legs": 1703,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-16",
+      "miles_floor": 697977.5,
+      "miles_adjusted": 722144.7,
+      "n_legs": 2108,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-17",
+      "miles_floor": 704591.1,
+      "miles_adjusted": 730468.3,
+      "n_legs": 2408,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-18",
+      "miles_floor": 736516.4,
+      "miles_adjusted": 760077.1,
+      "n_legs": 2326,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-19",
+      "miles_floor": 551320.2,
+      "miles_adjusted": 570897.6,
+      "n_legs": 1803,
+      "undetermined_miles": 179.0
+    },
+    {
+      "period": "2025-06-20",
+      "miles_floor": 565454.6,
+      "miles_adjusted": 595743.4,
+      "n_legs": 2509,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-21",
+      "miles_floor": 647262.1,
+      "miles_adjusted": 659786.3,
+      "n_legs": 1604,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-22",
+      "miles_floor": 609683.7,
+      "miles_adjusted": 618586.0,
+      "n_legs": 1363,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-23",
+      "miles_floor": 392233.1,
+      "miles_adjusted": 410909.0,
+      "n_legs": 1776,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-24",
+      "miles_floor": 636885.9,
+      "miles_adjusted": 668628.1,
+      "n_legs": 2191,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-25",
+      "miles_floor": 619694.7,
+      "miles_adjusted": 646343.8,
+      "n_legs": 2408,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-26",
+      "miles_floor": 609956.5,
+      "miles_adjusted": 628851.9,
+      "n_legs": 2115,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-27",
+      "miles_floor": 568798.2,
+      "miles_adjusted": 592395.2,
+      "n_legs": 2158,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-28",
+      "miles_floor": 562895.4,
+      "miles_adjusted": 574984.5,
+      "n_legs": 1345,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-29",
+      "miles_floor": 624411.5,
+      "miles_adjusted": 635433.2,
+      "n_legs": 1533,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-06-30",
+      "miles_floor": 700581.9,
+      "miles_adjusted": 725674.3,
+      "n_legs": 2125,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-01",
+      "miles_floor": 688826.0,
+      "miles_adjusted": 707880.0,
+      "n_legs": 2194,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-02",
+      "miles_floor": 552055.1,
+      "miles_adjusted": 577553.4,
+      "n_legs": 2315,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-03",
+      "miles_floor": 438393.5,
+      "miles_adjusted": 461686.4,
+      "n_legs": 1932,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-04",
+      "miles_floor": 515205.7,
+      "miles_adjusted": 530662.7,
+      "n_legs": 1406,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-05",
+      "miles_floor": 248971.6,
+      "miles_adjusted": 262476.0,
+      "n_legs": 875,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-06",
+      "miles_floor": 769021.4,
+      "miles_adjusted": 779709.4,
+      "n_legs": 1334,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-07",
+      "miles_floor": 342688.1,
+      "miles_adjusted": 362266.9,
+      "n_legs": 1563,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-08",
+      "miles_floor": 591514.7,
+      "miles_adjusted": 613631.1,
+      "n_legs": 2056,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-09",
+      "miles_floor": 640273.3,
+      "miles_adjusted": 669882.9,
+      "n_legs": 2495,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-10",
+      "miles_floor": 572623.0,
+      "miles_adjusted": 592304.5,
+      "n_legs": 2164,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-11",
+      "miles_floor": 833254.1,
+      "miles_adjusted": 870190.8,
+      "n_legs": 2640,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-12",
+      "miles_floor": 851042.0,
+      "miles_adjusted": 869003.4,
+      "n_legs": 1858,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-13",
+      "miles_floor": 867130.4,
+      "miles_adjusted": 875990.8,
+      "n_legs": 1832,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-14",
+      "miles_floor": 499664.4,
+      "miles_adjusted": 521615.3,
+      "n_legs": 1900,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-15",
+      "miles_floor": 560925.2,
+      "miles_adjusted": 578382.6,
+      "n_legs": 2118,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-16",
+      "miles_floor": 664375.0,
+      "miles_adjusted": 689429.5,
+      "n_legs": 2377,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-17",
+      "miles_floor": 564400.3,
+      "miles_adjusted": 595885.7,
+      "n_legs": 2053,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-18",
+      "miles_floor": 570006.5,
+      "miles_adjusted": 591881.0,
+      "n_legs": 2293,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-19",
+      "miles_floor": 637283.0,
+      "miles_adjusted": 652214.5,
+      "n_legs": 1417,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-20",
+      "miles_floor": 527367.6,
+      "miles_adjusted": 533533.1,
+      "n_legs": 1117,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-21",
+      "miles_floor": 324168.9,
+      "miles_adjusted": 347728.8,
+      "n_legs": 1671,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-22",
+      "miles_floor": 577384.0,
+      "miles_adjusted": 603015.5,
+      "n_legs": 2022,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-23",
+      "miles_floor": 826244.8,
+      "miles_adjusted": 847396.3,
+      "n_legs": 2562,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-24",
+      "miles_floor": 571090.7,
+      "miles_adjusted": 592818.9,
+      "n_legs": 2017,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-25",
+      "miles_floor": 703282.2,
+      "miles_adjusted": 725434.6,
+      "n_legs": 2252,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-26",
+      "miles_floor": 500157.5,
+      "miles_adjusted": 516922.3,
+      "n_legs": 1483,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-27",
+      "miles_floor": 666838.3,
+      "miles_adjusted": 677327.1,
+      "n_legs": 1372,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-28",
+      "miles_floor": 469202.6,
+      "miles_adjusted": 492054.5,
+      "n_legs": 1803,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-29",
+      "miles_floor": 522562.6,
+      "miles_adjusted": 546332.0,
+      "n_legs": 2065,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-30",
+      "miles_floor": 706195.7,
+      "miles_adjusted": 726083.9,
+      "n_legs": 2286,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-07-31",
+      "miles_floor": 470346.3,
+      "miles_adjusted": 493894.6,
+      "n_legs": 2010,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-01",
+      "miles_floor": 741395.0,
+      "miles_adjusted": 768845.3,
+      "n_legs": 2606,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-02",
+      "miles_floor": 784890.6,
+      "miles_adjusted": 798645.4,
+      "n_legs": 1846,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-03",
+      "miles_floor": 612236.4,
+      "miles_adjusted": 619710.1,
+      "n_legs": 1398,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-04",
+      "miles_floor": 621257.3,
+      "miles_adjusted": 644025.5,
+      "n_legs": 1991,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-05",
+      "miles_floor": 941432.8,
+      "miles_adjusted": 962426.4,
+      "n_legs": 2498,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-06",
+      "miles_floor": 858515.1,
+      "miles_adjusted": 889566.8,
+      "n_legs": 3103,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-07",
+      "miles_floor": 696249.7,
+      "miles_adjusted": 715089.4,
+      "n_legs": 2259,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-08",
+      "miles_floor": 1079382.3,
+      "miles_adjusted": 1117302.0,
+      "n_legs": 2859,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-09",
+      "miles_floor": 832459.7,
+      "miles_adjusted": 855163.8,
+      "n_legs": 2016,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-10",
+      "miles_floor": 884534.8,
+      "miles_adjusted": 897048.6,
+      "n_legs": 1680,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-11",
+      "miles_floor": 1014503.8,
+      "miles_adjusted": 1041167.8,
+      "n_legs": 2365,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-12",
+      "miles_floor": 1111443.0,
+      "miles_adjusted": 1139344.8,
+      "n_legs": 2688,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-13",
+      "miles_floor": 946879.8,
+      "miles_adjusted": 975208.8,
+      "n_legs": 2731,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-14",
+      "miles_floor": 844977.3,
+      "miles_adjusted": 873389.0,
+      "n_legs": 2595,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-15",
+      "miles_floor": 658451.3,
+      "miles_adjusted": 685400.7,
+      "n_legs": 2979,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-16",
+      "miles_floor": 999167.1,
+      "miles_adjusted": 1017068.0,
+      "n_legs": 2490,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-17",
+      "miles_floor": 625736.6,
+      "miles_adjusted": 634738.9,
+      "n_legs": 1703,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-18",
+      "miles_floor": 435512.1,
+      "miles_adjusted": 452270.8,
+      "n_legs": 2072,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-19",
+      "miles_floor": 670454.8,
+      "miles_adjusted": 696479.0,
+      "n_legs": 2343,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-20",
+      "miles_floor": 977465.1,
+      "miles_adjusted": 1001286.7,
+      "n_legs": 2731,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-21",
+      "miles_floor": 835239.0,
+      "miles_adjusted": 857455.7,
+      "n_legs": 3055,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-22",
+      "miles_floor": 987903.0,
+      "miles_adjusted": 1021435.5,
+      "n_legs": 3074,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-23",
+      "miles_floor": 897323.5,
+      "miles_adjusted": 914149.7,
+      "n_legs": 2126,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-24",
+      "miles_floor": 489691.9,
+      "miles_adjusted": 507277.9,
+      "n_legs": 1689,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-25",
+      "miles_floor": 547283.5,
+      "miles_adjusted": 575072.6,
+      "n_legs": 2229,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-26",
+      "miles_floor": 647161.4,
+      "miles_adjusted": 668355.9,
+      "n_legs": 2440,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-27",
+      "miles_floor": 961546.0,
+      "miles_adjusted": 987464.4,
+      "n_legs": 3185,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-28",
+      "miles_floor": 773136.5,
+      "miles_adjusted": 794461.6,
+      "n_legs": 2694,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-29",
+      "miles_floor": 874879.2,
+      "miles_adjusted": 900845.4,
+      "n_legs": 2748,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-30",
+      "miles_floor": 488145.9,
+      "miles_adjusted": 506081.4,
+      "n_legs": 1635,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08-31",
+      "miles_floor": 420047.4,
+      "miles_adjusted": 431632.5,
+      "n_legs": 1345,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-01",
+      "miles_floor": 598847.4,
+      "miles_adjusted": 618368.8,
+      "n_legs": 1925,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-02",
+      "miles_floor": 575454.8,
+      "miles_adjusted": 598018.3,
+      "n_legs": 1825,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-03",
+      "miles_floor": 815944.5,
+      "miles_adjusted": 848208.8,
+      "n_legs": 2889,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-04",
+      "miles_floor": 655222.4,
+      "miles_adjusted": 672611.6,
+      "n_legs": 2271,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-05",
+      "miles_floor": 795208.5,
+      "miles_adjusted": 828044.2,
+      "n_legs": 2824,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-06",
+      "miles_floor": 840548.3,
+      "miles_adjusted": 856233.9,
+      "n_legs": 2067,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-07",
+      "miles_floor": 883585.9,
+      "miles_adjusted": 892603.1,
+      "n_legs": 1729,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-08",
+      "miles_floor": 809306.6,
+      "miles_adjusted": 830780.7,
+      "n_legs": 2206,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-09",
+      "miles_floor": 654384.9,
+      "miles_adjusted": 678946.6,
+      "n_legs": 2128,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-10",
+      "miles_floor": 912949.2,
+      "miles_adjusted": 940807.3,
+      "n_legs": 3034,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-11",
+      "miles_floor": 703902.0,
+      "miles_adjusted": 726801.6,
+      "n_legs": 2751,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-12",
+      "miles_floor": 721905.8,
+      "miles_adjusted": 742757.2,
+      "n_legs": 2527,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-13",
+      "miles_floor": 797991.8,
+      "miles_adjusted": 822966.6,
+      "n_legs": 2326,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-14",
+      "miles_floor": 533787.2,
+      "miles_adjusted": 544875.9,
+      "n_legs": 1591,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-15",
+      "miles_floor": 698869.2,
+      "miles_adjusted": 720267.2,
+      "n_legs": 2090,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-16",
+      "miles_floor": 831435.0,
+      "miles_adjusted": 853450.7,
+      "n_legs": 2548,
+      "undetermined_miles": 975.4
+    },
+    {
+      "period": "2025-09-17",
+      "miles_floor": 834395.9,
+      "miles_adjusted": 863566.0,
+      "n_legs": 2863,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-18",
+      "miles_floor": 645634.6,
+      "miles_adjusted": 673074.4,
+      "n_legs": 2355,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-19",
+      "miles_floor": 932313.8,
+      "miles_adjusted": 967526.4,
+      "n_legs": 2633,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-20",
+      "miles_floor": 906948.4,
+      "miles_adjusted": 926265.2,
+      "n_legs": 2138,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-21",
+      "miles_floor": 644044.5,
+      "miles_adjusted": 654138.3,
+      "n_legs": 1473,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-22",
+      "miles_floor": 693882.7,
+      "miles_adjusted": 716698.4,
+      "n_legs": 2136,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-23",
+      "miles_floor": 859123.5,
+      "miles_adjusted": 883662.4,
+      "n_legs": 2677,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-24",
+      "miles_floor": 761199.1,
+      "miles_adjusted": 785934.1,
+      "n_legs": 2771,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-25",
+      "miles_floor": 999254.0,
+      "miles_adjusted": 1026121.0,
+      "n_legs": 2775,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-26",
+      "miles_floor": 1025973.3,
+      "miles_adjusted": 1054557.7,
+      "n_legs": 2975,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-27",
+      "miles_floor": 678224.9,
+      "miles_adjusted": 714120.6,
+      "n_legs": 2126,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-28",
+      "miles_floor": 707352.6,
+      "miles_adjusted": 722970.9,
+      "n_legs": 1710,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-29",
+      "miles_floor": 722816.9,
+      "miles_adjusted": 748351.1,
+      "n_legs": 2139,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09-30",
+      "miles_floor": 900648.6,
+      "miles_adjusted": 923878.8,
+      "n_legs": 2476,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-01",
+      "miles_floor": 866607.1,
+      "miles_adjusted": 904047.8,
+      "n_legs": 2775,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-02",
+      "miles_floor": 709602.2,
+      "miles_adjusted": 737602.6,
+      "n_legs": 2711,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-03",
+      "miles_floor": 921956.2,
+      "miles_adjusted": 955723.3,
+      "n_legs": 2754,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-04",
+      "miles_floor": 836414.4,
+      "miles_adjusted": 855564.2,
+      "n_legs": 2052,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-05",
+      "miles_floor": 703378.1,
+      "miles_adjusted": 712376.4,
+      "n_legs": 1748,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-06",
+      "miles_floor": 600175.5,
+      "miles_adjusted": 623286.9,
+      "n_legs": 1998,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-07",
+      "miles_floor": 677496.5,
+      "miles_adjusted": 698030.7,
+      "n_legs": 2277,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-08",
+      "miles_floor": 706509.4,
+      "miles_adjusted": 733622.8,
+      "n_legs": 2660,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-09",
+      "miles_floor": 685992.0,
+      "miles_adjusted": 709752.8,
+      "n_legs": 2333,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-10",
+      "miles_floor": 761763.3,
+      "miles_adjusted": 797290.2,
+      "n_legs": 2692,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-11",
+      "miles_floor": 808320.2,
+      "miles_adjusted": 826468.4,
+      "n_legs": 2048,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-12",
+      "miles_floor": 729343.4,
+      "miles_adjusted": 741115.8,
+      "n_legs": 1441,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-13",
+      "miles_floor": 552415.5,
+      "miles_adjusted": 569480.6,
+      "n_legs": 1698,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-14",
+      "miles_floor": 585513.8,
+      "miles_adjusted": 606573.7,
+      "n_legs": 2113,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-15",
+      "miles_floor": 780754.6,
+      "miles_adjusted": 810870.1,
+      "n_legs": 2678,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-16",
+      "miles_floor": 680893.1,
+      "miles_adjusted": 710523.4,
+      "n_legs": 2285,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-17",
+      "miles_floor": 778251.6,
+      "miles_adjusted": 807351.5,
+      "n_legs": 2607,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-18",
+      "miles_floor": 719619.7,
+      "miles_adjusted": 737518.0,
+      "n_legs": 2006,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-19",
+      "miles_floor": 515310.1,
+      "miles_adjusted": 530779.0,
+      "n_legs": 1587,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-20",
+      "miles_floor": 879158.6,
+      "miles_adjusted": 898039.2,
+      "n_legs": 2326,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-21",
+      "miles_floor": 714291.7,
+      "miles_adjusted": 740177.4,
+      "n_legs": 2591,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-22",
+      "miles_floor": 706117.3,
+      "miles_adjusted": 737473.5,
+      "n_legs": 2630,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-23",
+      "miles_floor": 813666.4,
+      "miles_adjusted": 840905.2,
+      "n_legs": 2634,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-24",
+      "miles_floor": 771573.3,
+      "miles_adjusted": 802283.5,
+      "n_legs": 2916,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-25",
+      "miles_floor": 779503.4,
+      "miles_adjusted": 797925.1,
+      "n_legs": 1934,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-26",
+      "miles_floor": 592259.7,
+      "miles_adjusted": 601868.0,
+      "n_legs": 1657,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-27",
+      "miles_floor": 782160.8,
+      "miles_adjusted": 812597.7,
+      "n_legs": 2628,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-28",
+      "miles_floor": 796224.7,
+      "miles_adjusted": 828650.2,
+      "n_legs": 2909,
+      "undetermined_miles": 2084.8
+    },
+    {
+      "period": "2025-10-29",
+      "miles_floor": 981679.5,
+      "miles_adjusted": 1017884.5,
+      "n_legs": 3426,
+      "undetermined_miles": 105.9
+    },
+    {
+      "period": "2025-10-30",
+      "miles_floor": 945198.4,
+      "miles_adjusted": 970219.5,
+      "n_legs": 2800,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-10-31",
+      "miles_floor": 1212647.8,
+      "miles_adjusted": 1242194.6,
+      "n_legs": 3381,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-01",
+      "miles_floor": 912993.8,
+      "miles_adjusted": 931251.1,
+      "n_legs": 2354,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-02",
+      "miles_floor": 612585.3,
+      "miles_adjusted": 624793.5,
+      "n_legs": 1658,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-03",
+      "miles_floor": 900211.2,
+      "miles_adjusted": 936666.4,
+      "n_legs": 2695,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-04",
+      "miles_floor": 1073643.7,
+      "miles_adjusted": 1097959.3,
+      "n_legs": 2979,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-05",
+      "miles_floor": 926880.7,
+      "miles_adjusted": 957312.3,
+      "n_legs": 3109,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-06",
+      "miles_floor": 683963.4,
+      "miles_adjusted": 713246.6,
+      "n_legs": 2547,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-07",
+      "miles_floor": 1133831.2,
+      "miles_adjusted": 1172178.9,
+      "n_legs": 3158,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-08",
+      "miles_floor": 1024359.3,
+      "miles_adjusted": 1046106.0,
+      "n_legs": 2619,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-09",
+      "miles_floor": 493119.1,
+      "miles_adjusted": 502386.1,
+      "n_legs": 1388,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-10",
+      "miles_floor": 974218.8,
+      "miles_adjusted": 1005044.9,
+      "n_legs": 2697,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-11",
+      "miles_floor": 1168968.8,
+      "miles_adjusted": 1191451.4,
+      "n_legs": 2676,
+      "undetermined_miles": 688.9
+    },
+    {
+      "period": "2025-11-12",
+      "miles_floor": 842424.0,
+      "miles_adjusted": 873005.4,
+      "n_legs": 2881,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-13",
+      "miles_floor": 906124.0,
+      "miles_adjusted": 942588.6,
+      "n_legs": 2854,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-14",
+      "miles_floor": 663904.0,
+      "miles_adjusted": 703955.1,
+      "n_legs": 2771,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-15",
+      "miles_floor": 870642.8,
+      "miles_adjusted": 896480.3,
+      "n_legs": 2468,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-16",
+      "miles_floor": 606816.3,
+      "miles_adjusted": 622970.4,
+      "n_legs": 2033,
+      "undetermined_miles": 1928.1
+    },
+    {
+      "period": "2025-11-17",
+      "miles_floor": 930993.2,
+      "miles_adjusted": 965388.7,
+      "n_legs": 2951,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-18",
+      "miles_floor": 960171.9,
+      "miles_adjusted": 994486.7,
+      "n_legs": 3252,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-19",
+      "miles_floor": 736399.1,
+      "miles_adjusted": 762489.9,
+      "n_legs": 2978,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-20",
+      "miles_floor": 915987.3,
+      "miles_adjusted": 942167.8,
+      "n_legs": 2980,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-21",
+      "miles_floor": 915293.3,
+      "miles_adjusted": 945631.4,
+      "n_legs": 2972,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-22",
+      "miles_floor": 803194.2,
+      "miles_adjusted": 824515.7,
+      "n_legs": 2378,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-23",
+      "miles_floor": 1016289.9,
+      "miles_adjusted": 1029994.0,
+      "n_legs": 2293,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-24",
+      "miles_floor": 804842.3,
+      "miles_adjusted": 838388.7,
+      "n_legs": 2831,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-25",
+      "miles_floor": 1094187.7,
+      "miles_adjusted": 1120240.4,
+      "n_legs": 3091,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-26",
+      "miles_floor": 1018435.5,
+      "miles_adjusted": 1049297.4,
+      "n_legs": 2969,
+      "undetermined_miles": 801.2
+    },
+    {
+      "period": "2025-11-27",
+      "miles_floor": 1018215.3,
+      "miles_adjusted": 1031716.4,
+      "n_legs": 1815,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-28",
+      "miles_floor": 748024.9,
+      "miles_adjusted": 770777.1,
+      "n_legs": 2215,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-29",
+      "miles_floor": 691457.7,
+      "miles_adjusted": 701474.7,
+      "n_legs": 1676,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-11-30",
+      "miles_floor": 502838.2,
+      "miles_adjusted": 511344.4,
+      "n_legs": 1058,
+      "undetermined_miles": 6045.1
+    },
+    {
+      "period": "2025-12-01",
+      "miles_floor": 937693.1,
+      "miles_adjusted": 958565.1,
+      "n_legs": 2444,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-02",
+      "miles_floor": 594279.7,
+      "miles_adjusted": 619524.5,
+      "n_legs": 2396,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-03",
+      "miles_floor": 909266.2,
+      "miles_adjusted": 938002.8,
+      "n_legs": 3124,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-04",
+      "miles_floor": 826126.0,
+      "miles_adjusted": 854877.5,
+      "n_legs": 3217,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-05",
+      "miles_floor": 817939.9,
+      "miles_adjusted": 852474.7,
+      "n_legs": 3326,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-06",
+      "miles_floor": 1201376.8,
+      "miles_adjusted": 1229724.0,
+      "n_legs": 2735,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-07",
+      "miles_floor": 1069726.7,
+      "miles_adjusted": 1091111.8,
+      "n_legs": 2327,
+      "undetermined_miles": 1176.3
+    },
+    {
+      "period": "2025-12-08",
+      "miles_floor": 970252.9,
+      "miles_adjusted": 995146.9,
+      "n_legs": 2925,
+      "undetermined_miles": 18423.6
+    },
+    {
+      "period": "2025-12-09",
+      "miles_floor": 1358617.4,
+      "miles_adjusted": 1388552.3,
+      "n_legs": 3267,
+      "undetermined_miles": 1022.3
+    },
+    {
+      "period": "2025-12-10",
+      "miles_floor": 1173054.7,
+      "miles_adjusted": 1198404.0,
+      "n_legs": 3075,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-11",
+      "miles_floor": 888703.4,
+      "miles_adjusted": 925741.1,
+      "n_legs": 3301,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-12",
+      "miles_floor": 1202672.7,
+      "miles_adjusted": 1231997.5,
+      "n_legs": 3824,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-13",
+      "miles_floor": 1106970.4,
+      "miles_adjusted": 1141044.3,
+      "n_legs": 2895,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-14",
+      "miles_floor": 911133.3,
+      "miles_adjusted": 925954.8,
+      "n_legs": 2083,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-15",
+      "miles_floor": 1124451.8,
+      "miles_adjusted": 1160116.0,
+      "n_legs": 3637,
+      "undetermined_miles": 3681.6
+    },
+    {
+      "period": "2025-12-16",
+      "miles_floor": 913743.4,
+      "miles_adjusted": 940537.5,
+      "n_legs": 2906,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-17",
+      "miles_floor": 816862.8,
+      "miles_adjusted": 845863.0,
+      "n_legs": 3015,
+      "undetermined_miles": 137.4
+    },
+    {
+      "period": "2025-12-18",
+      "miles_floor": 827108.6,
+      "miles_adjusted": 847459.7,
+      "n_legs": 2855,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-19",
+      "miles_floor": 970526.7,
+      "miles_adjusted": 997108.9,
+      "n_legs": 3515,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-20",
+      "miles_floor": 843880.2,
+      "miles_adjusted": 865416.7,
+      "n_legs": 2402,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-21",
+      "miles_floor": 1033039.8,
+      "miles_adjusted": 1058428.1,
+      "n_legs": 2072,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-22",
+      "miles_floor": 888043.5,
+      "miles_adjusted": 917809.5,
+      "n_legs": 2816,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-23",
+      "miles_floor": 939774.5,
+      "miles_adjusted": 964251.2,
+      "n_legs": 2994,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-24",
+      "miles_floor": 795746.2,
+      "miles_adjusted": 819774.5,
+      "n_legs": 2308,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-25",
+      "miles_floor": 525982.5,
+      "miles_adjusted": 541149.5,
+      "n_legs": 1393,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-26",
+      "miles_floor": 600359.5,
+      "miles_adjusted": 616985.8,
+      "n_legs": 2102,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-27",
+      "miles_floor": 591806.6,
+      "miles_adjusted": 603176.7,
+      "n_legs": 1438,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-28",
+      "miles_floor": 521506.4,
+      "miles_adjusted": 531285.2,
+      "n_legs": 1140,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-29",
+      "miles_floor": 740044.7,
+      "miles_adjusted": 770526.5,
+      "n_legs": 2312,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-30",
+      "miles_floor": 528434.1,
+      "miles_adjusted": 551727.6,
+      "n_legs": 2257,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-12-31",
+      "miles_floor": 865678.9,
+      "miles_adjusted": 882274.5,
+      "n_legs": 2176,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-01",
+      "miles_floor": 637486.8,
+      "miles_adjusted": 651724.3,
+      "n_legs": 1733,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-02",
+      "miles_floor": 811961.0,
+      "miles_adjusted": 833613.3,
+      "n_legs": 2393,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-03",
+      "miles_floor": 717859.1,
+      "miles_adjusted": 730111.8,
+      "n_legs": 1788,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-04",
+      "miles_floor": 374625.5,
+      "miles_adjusted": 384700.7,
+      "n_legs": 1098,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-05",
+      "miles_floor": 826045.8,
+      "miles_adjusted": 850664.4,
+      "n_legs": 2435,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-06",
+      "miles_floor": 869654.9,
+      "miles_adjusted": 896911.2,
+      "n_legs": 2619,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-07",
+      "miles_floor": 621039.8,
+      "miles_adjusted": 640411.7,
+      "n_legs": 2363,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-08",
+      "miles_floor": 939705.5,
+      "miles_adjusted": 963463.5,
+      "n_legs": 2647,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-09",
+      "miles_floor": 1383220.0,
+      "miles_adjusted": 1423384.0,
+      "n_legs": 3839,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-10",
+      "miles_floor": 1039499.8,
+      "miles_adjusted": 1057114.7,
+      "n_legs": 2572,
+      "undetermined_miles": 1942.7
+    },
+    {
+      "period": "2026-01-11",
+      "miles_floor": 946599.8,
+      "miles_adjusted": 967885.9,
+      "n_legs": 2005,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-12",
+      "miles_floor": 1075772.8,
+      "miles_adjusted": 1107443.6,
+      "n_legs": 2902,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-13",
+      "miles_floor": 1221126.7,
+      "miles_adjusted": 1247395.5,
+      "n_legs": 3225,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-14",
+      "miles_floor": 1033908.9,
+      "miles_adjusted": 1057141.8,
+      "n_legs": 3020,
+      "undetermined_miles": 1102.2
+    },
+    {
+      "period": "2026-01-15",
+      "miles_floor": 1157279.7,
+      "miles_adjusted": 1189401.9,
+      "n_legs": 3292,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-16",
+      "miles_floor": 1011715.0,
+      "miles_adjusted": 1051526.8,
+      "n_legs": 3446,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-17",
+      "miles_floor": 1083560.1,
+      "miles_adjusted": 1109180.8,
+      "n_legs": 2552,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-18",
+      "miles_floor": 971687.1,
+      "miles_adjusted": 988357.3,
+      "n_legs": 1899,
+      "undetermined_miles": 1269.5
+    },
+    {
+      "period": "2026-01-19",
+      "miles_floor": 1001427.0,
+      "miles_adjusted": 1020518.0,
+      "n_legs": 2634,
+      "undetermined_miles": 5569.6
+    },
+    {
+      "period": "2026-01-20",
+      "miles_floor": 984974.4,
+      "miles_adjusted": 1016648.5,
+      "n_legs": 3134,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-21",
+      "miles_floor": 988444.5,
+      "miles_adjusted": 1013616.9,
+      "n_legs": 2934,
+      "undetermined_miles": 2381.6
+    },
+    {
+      "period": "2026-01-22",
+      "miles_floor": 795331.6,
+      "miles_adjusted": 822259.2,
+      "n_legs": 2623,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-23",
+      "miles_floor": 1101700.0,
+      "miles_adjusted": 1138000.5,
+      "n_legs": 3706,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-24",
+      "miles_floor": 1160838.6,
+      "miles_adjusted": 1177248.1,
+      "n_legs": 2539,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-25",
+      "miles_floor": 840343.9,
+      "miles_adjusted": 846633.8,
+      "n_legs": 1344,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-26",
+      "miles_floor": 824694.6,
+      "miles_adjusted": 837577.0,
+      "n_legs": 2138,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-27",
+      "miles_floor": 894554.2,
+      "miles_adjusted": 909478.6,
+      "n_legs": 2129,
+      "undetermined_miles": 1192.5
+    },
+    {
+      "period": "2026-01-28",
+      "miles_floor": 1018723.8,
+      "miles_adjusted": 1048158.1,
+      "n_legs": 3051,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-29",
+      "miles_floor": 1023743.5,
+      "miles_adjusted": 1056450.3,
+      "n_legs": 2908,
+      "undetermined_miles": 473.3
+    },
+    {
+      "period": "2026-01-30",
+      "miles_floor": 949703.4,
+      "miles_adjusted": 978773.7,
+      "n_legs": 3241,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-01-31",
+      "miles_floor": 932928.1,
+      "miles_adjusted": 949538.5,
+      "n_legs": 2178,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-01",
+      "miles_floor": 744457.5,
+      "miles_adjusted": 763733.9,
+      "n_legs": 1939,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-02",
+      "miles_floor": 1012799.2,
+      "miles_adjusted": 1040696.5,
+      "n_legs": 2866,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-03",
+      "miles_floor": 913562.2,
+      "miles_adjusted": 956762.6,
+      "n_legs": 2819,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-04",
+      "miles_floor": 1078246.8,
+      "miles_adjusted": 1107072.9,
+      "n_legs": 2782,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-05",
+      "miles_floor": 947946.0,
+      "miles_adjusted": 980427.3,
+      "n_legs": 2827,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-06",
+      "miles_floor": 1047982.7,
+      "miles_adjusted": 1079346.1,
+      "n_legs": 3272,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-07",
+      "miles_floor": 808184.2,
+      "miles_adjusted": 816173.8,
+      "n_legs": 1696,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-08",
+      "miles_floor": 862689.9,
+      "miles_adjusted": 871516.3,
+      "n_legs": 1713,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-09",
+      "miles_floor": 646233.7,
+      "miles_adjusted": 670559.4,
+      "n_legs": 2478,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-10",
+      "miles_floor": 1080862.4,
+      "miles_adjusted": 1103550.7,
+      "n_legs": 2981,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-11",
+      "miles_floor": 1059269.3,
+      "miles_adjusted": 1084447.7,
+      "n_legs": 2903,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-12",
+      "miles_floor": 1029432.3,
+      "miles_adjusted": 1058487.6,
+      "n_legs": 2867,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-13",
+      "miles_floor": 976438.1,
+      "miles_adjusted": 1010164.2,
+      "n_legs": 3109,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-14",
+      "miles_floor": 708605.5,
+      "miles_adjusted": 719357.2,
+      "n_legs": 1892,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-15",
+      "miles_floor": 628825.9,
+      "miles_adjusted": 641798.2,
+      "n_legs": 1651,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-16",
+      "miles_floor": 872953.5,
+      "miles_adjusted": 894901.4,
+      "n_legs": 2494,
+      "undetermined_miles": 124.8
+    },
+    {
+      "period": "2026-02-17",
+      "miles_floor": 762370.7,
+      "miles_adjusted": 789409.7,
+      "n_legs": 2577,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-18",
+      "miles_floor": 935741.4,
+      "miles_adjusted": 957435.7,
+      "n_legs": 2807,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-19",
+      "miles_floor": 969446.4,
+      "miles_adjusted": 1003331.4,
+      "n_legs": 2891,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-20",
+      "miles_floor": 896167.4,
+      "miles_adjusted": 925398.8,
+      "n_legs": 2960,
+      "undetermined_miles": 377.4
+    },
+    {
+      "period": "2026-02-21",
+      "miles_floor": 660916.7,
+      "miles_adjusted": 673368.7,
+      "n_legs": 1759,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-22",
+      "miles_floor": 562656.5,
+      "miles_adjusted": 578291.0,
+      "n_legs": 1712,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-23",
+      "miles_floor": 898837.2,
+      "miles_adjusted": 925540.7,
+      "n_legs": 2501,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-24",
+      "miles_floor": 765068.1,
+      "miles_adjusted": 790678.7,
+      "n_legs": 2427,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-25",
+      "miles_floor": 762693.1,
+      "miles_adjusted": 797437.7,
+      "n_legs": 2784,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-26",
+      "miles_floor": 963489.7,
+      "miles_adjusted": 998364.5,
+      "n_legs": 2890,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-27",
+      "miles_floor": 939815.7,
+      "miles_adjusted": 976092.9,
+      "n_legs": 3095,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-02-28",
+      "miles_floor": 706941.4,
+      "miles_adjusted": 716598.1,
+      "n_legs": 1850,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-01",
+      "miles_floor": 498880.3,
+      "miles_adjusted": 510009.3,
+      "n_legs": 1425,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-02",
+      "miles_floor": 886749.2,
+      "miles_adjusted": 913604.6,
+      "n_legs": 2803,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-03",
+      "miles_floor": 573570.2,
+      "miles_adjusted": 595845.9,
+      "n_legs": 2246,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-04",
+      "miles_floor": 813211.1,
+      "miles_adjusted": 832083.0,
+      "n_legs": 2635,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-05",
+      "miles_floor": 863429.1,
+      "miles_adjusted": 888868.7,
+      "n_legs": 2462,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-06",
+      "miles_floor": 892372.1,
+      "miles_adjusted": 926549.7,
+      "n_legs": 3122,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-07",
+      "miles_floor": 514860.9,
+      "miles_adjusted": 527690.8,
+      "n_legs": 1808,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-08",
+      "miles_floor": 673766.4,
+      "miles_adjusted": 685710.2,
+      "n_legs": 1393,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-09",
+      "miles_floor": 807913.4,
+      "miles_adjusted": 827836.3,
+      "n_legs": 2437,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-10",
+      "miles_floor": 848374.3,
+      "miles_adjusted": 880616.4,
+      "n_legs": 2637,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-11",
+      "miles_floor": 647816.0,
+      "miles_adjusted": 675510.6,
+      "n_legs": 2451,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-12",
+      "miles_floor": 860470.0,
+      "miles_adjusted": 884403.6,
+      "n_legs": 2617,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-13",
+      "miles_floor": 794564.3,
+      "miles_adjusted": 832402.4,
+      "n_legs": 2892,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-14",
+      "miles_floor": 642798.7,
+      "miles_adjusted": 658659.3,
+      "n_legs": 1674,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-15",
+      "miles_floor": 331620.4,
+      "miles_adjusted": 343046.7,
+      "n_legs": 1152,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-16",
+      "miles_floor": 619860.6,
+      "miles_adjusted": 650370.9,
+      "n_legs": 2315,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-17",
+      "miles_floor": 658678.1,
+      "miles_adjusted": 684641.4,
+      "n_legs": 2621,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-18",
+      "miles_floor": 940496.4,
+      "miles_adjusted": 964289.0,
+      "n_legs": 2747,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-19",
+      "miles_floor": 834248.8,
+      "miles_adjusted": 859450.5,
+      "n_legs": 2503,
+      "undetermined_miles": 546.7
+    },
+    {
+      "period": "2026-03-20",
+      "miles_floor": 767861.7,
+      "miles_adjusted": 800764.3,
+      "n_legs": 3264,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-21",
+      "miles_floor": 595913.3,
+      "miles_adjusted": 615349.7,
+      "n_legs": 1541,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-22",
+      "miles_floor": 306311.7,
+      "miles_adjusted": 314614.7,
+      "n_legs": 1106,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-23",
+      "miles_floor": 842599.9,
+      "miles_adjusted": 866805.6,
+      "n_legs": 2445,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-24",
+      "miles_floor": 729530.4,
+      "miles_adjusted": 748518.1,
+      "n_legs": 2361,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-25",
+      "miles_floor": 723876.0,
+      "miles_adjusted": 751722.9,
+      "n_legs": 2571,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-26",
+      "miles_floor": 741029.1,
+      "miles_adjusted": 766798.2,
+      "n_legs": 2565,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-27",
+      "miles_floor": 616402.8,
+      "miles_adjusted": 648158.5,
+      "n_legs": 2709,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-28",
+      "miles_floor": 585008.5,
+      "miles_adjusted": 596353.3,
+      "n_legs": 1657,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-29",
+      "miles_floor": 346567.0,
+      "miles_adjusted": 360398.1,
+      "n_legs": 1247,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-30",
+      "miles_floor": 708089.5,
+      "miles_adjusted": 728615.1,
+      "n_legs": 2392,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-03-31",
+      "miles_floor": 690157.7,
+      "miles_adjusted": 709953.1,
+      "n_legs": 2379,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-01",
+      "miles_floor": 873173.4,
+      "miles_adjusted": 899000.8,
+      "n_legs": 2513,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-02",
+      "miles_floor": 797626.7,
+      "miles_adjusted": 819805.1,
+      "n_legs": 2354,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-03",
+      "miles_floor": 779278.7,
+      "miles_adjusted": 816536.3,
+      "n_legs": 2819,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-04",
+      "miles_floor": 418723.5,
+      "miles_adjusted": 427490.1,
+      "n_legs": 1384,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-05",
+      "miles_floor": 341828.8,
+      "miles_adjusted": 352411.7,
+      "n_legs": 893,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-06",
+      "miles_floor": 813223.2,
+      "miles_adjusted": 832373.9,
+      "n_legs": 2488,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-07",
+      "miles_floor": 578720.1,
+      "miles_adjusted": 607789.6,
+      "n_legs": 2372,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-08",
+      "miles_floor": 812421.0,
+      "miles_adjusted": 846940.4,
+      "n_legs": 2876,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-09",
+      "miles_floor": 765442.9,
+      "miles_adjusted": 795695.4,
+      "n_legs": 2561,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-10",
+      "miles_floor": 847928.8,
+      "miles_adjusted": 881278.7,
+      "n_legs": 3090,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-11",
+      "miles_floor": 640853.7,
+      "miles_adjusted": 652845.5,
+      "n_legs": 1750,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-12",
+      "miles_floor": 382383.7,
+      "miles_adjusted": 390604.7,
+      "n_legs": 1364,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-13",
+      "miles_floor": 892057.1,
+      "miles_adjusted": 909105.6,
+      "n_legs": 2750,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-14",
+      "miles_floor": 595557.4,
+      "miles_adjusted": 621556.4,
+      "n_legs": 2376,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-15",
+      "miles_floor": 737860.4,
+      "miles_adjusted": 765169.2,
+      "n_legs": 2688,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-16",
+      "miles_floor": 982263.8,
+      "miles_adjusted": 1013678.3,
+      "n_legs": 2784,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-17",
+      "miles_floor": 769731.6,
+      "miles_adjusted": 798524.4,
+      "n_legs": 3039,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-18",
+      "miles_floor": 460873.2,
+      "miles_adjusted": 473780.9,
+      "n_legs": 1679,
+      "undetermined_miles": 8.6
+    },
+    {
+      "period": "2026-04-19",
+      "miles_floor": 495122.2,
+      "miles_adjusted": 502540.5,
+      "n_legs": 1252,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-20",
+      "miles_floor": 710338.2,
+      "miles_adjusted": 730135.0,
+      "n_legs": 2529,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-21",
+      "miles_floor": 638946.2,
+      "miles_adjusted": 660004.8,
+      "n_legs": 2505,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-22",
+      "miles_floor": 653191.7,
+      "miles_adjusted": 680344.9,
+      "n_legs": 2657,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-23",
+      "miles_floor": 840864.6,
+      "miles_adjusted": 872494.0,
+      "n_legs": 2847,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-24",
+      "miles_floor": 853066.8,
+      "miles_adjusted": 900116.6,
+      "n_legs": 3306,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-25",
+      "miles_floor": 914951.2,
+      "miles_adjusted": 927575.6,
+      "n_legs": 1838,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-26",
+      "miles_floor": 424769.6,
+      "miles_adjusted": 433001.0,
+      "n_legs": 1287,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-27",
+      "miles_floor": 945831.8,
+      "miles_adjusted": 971445.3,
+      "n_legs": 2911,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-28",
+      "miles_floor": 746286.3,
+      "miles_adjusted": 776714.7,
+      "n_legs": 2756,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-29",
+      "miles_floor": 764652.4,
+      "miles_adjusted": 793692.3,
+      "n_legs": 2567,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-04-30",
+      "miles_floor": 652624.6,
+      "miles_adjusted": 683353.3,
+      "n_legs": 2745,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-01",
+      "miles_floor": 813035.2,
+      "miles_adjusted": 850053.9,
+      "n_legs": 3201,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-02",
+      "miles_floor": 438528.3,
+      "miles_adjusted": 453003.6,
+      "n_legs": 1805,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-03",
+      "miles_floor": 336677.0,
+      "miles_adjusted": 347710.3,
+      "n_legs": 916,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-04",
+      "miles_floor": 780039.8,
+      "miles_adjusted": 800432.6,
+      "n_legs": 2550,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-05",
+      "miles_floor": 824931.3,
+      "miles_adjusted": 847644.4,
+      "n_legs": 2846,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-06",
+      "miles_floor": 775921.1,
+      "miles_adjusted": 795380.8,
+      "n_legs": 2436,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-07",
+      "miles_floor": 828384.5,
+      "miles_adjusted": 857059.1,
+      "n_legs": 2670,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-08",
+      "miles_floor": 773310.1,
+      "miles_adjusted": 808808.2,
+      "n_legs": 2919,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-09",
+      "miles_floor": 913705.0,
+      "miles_adjusted": 933598.4,
+      "n_legs": 2035,
+      "undetermined_miles": 777.8
+    },
+    {
+      "period": "2026-05-10",
+      "miles_floor": 469093.7,
+      "miles_adjusted": 488653.5,
+      "n_legs": 1435,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-11",
+      "miles_floor": 586975.3,
+      "miles_adjusted": 606793.6,
+      "n_legs": 2388,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-12",
+      "miles_floor": 650706.1,
+      "miles_adjusted": 670694.1,
+      "n_legs": 2364,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-13",
+      "miles_floor": 571022.8,
+      "miles_adjusted": 599357.8,
+      "n_legs": 3047,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-14",
+      "miles_floor": 840706.4,
+      "miles_adjusted": 872110.4,
+      "n_legs": 3321,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-15",
+      "miles_floor": 862613.8,
+      "miles_adjusted": 894814.2,
+      "n_legs": 3204,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-16",
+      "miles_floor": 738975.9,
+      "miles_adjusted": 752710.6,
+      "n_legs": 2142,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-17",
+      "miles_floor": 354243.9,
+      "miles_adjusted": 364908.6,
+      "n_legs": 1163,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-18",
+      "miles_floor": 664224.3,
+      "miles_adjusted": 684607.0,
+      "n_legs": 2632,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-19",
+      "miles_floor": 795882.9,
+      "miles_adjusted": 826982.9,
+      "n_legs": 2770,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-20",
+      "miles_floor": 850435.4,
+      "miles_adjusted": 879560.8,
+      "n_legs": 3126,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-21",
+      "miles_floor": 829248.3,
+      "miles_adjusted": 859288.6,
+      "n_legs": 3255,
+      "undetermined_miles": 196.4
+    },
+    {
+      "period": "2026-05-22",
+      "miles_floor": 653558.5,
+      "miles_adjusted": 683563.3,
+      "n_legs": 2748,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-23",
+      "miles_floor": 1027634.4,
+      "miles_adjusted": 1045538.1,
+      "n_legs": 2298,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-24",
+      "miles_floor": 482391.3,
+      "miles_adjusted": 500040.4,
+      "n_legs": 1738,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-25",
+      "miles_floor": 635279.3,
+      "miles_adjusted": 648700.5,
+      "n_legs": 2302,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-26",
+      "miles_floor": 670973.2,
+      "miles_adjusted": 696434.6,
+      "n_legs": 2469,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-27",
+      "miles_floor": 874513.4,
+      "miles_adjusted": 917591.7,
+      "n_legs": 2869,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-28",
+      "miles_floor": 892406.5,
+      "miles_adjusted": 938760.9,
+      "n_legs": 3096,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-29",
+      "miles_floor": 773034.6,
+      "miles_adjusted": 820361.6,
+      "n_legs": 3162,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-30",
+      "miles_floor": 540224.6,
+      "miles_adjusted": 555317.9,
+      "n_legs": 1934,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-05-31",
+      "miles_floor": 587160.7,
+      "miles_adjusted": 603785.6,
+      "n_legs": 2338,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-01",
+      "miles_floor": 701079.9,
+      "miles_adjusted": 722435.6,
+      "n_legs": 2557,
+      "undetermined_miles": 1658.0
+    },
+    {
+      "period": "2026-06-02",
+      "miles_floor": 686043.6,
+      "miles_adjusted": 715409.9,
+      "n_legs": 2890,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-03",
+      "miles_floor": 771738.6,
+      "miles_adjusted": 803223.6,
+      "n_legs": 2844,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-04",
+      "miles_floor": 594806.3,
+      "miles_adjusted": 618782.7,
+      "n_legs": 2804,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-05",
+      "miles_floor": 843507.7,
+      "miles_adjusted": 886909.4,
+      "n_legs": 3030,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-06",
+      "miles_floor": 656887.7,
+      "miles_adjusted": 686746.7,
+      "n_legs": 2063,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-07",
+      "miles_floor": 636616.9,
+      "miles_adjusted": 652005.1,
+      "n_legs": 1639,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-08",
+      "miles_floor": 687711.3,
+      "miles_adjusted": 709034.0,
+      "n_legs": 2714,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-09",
+      "miles_floor": 778974.8,
+      "miles_adjusted": 807506.9,
+      "n_legs": 2900,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-10",
+      "miles_floor": 731445.2,
+      "miles_adjusted": 755360.0,
+      "n_legs": 2710,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-11",
+      "miles_floor": 697993.5,
+      "miles_adjusted": 734194.6,
+      "n_legs": 3168,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-12",
+      "miles_floor": 1106235.1,
+      "miles_adjusted": 1146768.4,
+      "n_legs": 3768,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-13",
+      "miles_floor": 750378.9,
+      "miles_adjusted": 773354.6,
+      "n_legs": 2405,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-14",
+      "miles_floor": 1076605.5,
+      "miles_adjusted": 1092223.7,
+      "n_legs": 2241,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-15",
+      "miles_floor": 689396.1,
+      "miles_adjusted": 708936.1,
+      "n_legs": 2693,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-16",
+      "miles_floor": 723600.5,
+      "miles_adjusted": 750968.9,
+      "n_legs": 3062,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-17",
+      "miles_floor": 963963.4,
+      "miles_adjusted": 991714.7,
+      "n_legs": 3196,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-18",
+      "miles_floor": 818404.0,
+      "miles_adjusted": 852145.5,
+      "n_legs": 3376,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-19",
+      "miles_floor": 820822.8,
+      "miles_adjusted": 847058.2,
+      "n_legs": 3313,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-20",
+      "miles_floor": 767952.4,
+      "miles_adjusted": 791891.7,
+      "n_legs": 2353,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-21",
+      "miles_floor": 560933.4,
+      "miles_adjusted": 582829.9,
+      "n_legs": 2014,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-22",
+      "miles_floor": 809412.6,
+      "miles_adjusted": 839335.2,
+      "n_legs": 2981,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-23",
+      "miles_floor": 974450.0,
+      "miles_adjusted": 1004769.9,
+      "n_legs": 3117,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-24",
+      "miles_floor": 943916.1,
+      "miles_adjusted": 970035.2,
+      "n_legs": 3255,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-25",
+      "miles_floor": 655446.0,
+      "miles_adjusted": 689442.4,
+      "n_legs": 3347,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-26",
+      "miles_floor": 838696.1,
+      "miles_adjusted": 878305.1,
+      "n_legs": 3654,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-27",
+      "miles_floor": 1022513.8,
+      "miles_adjusted": 1050468.4,
+      "n_legs": 3388,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-28",
+      "miles_floor": 547962.3,
+      "miles_adjusted": 571784.9,
+      "n_legs": 2386,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-29",
+      "miles_floor": 896682.4,
+      "miles_adjusted": 933044.0,
+      "n_legs": 3773,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-06-30",
+      "miles_floor": 1195481.1,
+      "miles_adjusted": 1235567.3,
+      "n_legs": 3957,
+      "undetermined_miles": 850.1
+    },
+    {
+      "period": "2026-07-01",
+      "miles_floor": 1205398.9,
+      "miles_adjusted": 1239420.7,
+      "n_legs": 3808,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-02",
+      "miles_floor": 1049816.8,
+      "miles_adjusted": 1089583.1,
+      "n_legs": 3719,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-03",
+      "miles_floor": 1649043.9,
+      "miles_adjusted": 1686060.9,
+      "n_legs": 4054,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-04",
+      "miles_floor": 1065165.7,
+      "miles_adjusted": 1099763.2,
+      "n_legs": 2817,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-05",
+      "miles_floor": 1163786.3,
+      "miles_adjusted": 1177856.8,
+      "n_legs": 2249,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-06",
+      "miles_floor": 828576.0,
+      "miles_adjusted": 854227.5,
+      "n_legs": 3308,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-07",
+      "miles_floor": 1303815.2,
+      "miles_adjusted": 1331719.6,
+      "n_legs": 3142,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-08",
+      "miles_floor": 1548752.6,
+      "miles_adjusted": 1578953.2,
+      "n_legs": 4050,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-09",
+      "miles_floor": 954305.4,
+      "miles_adjusted": 1004044.6,
+      "n_legs": 3460,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-10",
+      "miles_floor": 986275.4,
+      "miles_adjusted": 1034414.0,
+      "n_legs": 3983,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-11",
+      "miles_floor": 687748.5,
+      "miles_adjusted": 709456.1,
+      "n_legs": 2555,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-12",
+      "miles_floor": 722487.1,
+      "miles_adjusted": 743671.3,
+      "n_legs": 2088,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-13",
+      "miles_floor": 935380.2,
+      "miles_adjusted": 961344.2,
+      "n_legs": 3356,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-14",
+      "miles_floor": 1137583.4,
+      "miles_adjusted": 1177891.6,
+      "n_legs": 3662,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-15",
+      "miles_floor": 1150155.0,
+      "miles_adjusted": 1191026.0,
+      "n_legs": 3747,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-16",
+      "miles_floor": 838459.8,
+      "miles_adjusted": 869371.3,
+      "n_legs": 2932,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-17",
+      "miles_floor": 971777.2,
+      "miles_adjusted": 1011989.4,
+      "n_legs": 3822,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-18",
+      "miles_floor": 777539.7,
+      "miles_adjusted": 812416.5,
+      "n_legs": 2620,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-19",
+      "miles_floor": 555659.7,
+      "miles_adjusted": 594843.9,
+      "n_legs": 2393,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-20",
+      "miles_floor": 896305.5,
+      "miles_adjusted": 922165.1,
+      "n_legs": 2981,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-21",
+      "miles_floor": 955925.4,
+      "miles_adjusted": 991170.3,
+      "n_legs": 3162,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-22",
+      "miles_floor": 743563.3,
+      "miles_adjusted": 779651.5,
+      "n_legs": 3507,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-23",
+      "miles_floor": 870338.2,
+      "miles_adjusted": 899958.7,
+      "n_legs": 3316,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-24",
+      "miles_floor": 896593.3,
+      "miles_adjusted": 940190.9,
+      "n_legs": 4068,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-25",
+      "miles_floor": 904921.2,
+      "miles_adjusted": 925718.7,
+      "n_legs": 2649,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-26",
+      "miles_floor": 868793.6,
+      "miles_adjusted": 887495.0,
+      "n_legs": 2333,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-27",
+      "miles_floor": 874449.2,
+      "miles_adjusted": 902422.8,
+      "n_legs": 3390,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-28",
+      "miles_floor": 828702.8,
+      "miles_adjusted": 853991.0,
+      "n_legs": 2878,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-29",
+      "miles_floor": 1506345.8,
+      "miles_adjusted": 1533810.7,
+      "n_legs": 3903,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-30",
+      "miles_floor": 643720.3,
+      "miles_adjusted": 669041.3,
+      "n_legs": 3268,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-07-31",
+      "miles_floor": 941819.4,
+      "miles_adjusted": 980196.8,
+      "n_legs": 3734,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-08-01",
+      "miles_floor": 956500.4,
+      "miles_adjusted": 976427.6,
+      "n_legs": 2784,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-08-02",
+      "miles_floor": 540619.0,
+      "miles_adjusted": 563515.3,
+      "n_legs": 2172,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-08-03",
+      "miles_floor": 959029.5,
+      "miles_adjusted": 981075.8,
+      "n_legs": 3254,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-08-04",
+      "miles_floor": 964744.5,
+      "miles_adjusted": 1006383.1,
+      "n_legs": 3239,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-08-05",
+      "miles_floor": 858318.7,
+      "miles_adjusted": 874185.2,
+      "n_legs": 2917,
+      "undetermined_miles": 0.0
+    }
+  ],
+  "monthly": [
+    {
+      "period": "2025-01",
+      "miles_floor": 1226173.1,
+      "miles_adjusted": 1343571.0,
+      "n_legs": 7580,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-02",
+      "miles_floor": 6779287.6,
+      "miles_adjusted": 7165298.8,
+      "n_legs": 30146,
+      "undetermined_miles": 415.6
+    },
+    {
+      "period": "2025-03",
+      "miles_floor": 12195052.1,
+      "miles_adjusted": 12649167.7,
+      "n_legs": 39265,
+      "undetermined_miles": 67.8
+    },
+    {
+      "period": "2025-04",
+      "miles_floor": 14208232.8,
+      "miles_adjusted": 14714401.0,
+      "n_legs": 45153,
+      "undetermined_miles": 450.4
+    },
+    {
+      "period": "2025-05",
+      "miles_floor": 16108653.8,
+      "miles_adjusted": 16723634.7,
+      "n_legs": 51033,
+      "undetermined_miles": 567.8
+    },
+    {
+      "period": "2025-06",
+      "miles_floor": 21535933.7,
+      "miles_adjusted": 22236616.6,
+      "n_legs": 63080,
+      "undetermined_miles": 920.2
+    },
+    {
+      "period": "2025-07",
+      "miles_floor": 18272494.3,
+      "miles_adjusted": 18905188.4,
+      "n_legs": 59482,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-08",
+      "miles_floor": 24259301.5,
+      "miles_adjusted": 24948410.9,
+      "n_legs": 73173,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2025-09",
+      "miles_floor": 23141156.3,
+      "miles_adjusted": 23836607.7,
+      "n_legs": 69978,
+      "undetermined_miles": 975.4
+    },
+    {
+      "period": "2025-10",
+      "miles_floor": 23594798.3,
+      "miles_adjusted": 24358196.6,
+      "n_legs": 74295,
+      "undetermined_miles": 2190.7
+    },
+    {
+      "period": "2025-11",
+      "miles_floor": 25951017.0,
+      "miles_adjusted": 26705309.6,
+      "n_legs": 76346,
+      "undetermined_miles": 9463.3
+    },
+    {
+      "period": "2025-12",
+      "miles_floor": 27494803.4,
+      "miles_adjusted": 28265012.4,
+      "n_legs": 82277,
+      "undetermined_miles": 24441.3
+    },
+    {
+      "period": "2026-01",
+      "miles_floor": 29240156.2,
+      "miles_adjusted": 29965334.3,
+      "n_legs": 80387,
+      "undetermined_miles": 13931.5
+    },
+    {
+      "period": "2026-02",
+      "miles_floor": 24242633.3,
+      "miles_adjusted": 24930943.7,
+      "n_legs": 70542,
+      "undetermined_miles": 502.2
+    },
+    {
+      "period": "2026-03",
+      "miles_floor": 21357027.9,
+      "miles_adjusted": 22049640.7,
+      "n_legs": 70177,
+      "undetermined_miles": 546.7
+    },
+    {
+      "period": "2026-04",
+      "miles_floor": 21130593.8,
+      "miles_adjusted": 21836005.0,
+      "n_legs": 70980,
+      "undetermined_miles": 8.6
+    },
+    {
+      "period": "2026-05",
+      "miles_floor": 21835837.8,
+      "miles_adjusted": 22604267.9,
+      "n_legs": 77179,
+      "undetermined_miles": 974.2
+    },
+    {
+      "period": "2026-06",
+      "miles_floor": 23949657.8,
+      "miles_adjusted": 24802252.5,
+      "n_legs": 87598,
+      "undetermined_miles": 2508.1
+    },
+    {
+      "period": "2026-07",
+      "miles_floor": 30463204.7,
+      "miles_adjusted": 31453866.7,
+      "n_legs": 100954,
+      "undetermined_miles": 0.0
+    },
+    {
+      "period": "2026-08",
+      "miles_floor": 4279212.1,
+      "miles_adjusted": 4401586.9,
+      "n_legs": 14366,
+      "undetermined_miles": 0.0
+    }
+  ]
+}

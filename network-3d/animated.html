@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Transfer network -- 3D layout, animated flow</title>
+<!--
+  Third sibling to index.html (betweenness color) and by-category.html (category
+  color) -- same force layout, but its own data file. Built 2026-09-22, direct
+  follow-on to "IM IMAGINNG A VERIOSN OF THE THE 3D network with animated arcs of
+  migrants moving through", then revised the same day on "I want to see the
+  particles enter into the system from their entry points then travel in real
+  pathways until they reach their endpoints... perhaps there could even be a
+  timeline like in the map."
+
+  REAL DIRECTION, not the first prototype's alphabetical artifact. The first
+  version of this page used ../data/network_3d_data.json?v=1791494712, which collapses both
+  directions of a facility pair into one undirected edge (correct for the static
+  force-layout figure it was built for, wrong for "which way did people move").
+  This version reads ../data/network_3d_directed.json?v=1791494712 instead
+  (data/build_network_3d_directed.py) -- the SAME node set, but edges taken
+  directly from data/spatial_analysis_edges.csv's own already-directed rows
+  rather than re-sorted into pairs. `TBRJLME -> BOSHOLD` and `BOSHOLD -> TBRJLME`
+  are two separate, separately-weighted links here.
+
+  TIMELINE, same idea as map/index.html's: monthly bins load at startup, weekly
+  and daily are fetched only when selected (data/build_network_3d_directed.py
+  writes all three, keyed by index into network_3d_directed.json's own link
+  array, with an edges_fingerprint checked on load -- same guard, same reason,
+  as the map's own timeline; see that script's docstring). Scrubbing or playing
+  the timeline re-weights every edge and every particle to ONLY that period's
+  real activity -- an edge with no transfers in the current window goes dark and
+  stops animating, rather than showing the whole-period total regardless of when
+  you're looking.
+
+  What this still doesn't do: animate one person's whole real journey as a single
+  continuous path. This is aggregate, edge-by-edge flow -- real direction, real
+  per-period volume, not a reconstructed individual trajectory. That's a larger,
+  separate build (see todo.md) if this aggregate version doesn't scratch the itch.
+
+  CONE LAYOUT, added 2026-09-22 same day, on "we may want to rethink the overall
+  shape so that it doesn't get muddled in the middle... perhaps there is a conical
+  logic". Each node's height is fixed (fy) to its own real net flow direction
+  (whole-period outgoing minus incoming, as a share of its total) instead of
+  letting the force simulation place it freely on every axis -- net exporters
+  (intake) settle at the base, net importers (exit-heavy) toward the apex. Tried
+  3d-force-graph's own dagMode (layering by graph-traversal depth from source
+  nodes) first; rejected because this network's transfer pairs run both ways
+  often enough that its own cycle detector found 34,000+ distinct back-and-forth
+  node sets, and traversal depth mostly collapsed into one pinched band instead
+  of a clean cone. Net flow balance reads real transfer volume directly and
+  doesn't care how many hops a cycle takes.
+
+  ENTRY/EXIT, added 2026-09-22 same day, on "now i want some indication of when
+  people enter and exit the system." Everything above is a TRANSFER between two
+  facilities -- it says nothing about a stay's first stint (a new arrest, not a
+  transfer in) or its last (a real departure, not a transfer out).
+  data/build_network_3d_directed.py now also emits those as their own edges,
+  `__ENTRY__ -> facility` and `facility -> __EXIT__`, dated the same way
+  (book_in_date_time / book_out_date_time) so they ride the same timeline. The two
+  sentinel nodes are fixed (fx/fy/fz) well below and above the whole cone, not
+  part of the force layout, so every entry edge visibly funnels in from one point
+  and every exit edge funnels out to another -- their own two colors (green/blue),
+  their own independent weight scale (their volumes are usually far larger than
+  any single transfer route's, so sharing one scale would have crushed the
+  transfer edges' color/particle range toward its dim end), and their own show/hide
+  toggle, deliberately NOT gated by the transfer weight-threshold slider, since
+  that scale doesn't apply to them either. Still detained (no recorded
+  book_out_date_time) is not counted as an exit; a facility with no transfer edge
+  of its own has no node here to attach its entries/exits to (96.2%/99.1%
+  coverage on facilities already in the graph -- printed at build time).
+-->
+<!-- Still not built: exit doesn't yet distinguish removal from release/bond/other
+  (stay_release_reason carries that split in the raw data, unused here) -- one
+  color for every kind of departure, stated as a scope limit, not fixed silently. -->
+
+<script src="https://cdn.jsdelivr.net/npm/3d-force-graph@1.80.0/dist/3d-force-graph.min.js"></script>
+<style>
+  :root{
+    color-scheme: dark;
+    --surface: #1a1a19;
+    --panel-bg: rgba(20,20,19,0.92);
+    --panel-border: #383835;
+    --ink-primary: #ffffff;
+    --ink-secondary: #c3c2b7;
+    --ink-muted: #898781;
+    --accent: #3987e5;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html,body{margin:0;padding:0;height:100%;background:var(--surface);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden;}
+  #graph{position:absolute;inset:0;}
+  #panel{
+    position:absolute;top:16px;left:16px;z-index:10;width:310px;
+    background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:10px;
+    padding:14px 16px;color:var(--ink-primary);box-shadow:0 10px 40px rgba(0,0,0,.5);
+    max-height:calc(100vh - 32px);overflow-y:auto;
+  }
+  #panel .backlink{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;
+    color:var(--ink-muted);text-decoration:none;margin-bottom:8px;}
+  #panel .backlink:hover{color:var(--ink-primary);}
+  #panel h1{font-size:14px;margin:0 0 4px 0;font-weight:600;}
+  #panel .sub{font-size:11px;color:var(--ink-secondary);margin-bottom:12px;line-height:1.45;}
+  #panel .row{margin:10px 0;}
+  #panel .row label{display:flex;justify-content:space-between;font-size:11px;
+    color:var(--ink-secondary);margin-bottom:4px;}
+  #panel input[type=range]{width:100%;accent-color:var(--accent);}
+  #panel .legend{font-size:10.5px;color:var(--ink-muted);margin-top:2px;}
+  #panel button{font-family:inherit;font-size:11px;padding:6px 10px;
+    background:rgba(255,255,255,0.06);border:1px solid var(--panel-border);border-radius:6px;
+    color:var(--ink-primary);cursor:pointer;margin-top:2px;}
+  #panel button:hover{background:rgba(255,255,255,0.12);}
+  #panel button.active{background:var(--accent);border-color:var(--accent);}
+  #panel .tierRow{display:flex;gap:6px;flex-wrap:wrap;}
+  #panel .tierRow button{flex:1;min-width:60px;}
+  #panel .toggle{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink-secondary);
+    cursor:pointer;user-select:none;}
+  #panel .toggle input{accent-color:var(--accent);}
+  #panel .catrow{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink-secondary);
+    margin:4px 0;}
+  #panel .swatch{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+  #panel .catcount{margin-left:auto;color:var(--ink-muted);font-size:10px;}
+  #panel .caveat{font-size:10px;color:var(--ink-muted);line-height:1.5;margin-top:10px;
+    padding-top:10px;border-top:1px solid var(--panel-border);}
+  #panel .binLabel{font-family:monospace;font-size:12px;color:var(--ink-primary);
+    text-align:center;margin:6px 0;}
+  #status{position:absolute;bottom:14px;left:16px;z-index:10;font-family:monospace;
+    font-size:10.5px;color:var(--ink-muted);}
+  #loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    color:var(--ink-secondary);font-size:13px;z-index:20;}
+  #err{position:absolute;top:16px;right:16px;z-index:20;background:#3a1414;color:#ffb3b3;
+    padding:10px 14px;border-radius:8px;font-size:12px;max-width:340px;display:none;}
+</style>
+</head>
+<body>
+<div id="graph"></div>
+<div id="loading">Loading network...</div>
+<div id="err"></div>
+
+<div id="panel">
+  <a class="backlink" href="../index.html">&larr; Back to map</a>
+  <h1>The transfer network in 3D, animated flow</h1>
+  <div class="sub">
+    Laid out by its own structure -- not by latitude and longitude. Drag to
+    rotate, scroll to zoom, click a facility to focus. Particles travel in the
+    real recorded direction, source to destination.
+  </div>
+  <div class="row" style="margin-top:-4px;">
+    <div class="legend">Coloring by facility category &middot;
+      <a href="index.html" style="color:var(--accent);">betweenness</a> &middot;
+      <a href="by-category.html" style="color:var(--accent);">static category</a>
+    </div>
+  </div>
+
+  <div class="row">
+    <label class="toggle"><input type="checkbox" id="animate" checked /> Animate flow (particles)</label>
+  </div>
+  <div class="row">
+    <label><span>Particle speed</span><span id="speedVal">-</span></label>
+    <input type="range" id="speed" min="1" max="20" value="6" />
+  </div>
+
+  <div class="row">
+    <div class="legend" style="margin-bottom:6px;">Time window</div>
+    <div class="tierRow">
+      <button id="tierWhole" class="active">Whole period</button>
+      <button id="tierMonthly">Monthly</button>
+      <button id="tierWeekly">Weekly</button>
+      <button id="tierDaily">Daily</button>
+    </div>
+    <div class="binLabel" id="binLabel">whole period</div>
+    <div class="row" id="scrubRow" style="display:none;">
+      <input type="range" id="binPos" min="0" max="1" value="0" />
+      <div style="display:flex;gap:6px;margin-top:6px;">
+        <button id="play" style="flex:1;">&#9654; Play</button>
+        <button id="stepBack" title="Previous bin">&laquo;</button>
+        <button id="stepFwd" title="Next bin">&raquo;</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <label><span>Minimum transfers to draw an edge</span><span id="threshVal">-</span></label>
+    <input type="range" id="thresh" min="0" max="100" value="0" />
+    <div class="legend"><span id="edgeCount">-</span> of <span id="edgeTotal">-</span> directed
+      transfer edges shown (entries/exits below aren't filtered by this)</div>
+  </div>
+
+  <div class="row" id="legendRows">
+    <div class="legend">Node color -- facility category (same colors as the map)</div>
+  </div>
+  <div class="row">
+    <div class="legend">Node size -- throughput &middot; particle count/size -- current-window edge weight</div>
+  </div>
+
+  <div class="row">
+    <label class="toggle"><input type="checkbox" id="entryExit" checked /> Show system entries/exits</label>
+    <div id="boundaryLegendRows" style="margin-top:6px;"></div>
+    <div class="legend">New, 2026-09-22: a stay's first stint (a new arrest, not a
+      transfer) and its last (a real departure -- release or removal, if recorded)
+      drawn as their own edges into/out of two fixed points below/above the whole
+      layout, so entries and exits read as crossing the system's own boundary, not
+      as one more inter-facility route. Always the whole period; not affected by the
+      timeline above or the transfer threshold.</div>
+  </div>
+
+  <div class="row">
+    <label class="toggle"><input type="checkbox" id="dagMode" checked /> Cone layout (intake at base)</label>
+    <div class="legend">Prototype, 2026-09-22: height = each facility's own real net
+      flow direction over the whole period (outgoing minus incoming, as a share of
+      its total) -- net exporters (intake) at the base, net importers (exit-heavy)
+      toward the apex, balanced facilities mid-height. Off = original free-floating
+      layout.</div>
+  </div>
+  <div class="row">
+    <label class="toggle"><input type="checkbox" id="autorotate" /> Auto-rotate</label>
+  </div>
+  <div class="row">
+    <button id="reset">Reset camera</button>
+  </div>
+
+  <div class="caveat">
+    Edges are directed, real recorded flow (source -&gt; destination) -- not one
+    person's whole path. Entry/intake facilities read as sources; terminal/
+    exit-dominant facilities read as sinks, because that's what the real direction
+    shows, not a special case for this page. Node/edge colors are the same 6 that
+    fail this project's own accessibility check (contrast/color-vision gates) --
+    shown for consistency with the map, not because they passed that check.
+    Entries/exits only count at a facility that already has a transfer edge of its
+    own -- a facility where someone was booked in and released/removed without ever
+    being moved elsewhere has no node here to attach that count to (96.2%/99.1%
+    coverage; see data/build_network_3d_directed.py). Exit doesn't yet distinguish
+    removal from release/bond/other -- it's every recorded departure, one color.
+  </div>
+</div>
+
+<div id="status"></div>
+
+<script>
+(function () {
+  const errEl = document.getElementById('err');
+  function showErr(msg) {
+    errEl.textContent = msg;
+    errEl.style.display = 'block';
+    console.error(msg);
+  }
+  window.addEventListener('error', (e) => showErr('Script error: ' + e.message));
+
+  // Renamed 2026-10-07 alongside map/index.html's move to multi-label roles --
+  // see that file's own CATEGORY_COLOR comment for the full reasoning. Colors
+  // replaced 2026-10-08, same basemap-color analysis and same revert note as there.
+  const CATEGORY_COLOR = {
+    'high removal share':               '#d97c5f',
+    'central hub (many-to-many)':       '#d4c35f',
+    'entry/intake (field-office hold)': '#89f7c6',
+    'regional collector/feeder':        '#61b9f7',
+    'diffuse (no dominant flow pattern)': '#a080d2',
+    'minimal activity (low volume)':    '#f79bc9',
+  };
+  const CATEGORY_LABEL = {
+    'high removal share':               'high removal share',
+    'central hub (many-to-many)':       'central hub',
+    'entry/intake (field-office hold)': 'entry/intake',
+    'regional collector/feeder':        'regional collector/feeder',
+    'diffuse (no dominant flow pattern)': 'diffuse (no dominant pattern)',
+    'minimal activity (low volume)':    'minimal activity (<100 stints)',
+  };
+  const NO_CATEGORY_COLOR = '#3a3a38';
+  const NO_CATEGORY_LABEL = 'not in categorized set';
+
+  const EDGE_LOW = '#383835';
+  const EDGE_HIGH = '#8a8a86';
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function hexToRgb(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function edgeWeightColor(t) {
+    const lo = hexToRgb(EDGE_LOW), hi = hexToRgb(EDGE_HIGH);
+    const r = Math.round(lerp(lo[0], hi[0], t));
+    const g = Math.round(lerp(lo[1], hi[1], t));
+    const b = Math.round(lerp(lo[2], hi[2], t));
+    return `rgba(${r},${g},${b},0.5)`;
+  }
+
+  // Entry/exit pseudo-edges (data/build_network_3d_directed.py) get their own two
+  // hues, deliberately not drawn from the 6 category colors above -- they are not
+  // one more facility category, they're the system's own boundary. A single fixed
+  // hue with alpha scaling by weight (not a lerp toward white, like transfer edges
+  // get) -- these are meant to read as a distinct kind of thing at a glance, not as
+  // a busier version of the same thing.
+  const ENTRY_ID = '__ENTRY__', EXIT_ID = '__EXIT__';
+  const ENTRY_COLOR = '#5fd968';
+  const EXIT_COLOR = '#3987e5'; // same hue as this page's own --accent
+  function boundaryColor(hex, t) {
+    const [r, g, b] = hexToRgb(hex);
+    return `rgba(${r},${g},${b},${(0.2 + 0.7 * t).toFixed(3)})`;
+  }
+  function makeLogScale(weights) {
+    if (!weights.length) return () => 0;
+    const lo = Math.log1p(Math.min(...weights)), hi = Math.log1p(Math.max(...weights));
+    return w => (w <= 0) ? 0 : Math.max(0, (Math.log1p(w) - lo) / (hi - lo + 1e-9));
+  }
+
+  const TIER_FILES = {
+    monthly: '../data/network_3d_directed_binned_monthly.json?v=1791494712',
+    weekly: '../data/network_3d_directed_binned_weekly.json?v=1791494712',
+    daily: '../data/network_3d_directed_binned_daily.json?v=1791494712',
+  };
+
+  fetch('../data/network_3d_directed.json?v=1791494712')
+    .then(r => {
+      if (!r.ok) throw new Error('Fetch failed: ' + r.status);
+      return r.json();
+    })
+    .then(data => {
+      document.getElementById('loading').style.display = 'none';
+
+      // Stable index into data.links, assigned before graphData() so it survives
+      // 3d-force-graph's own per-link augmentation (x/y/z, __threeObj, etc.) --
+      // this is how a per-bin cell [linkIndex, weight] maps back to a link object.
+      data.links.forEach((l, i) => { l.__idx = i; });
+      // Captured from the raw source/target STRINGS now, before .graphData()
+      // below resolves them into direct node object references (3d-force-graph's
+      // own documented behavior) -- computing this later reads "[object Object]"
+      // instead of a facility code, which is exactly the stale-vs-fresh confusion
+      // this fingerprint exists to catch, not something it should itself cause.
+      const linksFingerprint =
+        `${data.links.length}:${data.links[0].source}>${data.links[0].target}:` +
+        `${data.links[data.links.length-1].source}>${data.links[data.links.length-1].target}`;
+
+      // Cone layout: each facility's vertical position is its own real net
+      // flow direction -- (outgoing - incoming) / (outgoing + incoming) over
+      // the WHOLE period's weights, from data.links while source/target are
+      // still id strings (same reason as linksFingerprint above). +1 = pure
+      // source (everything leaves, nothing arrives) at the base; -1 = pure
+      // sink (everything arrives, nothing leaves) at the apex; 0 = balanced,
+      // mid-height. This reads directly off real transfer volume, not graph
+      // topology -- tried dagMode (layering by graph-traversal depth) first,
+      // but this network's transfer pairs run both ways often enough (34,000+
+      // distinct back-and-forth node sets found by 3d-force-graph's own cycle
+      // detector) that traversal depth mostly collapsed into one pinched band
+      // in the middle instead of a clean cone. Net flow balance is immune to
+      // that -- it doesn't care how many hops a cycle takes, only the real
+      // in/out totals -- and it's the same directional signal categorize()
+      // in data/build_facility_flows.py already uses to call a facility
+      // "entry/intake" or "terminal/exit-dominant" in the first place.
+      // Entry/exit pseudo-edges (added below) are deliberately EXCLUDED from this --
+      // counting a new arrest as "incoming" would push every busy intake facility
+      // toward the apex, exactly backwards. The cone's shape stays governed by real
+      // inter-facility movement only; entries/exits are a separate layer drawn on
+      // top of it, not a further input into where a facility sits.
+      const CONE_HEIGHT = 700;
+      const outW = {}, inW = {};
+      data.links.forEach(l => {
+        if (l.kind !== 'transfer') return;
+        outW[l.source] = (outW[l.source] || 0) + l.weight;
+        inW[l.target] = (inW[l.target] || 0) + l.weight;
+      });
+      data.nodes.forEach(n => {
+        const o = outW[n.id] || 0, i = inW[n.id] || 0;
+        n.__netFlow = (o - i) / (o + i + 1e-9);
+        n.__coneY = -n.__netFlow * (CONE_HEIGHT / 2);
+      });
+      // Entry/exit sentinel nodes are fixed anchors, not part of the cone or the
+      // force layout at all -- every entry edge visibly converges from a single
+      // point below the whole cone; every exit edge converges to one above it.
+      data.nodes.forEach(n => {
+        if (n.id === ENTRY_ID) { n.fx = 0; n.fz = 0; n.fy = -(CONE_HEIGHT / 2 + 180); }
+        if (n.id === EXIT_ID) { n.fx = 0; n.fz = 0; n.fy = (CONE_HEIGHT / 2 + 180); }
+      });
+
+      // __ENTRY__/__EXIT__ excluded from maxThpt -- their throughput is a sum
+      // across every facility with any entries/exits, which would otherwise
+      // dwarf any single real facility's and crush every other node's size.
+      const realNodes = data.nodes.filter(n => n.id !== ENTRY_ID && n.id !== EXIT_ID);
+      const maxThpt = Math.max(...realNodes.map(n => n.throughput), 1);
+      const entryNode = data.nodes.find(n => n.id === ENTRY_ID);
+      const exitNode = data.nodes.find(n => n.id === EXIT_ID);
+
+      // Three independent weight scales -- transfer, entry, exit edges are very
+      // different quantities (a facility's whole-period entry count is often far
+      // larger than any single transfer route's), so sharing one min/max would
+      // let entries/exits crush the already-verified transfer color/particle
+      // scale toward its dim end. logWeightT (transfer-only) keeps its name and
+      // behavior unchanged from before entries/exits existed.
+      const transferWeights = data.links.filter(l => l.kind === 'transfer').map(l => l.weight);
+      const maxWholeWeight = Math.max(...transferWeights);
+      const minWholeWeight = Math.min(...transferWeights);
+      const logWeightT = makeLogScale(transferWeights);
+      const entryWeightT = makeLogScale(data.links.filter(l => l.kind === 'entry').map(l => l.weight));
+      const exitWeightT = makeLogScale(data.links.filter(l => l.kind === 'exit').map(l => l.weight));
+      function boundaryWeightT(l, w) { return l.kind === 'entry' ? entryWeightT(w) : exitWeightT(w); }
+
+      const counts = {};
+      realNodes.forEach(n => {
+        const key = n.category || '__none__';
+        counts[key] = (counts[key] || 0) + 1;
+      });
+      const legendRows = document.getElementById('legendRows');
+      Object.keys(CATEGORY_COLOR).forEach(cat => {
+        if (!counts[cat]) return;
+        const row = document.createElement('div');
+        row.className = 'catrow';
+        row.innerHTML = `<span class="swatch" style="background:${CATEGORY_COLOR[cat]}"></span>` +
+          `<span>${CATEGORY_LABEL[cat]}</span><span class="catcount">${counts[cat]}</span>`;
+        legendRows.appendChild(row);
+      });
+      if (counts['__none__']) {
+        const row = document.createElement('div');
+        row.className = 'catrow';
+        row.innerHTML = `<span class="swatch" style="background:${NO_CATEGORY_COLOR}"></span>` +
+          `<span>${NO_CATEGORY_LABEL}</span><span class="catcount">${counts['__none__']}</span>`;
+        legendRows.appendChild(row);
+      }
+      const boundaryRows = document.getElementById('boundaryLegendRows');
+      [[ENTRY_COLOR, 'system entry (new arrests)', entryNode],
+       [EXIT_COLOR, 'system exit (recorded departures)', exitNode]].forEach(([color, label, node]) => {
+        const row = document.createElement('div');
+        row.className = 'catrow';
+        row.innerHTML = `<span class="swatch" style="background:${color}"></span>` +
+          `<span>${label}</span><span class="catcount">${Math.round(node.throughput).toLocaleString()}</span>`;
+        boundaryRows.appendChild(row);
+      });
+
+      function tooltip(n) {
+        if (n.id === ENTRY_ID || n.id === EXIT_ID) {
+          const verb = n.id === ENTRY_ID ? 'New arrests' : 'Recorded departures (release or removal)';
+          const extra = n.id === EXIT_ID
+            ? '<br/>Still-detained stays as of this data pull are not counted here.' : '';
+          return `<div style="font:11px -apple-system,sans-serif;color:#fff;background:rgba(20,20,19,0.95);
+            border:1px solid #383835;border-radius:6px;padding:8px 10px;max-width:240px;line-height:1.5;">
+            <b>${n.name}</b><br/>
+            ${verb} across all graphed facilities, whole period: ${Math.round(n.throughput).toLocaleString()}${extra}
+            </div>`;
+        }
+        const loc = n.city ? `${n.city}${n.state ? ', ' + n.state : ''}` : 'location not geocoded';
+        const cat = n.category ? (CATEGORY_LABEL[n.category] || n.category) : NO_CATEGORY_LABEL;
+        return `<div style="font:11px -apple-system,sans-serif;color:#fff;background:rgba(20,20,19,0.95);
+          border:1px solid #383835;border-radius:6px;padding:8px 10px;max-width:240px;line-height:1.5;">
+          <b>${n.name}</b> (${n.id})<br/>
+          ${loc}<br/>
+          Category: ${cat}<br/>
+          Throughput: ${Math.round(n.throughput).toLocaleString()}<br/>
+          Betweenness: ${n.betweenness.toFixed(4)}
+          </div>`;
+      }
+
+      // ---- Time-window state --------------------------------------------
+      // tier: 'whole' | 'monthly' | 'weekly' | 'daily'. In 'whole' mode every
+      // link uses its network_3d_directed.json weight. In a real tier, every
+      // link not present in the current bin's cell list has weight 0 for that
+      // window -- absent, not just dim, since it carried nothing then.
+      let tier = 'whole';
+      let tierData = {}; // cache: tier name -> loaded bin file
+      let binIndex = 0;
+      let currentThreshold = 0;
+      let animating = true;
+      let playTimer = null;
+      let coneOn = true;
+      let entryExitOn = true;
+      // Cone on by default -- skips the two sentinel nodes, whose fy was already
+      // fixed at the extremes above and must not be overwritten with their
+      // (meaningless, always-zero) __coneY.
+      data.nodes.forEach(n => {
+        if (n.id === ENTRY_ID || n.id === EXIT_ID) return;
+        n.fy = n.__coneY;
+      });
+
+      function currentWeight(l) {
+        if (tier === 'whole') return l.weight;
+        const d = tierData[tier];
+        if (!d) return l.weight;
+        const cell = d._byBin[binIndex];
+        return (cell && cell[l.__idx] !== undefined) ? cell[l.__idx] : 0;
+      }
+      function isBoundary(l) { return l.kind === 'entry' || l.kind === 'exit'; }
+      function particleCount(l) {
+        const w = currentWeight(l);
+        if (isBoundary(l)) {
+          if (!animating || !entryExitOn || w <= 0) return 0;
+          return 1 + Math.round(3 * boundaryWeightT(l, w));
+        }
+        if (!animating || w < currentThreshold || w <= 0) return 0;
+        return 1 + Math.round(3 * logWeightT(w));
+      }
+      function particleWidth(l) {
+        const w = currentWeight(l);
+        return isBoundary(l) ? 1.5 + 2.5 * boundaryWeightT(l, w) : 1.5 + 2.5 * logWeightT(w);
+      }
+      function linkVisible(l) {
+        const w = currentWeight(l);
+        if (isBoundary(l)) return entryExitOn && w > 0;
+        return w > 0 && w >= currentThreshold;
+      }
+      function linkColor(l) {
+        const w = currentWeight(l);
+        if (l.kind === 'entry') return boundaryColor(ENTRY_COLOR, boundaryWeightT(l, w));
+        if (l.kind === 'exit') return boundaryColor(EXIT_COLOR, boundaryWeightT(l, w));
+        return edgeWeightColor(logWeightT(w));
+      }
+
+      const Graph = ForceGraph3D()(document.getElementById('graph'))
+        .graphData(data)
+        .backgroundColor('#1a1a19')
+        .nodeId('id')
+        .nodeLabel(tooltip)
+        .nodeVal(n => (n.id === ENTRY_ID || n.id === EXIT_ID) ? 5 : 1 + 14 * Math.sqrt(n.throughput / maxThpt))
+        .nodeColor(n => {
+          if (n.id === ENTRY_ID) return ENTRY_COLOR;
+          if (n.id === EXIT_ID) return EXIT_COLOR;
+          return CATEGORY_COLOR[n.category] || NO_CATEGORY_COLOR;
+        })
+        .nodeOpacity(0.95)
+        .nodeVisibility(n => (n.id === ENTRY_ID || n.id === EXIT_ID) ? entryExitOn : true)
+        .linkSource('source')
+        .linkTarget('target')
+        .linkLabel(l => {
+          const s = typeof l.source === 'object' ? l.source : data.nodes.find(n => n.id === l.source);
+          const t = typeof l.target === 'object' ? l.target : data.nodes.find(n => n.id === l.target);
+          const w = currentWeight(l);
+          const windowNote = tier !== 'whole' ? ' in this window' : '';
+          if (l.kind === 'entry') return `New arrests at ${t ? t.name : l.target}: ${w.toLocaleString()}${windowNote}`;
+          if (l.kind === 'exit') return `Recorded departures from ${s ? s.name : l.source}: ${w.toLocaleString()}${windowNote}`;
+          return `${s ? s.id : l.source} -&gt; ${t ? t.id : l.target}: ${w.toLocaleString()} transfers${windowNote}`;
+        })
+        .linkWidth(1.0)
+        .linkColor(linkColor)
+        .linkOpacity(1)
+        .linkVisibility(linkVisible)
+        .linkDirectionalParticles(particleCount)
+        .linkDirectionalParticleWidth(particleWidth)
+        .linkDirectionalParticleColor(l => l.kind === 'entry' ? ENTRY_COLOR : l.kind === 'exit' ? EXIT_COLOR : '#ffffff')
+        .linkDirectionalParticleSpeed(0.006)
+        .onNodeClick(node => {
+          const distance = 90;
+          const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z || 1);
+          Graph.cameraPosition(
+            { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio },
+            node,
+            900
+          );
+        });
+
+      function refreshEdges() {
+        Graph.linkVisibility(linkVisible);
+        Graph.linkColor(linkColor);
+        Graph.linkDirectionalParticles(particleCount);
+        Graph.linkDirectionalParticleWidth(particleWidth);
+        // Scoped to transfer edges -- the count/threshold controls below are
+        // about inter-facility movement, not entries/exits (their own toggle
+        // and totals are shown separately, not mixed into this number).
+        const shown = data.links.filter(l => l.kind === 'transfer' && linkVisible(l)).length;
+        document.getElementById('edgeCount').textContent = shown.toLocaleString();
+      }
+
+      // ---- Weight-threshold slider ----------------------------------------
+      const thresh = document.getElementById('thresh');
+      const threshVal = document.getElementById('threshVal');
+      document.getElementById('edgeTotal').textContent = transferWeights.length.toLocaleString();
+      const wholeSorted = [...transferWeights].sort((a, b) => a - b);
+      thresh.min = minWholeWeight;
+      thresh.max = maxWholeWeight;
+      const defaultThreshold = wholeSorted[Math.floor(0.85 * wholeSorted.length)];
+      thresh.value = defaultThreshold;
+      function applyThreshold() {
+        currentThreshold = Number(thresh.value);
+        threshVal.textContent = Math.round(currentThreshold).toLocaleString();
+        refreshEdges();
+      }
+      thresh.addEventListener('input', applyThreshold);
+
+      // ---- Timeline: tier buttons, scrub slider, play -----------------------
+      const tierButtons = {
+        whole: document.getElementById('tierWhole'),
+        monthly: document.getElementById('tierMonthly'),
+        weekly: document.getElementById('tierWeekly'),
+        daily: document.getElementById('tierDaily'),
+      };
+      const scrubRow = document.getElementById('scrubRow');
+      const binPos = document.getElementById('binPos');
+      const binLabel = document.getElementById('binLabel');
+      const playBtn = document.getElementById('play');
+
+      function stopPlaying() {
+        if (playTimer) { clearInterval(playTimer); playTimer = null; playBtn.textContent = '▶ Play'; }
+      }
+
+      function updateBinLabel() {
+        if (tier === 'whole') { binLabel.textContent = 'whole period'; return; }
+        const d = tierData[tier];
+        if (!d) { binLabel.textContent = 'loading...'; return; }
+        const range = d.bin_ranges[binIndex];
+        binLabel.textContent = `${d.bins[binIndex]}  (${range[0]} to ${range[1]})`;
+      }
+
+      function setBin(i) {
+        const d = tierData[tier];
+        if (!d) return;
+        binIndex = Math.max(0, Math.min(d.bins.length - 1, i));
+        binPos.value = binIndex;
+        updateBinLabel();
+        refreshEdges();
+      }
+
+      function selectTier(name) {
+        stopPlaying();
+        Object.values(tierButtons).forEach(b => b.classList.remove('active'));
+        tierButtons[name].classList.add('active');
+
+        if (name === 'whole') {
+          tier = 'whole';
+          scrubRow.style.display = 'none';
+          updateBinLabel();
+          refreshEdges();
+          return;
+        }
+
+        scrubRow.style.display = '';
+        const go = () => {
+          tier = name;
+          const d = tierData[name];
+          binPos.max = d.bins.length - 1;
+          setBin(Math.min(binIndex, d.bins.length - 1));
+        };
+        if (tierData[name]) { go(); return; }
+        binLabel.textContent = 'loading...';
+        fetch(TIER_FILES[name]).then(r => r.json()).then(d => {
+          if (d.edges_fingerprint && d.edges_fingerprint !== linksFingerprint) {
+            showErr(`Directed edge bins were built against a different edge list -- re-run `
+              + `data/build_network_3d_directed.py. Browser has: ${linksFingerprint} · File (${name}) has: `
+              + `${d.edges_fingerprint}`);
+            return;
+          }
+          // Precompute an object-indexed lookup per bin (edgeIndex -> weight),
+          // instead of scanning the [index, weight] pair list on every frame.
+          d._byBin = d.cells.map(cellList => {
+            const m = {};
+            cellList.forEach(([idx, n]) => { m[idx] = n; });
+            return m;
+          });
+          tierData[name] = d;
+
+          // Re-calibrate the threshold slider to THIS tier's own weight
+          // distribution, not the whole-period one -- a single day's busiest
+          // route can be smaller than the whole-period 85th percentile, so
+          // reusing that value left Daily showing zero edges by default (found
+          // testing live, not assumed fine). Only done once, on first load of
+          // a tier, so a manual adjustment survives switching tiers back and
+          // forth afterward.
+          // Filtered to transfer-edge indices -- this slider is transfer-only
+          // (see refreshEdges), and entry/exit weights run much higher, which
+          // would badly skew this recalibration if left mixed in.
+          const cellWeights = d.cells
+            .flatMap(c => c.filter(([idx]) => data.links[idx].kind === 'transfer').map(([, n]) => n))
+            .sort((a, b) => a - b);
+          const maxCellWeight = cellWeights[cellWeights.length - 1] || 1;
+          thresh.max = maxCellWeight;
+          thresh.value = cellWeights[Math.floor(0.5 * cellWeights.length)] || 0;
+
+          go();
+          applyThreshold();
+        }).catch(e => showErr(`Could not load ${TIER_FILES[name]}: ${e.message}`));
+      }
+
+      Object.keys(tierButtons).forEach(name => {
+        tierButtons[name].addEventListener('click', () => selectTier(name));
+      });
+
+      binPos.addEventListener('input', () => setBin(Number(binPos.value)));
+
+      document.getElementById('stepBack').addEventListener('click', () => { stopPlaying(); setBin(binIndex - 1); });
+      document.getElementById('stepFwd').addEventListener('click', () => { stopPlaying(); setBin(binIndex + 1); });
+
+      playBtn.addEventListener('click', () => {
+        if (playTimer) { stopPlaying(); return; }
+        playBtn.textContent = '⏸ Pause';
+        playTimer = setInterval(() => {
+          const d = tierData[tier];
+          if (!d) return;
+          if (binIndex >= d.bins.length - 1) { setBin(0); }
+          else { setBin(binIndex + 1); }
+        }, 500);
+      });
+
+      // ---- Other controls ---------------------------------------------------
+      document.getElementById('animate').addEventListener('change', (e) => {
+        animating = e.target.checked;
+        refreshEdges();
+      });
+
+      const speed = document.getElementById('speed');
+      const speedVal = document.getElementById('speedVal');
+      function applySpeed() {
+        const v = Number(speed.value);
+        speedVal.textContent = v;
+        Graph.linkDirectionalParticleSpeed(v / 1000);
+      }
+      speed.addEventListener('input', applySpeed);
+      applySpeed();
+
+      document.getElementById('dagMode').addEventListener('change', (e) => {
+        coneOn = e.target.checked;
+        Graph.graphData().nodes.forEach(n => {
+          if (n.id === ENTRY_ID || n.id === EXIT_ID) return; // always fixed, regardless of toggle
+          if (coneOn) { n.fy = n.__coneY; } else { delete n.fy; }
+        });
+        Graph.d3ReheatSimulation();
+        // The cone and the free-floating layout occupy very different bounding
+        // boxes -- re-frame rather than leaving the camera at the old scale.
+        setTimeout(() => Graph.zoomToFit(600, 60, frameNodeFilter), 700);
+      });
+
+      document.getElementById('entryExit').addEventListener('change', (e) => {
+        entryExitOn = e.target.checked;
+        refreshEdges();
+        Graph.nodeVisibility(n => (n.id === ENTRY_ID || n.id === EXIT_ID) ? entryExitOn : true);
+      });
+
+      document.getElementById('autorotate').addEventListener('change', (e) => {
+        const controls = Graph.controls();
+        controls.autoRotate = e.target.checked;
+        controls.autoRotateSpeed = 0.6;
+      });
+
+      // Excludes the two fixed sentinel nodes from auto-framing -- they sit well
+      // outside the cone on purpose (see above), and letting them into the bbox
+      // would zoom out to fit two anchor points instead of the 612 real facilities.
+      function frameNodeFilter(n) { return n.id !== ENTRY_ID && n.id !== EXIT_ID; }
+
+      document.getElementById('reset').addEventListener('click', () => {
+        Graph.zoomToFit(800, 60, frameNodeFilter);
+      });
+
+      document.getElementById('status').textContent =
+        `${realNodes.length} facilities, ${transferWeights.length} directed transfer edges · ` +
+        `${Math.round(entryNode.throughput).toLocaleString()} system entries, ` +
+        `${Math.round(exitNode.throughput).toLocaleString()} system exits (whole period)`;
+
+      applyThreshold();
+      updateBinLabel();
+      setTimeout(() => Graph.zoomToFit(0, 60, frameNodeFilter), 300); // frame the cone on first paint, no animation
+
+    })
+    .catch(e => {
+      document.getElementById('loading').style.display = 'none';
+      showErr('Could not load network_3d_directed.json: ' + e.message +
+        ' -- run "uv run data/build_network_3d_directed.py" from the project root, ' +
+        'and serve this page over http:// (not file://), e.g. ' +
+        '"python3 -m http.server" from the project root, then open ' +
+        'http://localhost:8000/network-3d/animated.html');
+    });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "generated_by": "data/build_time_series.py",
+  "data_release_date": "2026-08-26",
+  "study_start": "2025-01-20",
+  "coverage_end": "2026-08-06",
+  "total_transfers": 1269705,
+  "n_days": 564,
+  "n_months": 20,
+  "first_date": "2025-01-20",
+  "last_date": "2026-08-06",
+  "last_complete_month": "2026-07",
+  "hour_is_floor": true,
+  "hour_floor_note": "Minutes in the source are rounded by hand (minute :00 holds 16.7% of arrivals against 1.67% if uniform), so hourly buckets are the finest honest resolution. Anything below the hour is spacing, not data.",
+  "times_are_utc": true,
+  "corridor_example": {
+    "src": "FSF",
+    "dst": "FLO",
+    "total": 22930
+  },
+  "censoring_note": "Periods after the last complete month under-report: stints had not been recorded when this release was cut. Shade, do not trim."
+}
