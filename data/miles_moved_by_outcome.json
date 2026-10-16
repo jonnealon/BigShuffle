@@ -1,0 +1,44 @@
+{
+  "generated_by": "data/build_miles_moved.py",
+  "labels_defined_once_here": {
+    "Still held": "stay_book_out_date_time IS NULL (open at the pull boundary)",
+    "Bonded": "stay_release_reason IN ('Bonded Out - IJ', 'Bonded Out - Field Office')",
+    "Removed": "stay_release_reason = 'Removed'",
+    "Released": "closed, not removed, not bonded (recognizance, parole, supervision, IJ relief, voluntary departure/return, court ordered, or any other closed reason)"
+  },
+  "floor_caveat": "Straight-line (WGS84 geodesic) distance is a FLOOR for road travel, not an estimate -- real road distance typically runs 1.2-1.4x the straight line. Never present this figure as 'distance travelled.'",
+  "by_outcome": [
+    {
+      "outcome": "Still held",
+      "n_stays": 64569,
+      "median_path_mi": 148.5,
+      "median_net_mi": 120.1,
+      "median_tortuosity": 1.0,
+      "total_path_mi_floor": 34052846.0
+    },
+    {
+      "outcome": "Bonded",
+      "n_stays": 30029,
+      "median_path_mi": 110.6,
+      "median_net_mi": 86.6,
+      "median_tortuosity": 1.0,
+      "total_path_mi_floor": 11945513.0
+    },
+    {
+      "outcome": "Removed",
+      "n_stays": 453428,
+      "median_path_mi": 512.2,
+      "median_net_mi": 408.0,
+      "median_tortuosity": 1.06,
+      "total_path_mi_floor": 322925801.0
+    },
+    {
+      "outcome": "Released",
+      "n_stays": 68738,
+      "median_path_mi": 29.0,
+      "median_net_mi": 11.0,
+      "median_tortuosity": 1.0,
+      "total_path_mi_floor": 22341068.0
+    }
+  ]
+}

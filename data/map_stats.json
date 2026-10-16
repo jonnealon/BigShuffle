@@ -1,0 +1,17 @@
+{
+  "data_release_date": "2026-08-26",
+  "study_start": "2025-01-20",
+  "facilities_scored": 677,
+  "facilities_shown": 673,
+  "facilities_dropped_no_coords": 4,
+  "edges_mapped_total": 9238,
+  "edges_shown": 9238,
+  "coord_sources": {
+    "facilities table": 503,
+    "hold-room crosswalk (exact)": 68,
+    "facility city (gazetteer, city level)": 45,
+    "manual addition (no DDP facilities-table row under any name)": 37,
+    "hold-room crosswalk (approximate)": 19,
+    "manual correction (DDP's own coordinate verified wrong)": 1
+  }
+}
