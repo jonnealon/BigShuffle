@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Unrecorded custody gaps (minors) -- an analysis</title>
+<!--
+  Standalone analysis page, Step 5 of the Flores v. Reno hotel-records task
+  (_prompt/to-review-to-run.md, 2026-10-20 15:55 EDT; see notes/flores-hotel-records.md
+  for the full methodology). Reachable from map/index.html's "More views" row, same
+  convention as population/, miles/, airports/, circuits/.
+
+  WHAT THIS SHOWS. Two counts, by hold room and by month: "court-documented hotel
+  staging" (a minor whose stay matched a real Flores v. Reno court filing describing a
+  hotel/transport chain) and "unrecorded custody gap (inferred)" (a minor whose stay
+  shows the same end-of-stay pattern with NO court match at all -- not a hotel, not
+  asserted to be any specific kind of custody). Every figure is an aggregate, built
+  server-side by data/build_minors_custody_aggregates.py and
+  data/build_minors_custody_population_daily.py from the GATED derived match data --
+  no individual case is named or traceable from this page, the same public/gated
+  boundary this project holds everywhere else (population/index.html, miles/index.html).
+
+  DEFAULT ON, per the owner's own decision (asked via AskUserQuestion, 2026-10-21
+  10:21) -- this page's own content is simply what shows when the page loads, no
+  toggle needed, since there is no main-map layer this feature attaches to at all
+  (the owner's separate, later decision, same date: keep this off the main map
+  entirely, as its own standalone page, precisely because it covers a specifically
+  vulnerable population and is fresh, exploratory analysis).
+
+  SUPPRESSION FLOOR: any facility/month cell (or daily population count) under 5 is
+  omitted entirely by the build scripts, before this page ever sees it -- not rounded,
+  not shown as "<5". This page never re-aggregates in a way that could leak a
+  suppressed cell back in.
+
+  Charts are hand-rolled inline SVG, no charting library -- same pattern as
+  population/index.html and miles/index.html. The facility map reuses miles/index.html's
+  own flat 2D deck.gl ScatterplotLayer pattern (DeckGL wrapper, not a separate
+  mapboxgl.Map + MapboxOverlay -- see that page's own README for why that distinction
+  matters) and its own mapOptions:{projection:'mercator'} fix for the same reason.
+-->
+<link href="https://cdn.jsdelivr.net/npm/mapbox-gl@2.15.0/dist/mapbox-gl.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/mapbox-gl@2.15.0/dist/mapbox-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/deck.gl@8.9.0/dist.min.js"></script>
+<style>
+  :root{
+    color-scheme: dark;
+    --surface: #1a1a19;
+    --panel-bg: rgba(20,20,19,0.92);
+    --panel-border: #383835;
+    --ink-primary: #ffffff;
+    --ink-secondary: #c3c2b7;
+    --ink-muted: #898781;
+    --accent: #3a6ea5;
+    --accent2: #888888;
+  }
+  html,body{margin:0;padding:0;background:var(--surface);color:var(--ink-primary);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+  a{color:var(--accent);}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 80px;}
+  .backlink{display:inline-flex;align-items:center;gap:5px;font-size:11px;
+    color:var(--ink-muted);text-decoration:none;margin-bottom:18px;}
+  .backlink:hover{color:var(--ink-primary);}
+  h1{font-size:24px;margin:0 0 6px 0;font-weight:700;}
+  .sub{font-size:13px;color:var(--ink-secondary);line-height:1.55;max-width:760px;margin-bottom:8px;}
+  .note{font-size:11.5px;color:var(--ink-muted);line-height:1.5;max-width:760px;}
+  .caveat{font-size:11px;color:#c9a876;line-height:1.5;max-width:760px;margin-top:6px;}
+  section{margin-top:44px;}
+  h2{font-size:15px;text-transform:uppercase;letter-spacing:0.6px;color:var(--ink-secondary);
+    border-bottom:1px solid var(--panel-border);padding-bottom:8px;margin:0 0 16px 0;}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;}
+  .tile{background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:10px;
+    padding:14px 16px;}
+  .tile .v{font-size:22px;font-weight:700;color:var(--ink-primary);}
+  .tile .k{font-size:10.5px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.4px;margin-top:4px;}
+  .chartbox{background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:10px;
+    padding:18px 20px;position:relative;}
+  .chartbox .caption{font-size:11px;color:var(--ink-muted);margin-top:10px;line-height:1.5;}
+  svg text{fill:var(--ink-secondary);font-size:10px;font-family:inherit;}
+  svg .axis-label{fill:var(--ink-muted);}
+  .legend-row{display:flex;gap:16px;font-size:11px;color:var(--ink-secondary);margin-bottom:10px;}
+  .legend-row .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;}
+  #tooltip{position:absolute;pointer-events:none;background:var(--panel-bg);border:1px solid var(--panel-border);
+    border-radius:8px;padding:8px 10px;font-size:11px;line-height:1.5;color:var(--ink-primary);
+    box-shadow:0 8px 24px rgba(0,0,0,.5);display:none;z-index:20;white-space:nowrap;}
+  table.stattable{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px;}
+  table.stattable th{text-align:left;color:var(--ink-muted);font-weight:600;font-size:10.5px;
+    text-transform:uppercase;letter-spacing:0.4px;padding:6px 10px;border-bottom:1px solid var(--panel-border);}
+  table.stattable td{padding:6px 10px;border-bottom:1px solid rgba(255,255,255,0.05);}
+  table.stattable tr:hover td{background:rgba(255,255,255,0.03);}
+  #facMapWrap{height:480px;border-radius:10px;overflow:hidden;position:relative;border:1px solid var(--panel-border);}
+  #facMap{position:absolute;inset:0;}
+  #facMapLegend{position:absolute;bottom:14px;left:14px;z-index:5;background:var(--panel-bg);
+    border:1px solid var(--panel-border);border-radius:8px;padding:10px 12px;font-size:10.5px;color:var(--ink-secondary);}
+  #facMapLegend .sw{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-2px;}
+  footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--panel-border);
+    font-size:11px;color:var(--ink-muted);line-height:1.6;}
+  #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    color:var(--ink-secondary);font-size:13px;z-index:50;background:var(--surface);}
+</style>
+</head>
+<body>
+<div id="loading">Loading&hellip;</div>
+<div id="tooltip"></div>
+<div class="wrap">
+  <a class="backlink" href="../index.html">&larr; back to the map</a>
+  <h1>Unrecorded custody gaps (minors)</h1>
+  <p class="sub">A detained minor's own stay can show a gap this project's underlying
+    detention data never recorded -- days between a recorded stint and a stay's own end,
+    with nothing in between. ICE is separately required to report its own custody of
+    minors, including hotel and transport stays, to a federal court (<i>Flores v. Reno</i>,
+    C.D. Cal. No. 2:85-cv-04544) -- a real source this project now matches against its own
+    records for a confirmed subset. Where no court record exists at all, a stay showing the
+    same pattern is flagged as an inference, never asserted to be a hotel or any specific
+    kind of custody.</p>
+  <p class="note">Every figure below is an aggregate (a count, a sum) -- no individual
+    case is named or traceable from this page. Any facility/month cell or daily count
+    under 5 is omitted entirely before this page ever sees it, not rounded or shown as
+    "&lt;5". Full methodology, numbers, and open questions:
+    the book's <a href="../04-interface.html#sec-interface-flores-custody" target="_blank" rel="noopener">Interface chapter</a>.</p>
+
+  <section>
+    <h2>Headline figures</h2>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <section>
+    <h2>By month, nationwide</h2>
+    <div class="chartbox">
+      <div class="legend-row">
+        <span><span class="sw" style="background:var(--accent)"></span>Court-documented hotel staging</span>
+        <span><span class="sw" style="background:var(--accent2)"></span>Unrecorded custody gap (inferred)</span>
+      </div>
+      <svg id="monthChart" width="100%" height="260" viewBox="0 0 1000 260" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="caption">Stacked by month, origin hold room summed nationwide. A
+        month with no bar segment of a given color means every facility's own cell for
+        that month and category fell under the suppression floor -- not that the true
+        count is zero.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Daily population in an unrecorded custody interval</h2>
+    <div class="chartbox">
+      <div class="legend-row">
+        <span><span class="sw" style="background:var(--accent)"></span>Court-documented</span>
+        <span><span class="sw" style="background:var(--accent2)"></span>Inferred, no court match</span>
+      </div>
+      <svg id="popChart" width="100%" height="260" viewBox="0 0 1000 260" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="caption" id="popCaption"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>By hold room</h2>
+    <div id="facMapWrap">
+      <div id="facMap"></div>
+      <div id="facMapLegend"></div>
+    </div>
+    <p class="note" id="facMapCaption" style="margin-top:10px;"></p>
+    <table class="stattable" id="facTable">
+      <thead><tr><th>Facility</th><th>Court-documented</th><th>Inferred</th><th>Total flagged minor stays</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <footer>
+    <b>Sources.</b> ICE's own court-filed Juvenile Flores Report (<i>Flores v. Reno</i>,
+    C.D. Cal. No. 2:85-cv-04544), matched to the Deportation Data Project's own detention
+    records. Built by <code>data/build_flores_exhibits.py</code>,
+    <code>data/build_flores_ddp_match.py</code>,
+    <code>data/build_minors_custody_aggregates.py</code>, and
+    <code>data/build_minors_custody_population_daily.py</code>. Full methodology:
+    <code>notes/flores-hotel-records.md</code>. Analysis &amp; visualization: Jon Nealon.
+  </footer>
+</div>
+
+<script>
+const tooltip = document.getElementById('tooltip');
+function showTip(html, evt){
+  tooltip.innerHTML = html;
+  tooltip.style.display = 'block';
+  const pad = 14;
+  tooltip.style.left = (evt.clientX + pad) + 'px';
+  tooltip.style.top = (evt.clientY + pad) + 'px';
+}
+function hideTip(){ tooltip.style.display = 'none'; }
+function num(n){ return n == null ? '?' : Number(n).toLocaleString(); }
+
+const SVGNS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs){
+  const e = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+// Stacked bar chart, two series -- same hand-rolled SVG convention as
+// miles/index.html's drawBars()/drawLines(), extended here for stacking.
+function drawStacked(svgId, labels, seriesA, seriesB, colorA, colorB){
+  const svg = document.getElementById(svgId);
+  svg.innerHTML = '';
+  const W = 1000, H = 260, padL = 46, padR = 16, padT = 16, padB = 44;
+  const innerW = W - padL - padR, innerH = H - padT - padB;
+  const totals = labels.map((_, i) => (seriesA[i]||0) + (seriesB[i]||0));
+  const maxV = Math.max(...totals, 1);
+  const gap = 4;
+  const bw = (innerW / labels.length) - gap;
+  svg.appendChild(el('line', {x1:padL, y1:padT+innerH, x2:padL+innerW, y2:padT+innerH, stroke:'#383835', 'stroke-width':1}));
+  labels.forEach((lbl, i) => {
+    const a = seriesA[i] || 0, b = seriesB[i] || 0;
+    const x = padL + i * (bw + gap);
+    const hA = maxV ? (a / maxV) * innerH : 0;
+    const hB = maxV ? (b / maxV) * innerH : 0;
+    const yBase = padT + innerH;
+    if (a) {
+      const rA = el('rect', {x, y: yBase - hA, width: Math.max(bw,2), height: hA, fill: colorA});
+      rA.addEventListener('mousemove', e => showTip(`<b>${lbl}</b><br>Court-documented: ${num(a)}`, e));
+      rA.addEventListener('mouseleave', hideTip);
+      svg.appendChild(rA);
+    }
+    if (b) {
+      const rB = el('rect', {x, y: yBase - hA - hB, width: Math.max(bw,2), height: hB, fill: colorB});
+      rB.addEventListener('mousemove', e => showTip(`<b>${lbl}</b><br>Inferred: ${num(b)}`, e));
+      rB.addEventListener('mouseleave', hideTip);
+      svg.appendChild(rB);
+    }
+    if ((i % 2 === 0) || i === labels.length - 1) {
+      const t = el('text', {x: x + bw/2, y: yBase+16, 'text-anchor':'middle', class:'axis-label', 'font-size':'8.5px'});
+      t.textContent = lbl;
+      svg.appendChild(t);
+    }
+  });
+}
+
+// Two-series line chart with per-day nulls (suppressed days) skipped, not
+// interpolated through -- a gap in the line is an honest gap, not drawn as 0.
+function drawLinesNullable(svgId, dates, seriesA, seriesB, colorA, colorB){
+  const svg = document.getElementById(svgId);
+  svg.innerHTML = '';
+  const W = 1000, H = 260, padL = 40, padR = 16, padT = 16, padB = 36;
+  const innerW = W - padL - padR, innerH = H - padT - padB;
+  const maxV = Math.max(...seriesA.filter(v=>v!=null), ...seriesB.filter(v=>v!=null), 1);
+  const n = dates.length;
+  const xAt = i => padL + (n > 1 ? i * (innerW / (n - 1)) : innerW/2);
+  const yAt = v => padT + innerH - (v / maxV) * innerH;
+  svg.appendChild(el('line', {x1:padL, y1:padT+innerH, x2:padL+innerW, y2:padT+innerH, stroke:'#383835', 'stroke-width':1}));
+  [0, 0.5, 1].forEach(f => {
+    const y = padT + innerH - f*innerH;
+    svg.appendChild(el('line', {x1:padL, y1:y, x2:padL+innerW, y2:y, stroke:'#292927', 'stroke-width':1}));
+    const t = el('text', {x: padL - 6, y: y+3, 'text-anchor':'end', 'font-size':'9px'});
+    t.textContent = Math.round(maxV*f);
+    svg.appendChild(t);
+  });
+  function path(series, color){
+    let d = '', drawing = false;
+    series.forEach((v, i) => {
+      if (v == null) { drawing = false; return; }
+      d += (drawing ? 'L' : 'M') + xAt(i) + ',' + yAt(v) + ' ';
+      drawing = true;
+    });
+    svg.appendChild(el('path', {d, fill:'none', stroke:color, 'stroke-width':2, 'stroke-linecap':'round', 'stroke-linejoin':'round'}));
+  }
+  path(seriesA, colorA);
+  path(seriesB, colorB);
+  const everyNth = Math.ceil(n / 10);
+  dates.forEach((d, i) => {
+    if (i % everyNth === 0 || i === n-1) {
+      const t = el('text', {x: xAt(i), y: padT+innerH+16, 'text-anchor':'middle', class:'axis-label', 'font-size':'8.5px'});
+      t.textContent = d.slice(0,7);
+      svg.appendChild(t);
+    }
+  });
+}
+
+async function main(){
+  const [hotel, facilities, pop] = await Promise.all([
+    fetch('../data/map_minors_custody_hotel_staging.json?v=1792765703').then(r => r.json()),
+    fetch('../data/map_minors_custody_facility_counts.json?v=1792765703').then(r => r.json()),
+    fetch('../data/map_minors_custody_population_daily.json?v=1792765703').then(r => r.json()),
+  ]);
+
+  const tiles = [
+    ['Court-documented hotel staging (total)', num(hotel.summary.total_court_documented_hotel_staging)],
+    ['Unrecorded custody gaps, inferred (total)', num(hotel.summary.total_unrecorded_custody_gap_inferred)],
+    ['Hold rooms with any published count', num(facilities.facilities.length)],
+    ['Suppression floor', '< ' + hotel.suppress_below],
+  ];
+  const tilesEl = document.getElementById('tiles');
+  tiles.forEach(([k,v]) => {
+    const d = document.createElement('div'); d.className = 'tile';
+    d.innerHTML = `<div class="v">${v}</div><div class="k">${k}</div>`;
+    tilesEl.appendChild(d);
+  });
+
+  const months = Object.keys(hotel.by_month_total).sort();
+  drawStacked('monthChart', months,
+    months.map(m => hotel.by_month_total[m].court_documented_hotel_staging || 0),
+    months.map(m => hotel.by_month_total[m].unrecorded_custody_gap_inferred || 0),
+    'var(--accent)', 'var(--accent2)');
+
+  drawLinesNullable('popChart', pop.dates, pop.court_documented, pop.inferred_unrecorded,
+    'var(--accent)', 'var(--accent2)');
+  document.getElementById('popCaption').textContent =
+    `${pop.dates[0]} to ${pop.dates[pop.dates.length-1]}. A gap in a line is a day where ` +
+    `that component's own count fell under the suppression floor, not a true zero.`;
+
+  // ---- facility map (flat 2D deck.gl, same pattern as miles/index.html's own county
+  // map -- DeckGL wrapper, mapOptions:{projection:'mercator'}, see that page's README
+  // for why both choices matter here too) ----
+  const facs = facilities.facilities.filter(f => f.lat != null && f.lon != null);
+  const maxTotal = Math.max(...facs.map(f => f.total_flagged_minor_stays), 1);
+  document.getElementById('facMapCaption').textContent =
+    `${num(facs.length)} hold rooms shown with a recorded coordinate, of ${num(facilities.facilities.length)} ` +
+    `with any published count (a coordinate is missing for some hold rooms in this project's own ` +
+    `underlying facility data -- a known, pre-existing gap, not specific to this page). ` +
+    `Circle area encodes total flagged minor stays.`;
+  document.getElementById('facMapLegend').innerHTML =
+    '<div style="margin-bottom:4px;color:var(--ink-primary);">Total flagged minor stays</div>' +
+    '<div><span class="sw" style="background:var(--accent);width:6px;height:6px;"></span>smaller</div>' +
+    '<div><span class="sw" style="background:var(--accent);width:16px;height:16px;"></span>larger</div>';
+
+  const MAPBOX_TOKEN = 'pk.eyJ1IjoibmVhbG9uIiwiYSI6ImNtdHJucGx3djA2aGkyd3B5Y2RjcTd6MjcifQ.YaWrgBupdgd5-Pjo2-gpvA';
+  new deck.DeckGL({
+    container: 'facMap',
+    mapboxApiAccessToken: MAPBOX_TOKEN,
+    mapStyle: 'mapbox://styles/mapbox/dark-v11',
+    mapOptions: { projection: 'mercator' },
+    initialViewState: { longitude: -96, latitude: 38.5, zoom: 3.4, pitch: 0, bearing: 0 },
+    controller: true,
+    layers: [
+      new deck.ScatterplotLayer({
+        id: 'custody-gap-facilities',
+        data: facs,
+        radiusUnits: 'pixels',
+        stroked: true,
+        getLineColor: [20,20,20,200],
+        lineWidthMinPixels: 1,
+        filled: true,
+        pickable: true,
+        getPosition: d => [d.lon, d.lat],
+        getRadius: d => 4 + 14 * Math.sqrt(d.total_flagged_minor_stays / maxTotal),
+        getFillColor: [58,110,165,210],
+      }),
+    ],
+    onHover: info => {
+      if (!info.object) { hideTip(); return; }
+      const d = info.object;
+      showTip(`<b>${d.fac}</b><br>Court-documented: ${num(d.court_documented_hotel_staging)}<br>` +
+               `Inferred: ${num(d.unrecorded_custody_gap_inferred)}<br>Total: ${num(d.total_flagged_minor_stays)}`,
+               info.srcEvent);
+    },
+  });
+
+  const tbody = document.querySelector('#facTable tbody');
+  facilities.facilities.slice(0, 25).forEach(f => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${f.fac}</td><td>${num(f.court_documented_hotel_staging)}</td>` +
+                   `<td>${num(f.unrecorded_custody_gap_inferred)}</td><td>${num(f.total_flagged_minor_stays)}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('loading').style.display = 'none';
+}
+
+main().catch(e => {
+  document.getElementById('loading').textContent = 'Failed to load: ' + e.message +
+    '. This page uses fetch() to load ../data/*.json, which most browsers block for local ' +
+    'file:// pages -- serve this folder over a local HTTP server instead.';
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1408 @@
+{
+  "generated_by": "data/build_airport_activity.py",
+  "window": {
+    "start": "2025-01-20",
+    "end": "2026-07-02",
+    "span_days": 528
+  },
+  "annualization_note": "flights_per_year_annualized = total_legs_in_window * (365.25 / window_span_days) -- an annualized RATE over a ~1.5-year window, never an actually observed single-year count.",
+  "matched": 279,
+  "unmatched": [],
+  "airports": {
+    "Alexandria Intl (KAEX)": {
+      "total_legs_in_window": 9309,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 6439.6
+    },
+    "Valley Intl (KHRL)": {
+      "total_legs_in_window": 6916,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 4784.2
+    },
+    "El Paso Intl (KELP)": {
+      "total_legs_in_window": 3737,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2585.1
+    },
+    "Phoenix-Mesa Gateway (KIWA)": {
+      "total_legs_in_window": 3022,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2090.5
+    },
+    "La Aurora Int'l (GUA / MGGT)": {
+      "total_legs_in_window": 1560,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1079.1
+    },
+    "Ramon Villeda Morales Int'l (SAP / MHLM)": {
+      "total_legs_in_window": 1377,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 952.6
+    },
+    "Opa-locka Executive (KOPF)": {
+      "total_legs_in_window": 1075,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 743.6
+    },
+    "Youngstown/Warren Rgnl (KYNG)": {
+      "total_legs_in_window": 1081,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 747.8
+    },
+    "Conroe/North Houston Rgnl (KCXO)": {
+      "total_legs_in_window": 706,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 488.4
+    },
+    "San Antonio Intl (KSAT)": {
+      "total_legs_in_window": 809,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 559.6
+    },
+    "Miramar Mcas (Joe Foss Fld) (KNKX)": {
+      "total_legs_in_window": 414,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 286.4
+    },
+    "Robert Gray Aaf (Fort Cavazos) (KGRK)": {
+      "total_legs_in_window": 1216,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 841.2
+    },
+    "Jacksonville Intl (KJAX)": {
+      "total_legs_in_window": 728,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 503.6
+    },
+    "Newark Liberty Intl (KEWR)": {
+      "total_legs_in_window": 632,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 437.2
+    },
+    "Dallas Love Field (KDAL)": {
+      "total_legs_in_window": 586,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 405.4
+    },
+    "El Salvador Int'l (SAL / MSLP)": {
+      "total_legs_in_window": 506,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 350.0
+    },
+    "Lawson AAF (Fort Benning) (KLSF)": {
+      "total_legs_in_window": 251,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 173.6
+    },
+    "Minneapolis/St Paul Intl (KMSP)": {
+      "total_legs_in_window": 420,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 290.5
+    },
+    "Denver Intl (KDEN)": {
+      "total_legs_in_window": 427,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 295.4
+    },
+    "Carlos Rovirosa Perez Int'l (VSA / MMVA)": {
+      "total_legs_in_window": 573,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 396.4
+    },
+    "So California Logistics (KVCV)": {
+      "total_legs_in_window": 436,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 301.6
+    },
+    "Luis Munoz Marin Intl (SJU / TJSJ)": {
+      "total_legs_in_window": 438,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 303.0
+    },
+    "Richmond Intl (KRIC)": {
+      "total_legs_in_window": 410,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 283.6
+    },
+    "Laurence G Hanscom Fld (KBED)": {
+      "total_legs_in_window": 394,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 272.6
+    },
+    "Harry Reid Intl (KLAS)": {
+      "total_legs_in_window": 353,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 244.2
+    },
+    "Boeing Field Intl (KBFI)": {
+      "total_legs_in_window": 374,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 258.7
+    },
+    "Kansas City Intl (KMCI)": {
+      "total_legs_in_window": 360,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 249.0
+    },
+    "Tapachula Int'l (TAP / MMTP)": {
+      "total_legs_in_window": 535,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 370.1
+    },
+    "Salt Lake City Intl (KSLC)": {
+      "total_legs_in_window": 328,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 226.9
+    },
+    "Willow Run (KYIP)": {
+      "total_legs_in_window": 341,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 235.9
+    },
+    "Jose Joaquin de Olmedo Int'l (GYE / SEGU)": {
+      "total_legs_in_window": 279,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 193.0
+    },
+    "Buffalo Niagara Intl (KBUF)": {
+      "total_legs_in_window": 258,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 178.5
+    },
+    "Baltimore/Washington Intl (KBWI)": {
+      "total_legs_in_window": 274,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 189.5
+    },
+    "Eppley Airfield (KOMA)": {
+      "total_legs_in_window": 262,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 181.2
+    },
+    "Indianapolis Intl (KIND)": {
+      "total_legs_in_window": 283,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 195.8
+    },
+    "NAS Guantanamo Bay (NBW / MUGM)": {
+      "total_legs_in_window": 215,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 148.7
+    },
+    "Simon Bolivar Int'l (Maiquetia Int'l) (CCS / SVMI)": {
+      "total_legs_in_window": 259,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 179.2
+    },
+    "Tampa Intl (KTPA)": {
+      "total_legs_in_window": 254,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 175.7
+    },
+    "Dade-Collier Training (KTNT)": {
+      "total_legs_in_window": 297,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 205.5
+    },
+    "Gary/Chicago Intl (KGYY)": {
+      "total_legs_in_window": 182,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 125.9
+    },
+    "Managua Int'l (Augusto Cesar Sandino Int'l) (MGA / MNMG)": {
+      "total_legs_in_window": 233,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 161.2
+    },
+    "Northeast Alabama Rgnl (KGAD)": {
+      "total_legs_in_window": 277,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 191.6
+    },
+    "El Dorado Int'l (BOG / SKBO)": {
+      "total_legs_in_window": 215,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 148.7
+    },
+    "Lake City Gateway (KLCQ)": {
+      "total_legs_in_window": 256,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 177.1
+    },
+    "Blaise Diagne (DSS / GOBD)": {
+      "total_legs_in_window": 220,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 152.2
+    },
+    "Milwaukee Mitchell Intl (KMKE)": {
+      "total_legs_in_window": 285,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 197.2
+    },
+    "Springfield (KSGF)": {
+      "total_legs_in_window": 169,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 116.9
+    },
+    "Las Americas (SDQ / MDSD)": {
+      "total_legs_in_window": 140,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 96.8
+    },
+    "Jorge Chavez Int'l (LIM / SPJC)": {
+      "total_legs_in_window": 135,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 93.4
+    },
+    "Nashville Intl (KBNA)": {
+      "total_legs_in_window": 106,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 73.3
+    },
+    "Reno/Tahoe Intl (KRNO)": {
+      "total_legs_in_window": 130,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 89.9
+    },
+    "Trenton Mercer (KTTN)": {
+      "total_legs_in_window": 97,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 67.1
+    },
+    "Harrisburg Intl (KMDT)": {
+      "total_legs_in_window": 96,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 66.4
+    },
+    "Laredo Intl (KLRD)": {
+      "total_legs_in_window": 56,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 38.7
+    },
+    "Portsmouth Intl At Pease (KPSM)": {
+      "total_legs_in_window": 79,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 54.6
+    },
+    "Tancredo Neves Int'l (CNF / SBCF)": {
+      "total_legs_in_window": 89,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 61.6
+    },
+    "Mexico City Santa Luc\u00eda Airport (NLU / MMSM)": {
+      "total_legs_in_window": 75,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 51.9
+    },
+    "Abilene Rgnl (KABI)": {
+      "total_legs_in_window": 97,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 67.1
+    },
+    "Tuscaloosa National Airport (KTCL)": {
+      "total_legs_in_window": 118,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 81.6
+    },
+    "Eugene F Kranz Toledo Express (KTOL)": {
+      "total_legs_in_window": 50,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 34.6
+    },
+    "Juan Santamaria Int'l (SJO / MROC)": {
+      "total_legs_in_window": 71,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 49.1
+    },
+    "Comayagua Int'l (XPL / MHPR)": {
+      "total_legs_in_window": 48,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 33.2
+    },
+    "Norman Manley Int'l (KIN / MKJP)": {
+      "total_legs_in_window": 60,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 41.5
+    },
+    "Charlotte/Douglas Intl (KCLT)": {
+      "total_legs_in_window": 43,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 29.7
+    },
+    "West Virginia Intl Yeager\u00a0(KCRW)": {
+      "total_legs_in_window": 42,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 29.1
+    },
+    "Rinas Mother Teresa (TIA / LATI)": {
+      "total_legs_in_window": 45,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 31.1
+    },
+    "Lynden Pindling Int'l (Nassau) (NAS / MYNN)": {
+      "total_legs_in_window": 54,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 37.4
+    },
+    "Kotoka Int'l (ACC / DGAA)": {
+      "total_legs_in_window": 60,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 41.5
+    },
+    "Hamad Int'l (DOH)": {
+      "total_legs_in_window": 17,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 11.8
+    },
+    "Hartsfield-Jackson Intl (KATL)": {
+      "total_legs_in_window": 37,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 25.6
+    },
+    "Indira Gandhi Int'l (DEL / VIDP)": {
+      "total_legs_in_window": 40,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 27.7
+    },
+    "Albuquerque Intl Sunport (KABQ)": {
+      "total_legs_in_window": 47,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 32.5
+    },
+    "Yuma Intl (KNYL)": {
+      "total_legs_in_window": 30,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 20.8
+    },
+    "Hato Int'l (CUR / TNCC)": {
+      "total_legs_in_window": 80,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 55.3
+    },
+    "Jose Marti Int'l (HAV / MUHA)": {
+      "total_legs_in_window": 36,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 24.9
+    },
+    "Anchorage Intl (PANC)": {
+      "total_legs_in_window": 39,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 27.0
+    },
+    "Meadows Fld (KBFL)": {
+      "total_legs_in_window": 62,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 42.9
+    },
+    "Cap-Haitien Int'l (CAP / MTCH)": {
+      "total_legs_in_window": 34,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 23.5
+    },
+    "Bucharest Aurel Vlaicu Vlaicu Int'l (BBU / LRBS)": {
+      "total_legs_in_window": 4,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.8
+    },
+    "Okc Will Rogers Intl (KOKC)": {
+      "total_legs_in_window": 32,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 22.1
+    },
+    "Sofia Airport (SOF / LBSF)": {
+      "total_legs_in_window": 30,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 20.8
+    },
+    "Pinto Martins Int'l (FOR / SBFZ)": {
+      "total_legs_in_window": 26,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 18.0
+    },
+    "Memphis Intl (KMEM)": {
+      "total_legs_in_window": 107,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 74.0
+    },
+    "Comodoro Arturo Merino Benitez Int'l (SCL / SCEL)": {
+      "total_legs_in_window": 28,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 19.4
+    },
+    "Cairo Int'l\u00a0(CAI / HECA)": {
+      "total_legs_in_window": 23,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 15.9
+    },
+    "Roberts Int'l (ROB / GLRB)": {
+      "total_legs_in_window": 25,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 17.3
+    },
+    "Jomo Kenyatta Int'l (NBO / HKJK)": {
+      "total_legs_in_window": 31,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 21.4
+    },
+    "Noi Bai Int'l (HAN / VVNB)": {
+      "total_legs_in_window": 25,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 17.3
+    },
+    "Guam Intl (PGUM)": {
+      "total_legs_in_window": 31,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 21.4
+    },
+    "Murtala Mohammed Int'l (LOS / DNMM)": {
+      "total_legs_in_window": 24,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 16.6
+    },
+    "Tucson Intl (KTUS)": {
+      "total_legs_in_window": 8,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 5.5
+    },
+    "Brownsville Intl (KBRO)": {
+      "total_legs_in_window": 21,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 14.5
+    },
+    "Yakima Air Terminal (KYKM)": {
+      "total_legs_in_window": 24,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 16.6
+    },
+    "Wattay Int'l (VTE / VLVT)": {
+      "total_legs_in_window": 22,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 15.2
+    },
+    "Nouakchott\u2013Oumtounsy Int'l (NKC / GQNO)": {
+      "total_legs_in_window": 17,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 11.8
+    },
+    "State College Regional (KUNV)": {
+      "total_legs_in_window": 168,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 116.2
+    },
+    "Tribhuvan Int'l (KTM / VNKT)": {
+      "total_legs_in_window": 18,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 12.5
+    },
+    "Shahjalal International Airport (DAC / VGHS)": {
+      "total_legs_in_window": 18,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 12.5
+    },
+    "Shannon (SNN / EINN)": {
+      "total_legs_in_window": 20,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 13.8
+    },
+    "Bangor Int'l (BGR)": {
+      "total_legs_in_window": 18,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 12.5
+    },
+    "McGhee Tyson (KTYS)": {
+      "total_legs_in_window": 33,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 22.8
+    },
+    "PAF Base Nur Khan (OPRN)": {
+      "total_legs_in_window": 16,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 11.1
+    },
+    "Ministro Pistarini Int'l (EZE / SAEZ)": {
+      "total_legs_in_window": 14,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 9.7
+    },
+    "Detroit Metro Wayne Co (KDTW)": {
+      "total_legs_in_window": 15,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 10.4
+    },
+    "Lakefront (KNEW)": {
+      "total_legs_in_window": 1,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 0.7
+    },
+    "Tashkent (TAS / UTTT)": {
+      "total_legs_in_window": 17,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 11.8
+    },
+    "Gowen Field (KBOI)": {
+      "total_legs_in_window": 12,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 8.3
+    },
+    "Conakry Int'l (Gbessia Int'l) (CKY / GUCY)": {
+      "total_legs_in_window": 16,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 11.1
+    },
+    "Lungi Int'l (FNA / GFLL)": {
+      "total_legs_in_window": 16,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 11.1
+    },
+    "Yaounde Nsimalen Int'l (NSI / FKYS)": {
+      "total_legs_in_window": 16,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 11.1
+    },
+    "Henry E Rohlsen (STX / TISX)": {
+      "total_legs_in_window": 12,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 8.3
+    },
+    "Daniel K Inouye Intl (PHNL)": {
+      "total_legs_in_window": 13,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 9.0
+    },
+    "Orlando Intl (KMCO)": {
+      "total_legs_in_window": 12,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 8.3
+    },
+    "Mc Allen Miller Intl (KMFE)": {
+      "total_legs_in_window": 11,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 7.6
+    },
+    "Tbilisi Int'l (TBS / UGTB)": {
+      "total_legs_in_window": 13,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 9.0
+    },
+    "Quatro de Fevereiro (LAD / FNLU)": {
+      "total_legs_in_window": 13,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 9.0
+    },
+    "Incheon Int'l (ICN / RKSI)": {
+      "total_legs_in_window": 9,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 6.2
+    },
+    "Piarco Int'l (POS / TTPP)": {
+      "total_legs_in_window": 10,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 6.9
+    },
+    "Amarillo Intl (KAMA)": {
+      "total_legs_in_window": 17,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 11.8
+    },
+    "Randolph Afb\u00a0(KRND)": {
+      "total_legs_in_window": 9,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 6.2
+    },
+    "Rafael Hernandez (BQN / TJBQ)": {
+      "total_legs_in_window": 7,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 4.8
+    },
+    "Tallahassee Intl (KTLH)": {
+      "total_legs_in_window": 35,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 24.2
+    },
+    "Lome (LFW / DXXX)": {
+      "total_legs_in_window": 10,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 6.9
+    },
+    "N'Djamena Int'l (NDJ / FTTJ)": {
+      "total_legs_in_window": 8,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 5.5
+    },
+    "Rzeszow/Jasionka (RZE / EPRZ)": {
+      "total_legs_in_window": 16,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 11.1
+    },
+    "Cadjehoun (Cotonou) (COO / DBBB)": {
+      "total_legs_in_window": 8,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 5.5
+    },
+    "Piedmont Triad Intl (KGSO)": {
+      "total_legs_in_window": 8,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 5.5
+    },
+    "Fuzhou Changle Int'l (FOC / ZSFZ)": {
+      "total_legs_in_window": 6,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 4.2
+    },
+    "Philip S. W. Goldson Int'l (BZE / MZBZ)": {
+      "total_legs_in_window": 12,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 8.3
+    },
+    "Mc Guire Fld (Joint Base Mc Guire Dix Lakehurst) (KWRI)": {
+      "total_legs_in_window": 8,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 5.5
+    },
+    "Teterboro Airport (KTEB)": {
+      "total_legs_in_window": 10,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 6.9
+    },
+    "Zvartnots Int'l (EVN / UDYZ)": {
+      "total_legs_in_window": 9,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 6.2
+    },
+    "John F Kennedy Intl (KJFK)": {
+      "total_legs_in_window": 7,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 4.8
+    },
+    "Techo Int'l (KTI)": {
+      "total_legs_in_window": 10,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 6.9
+    },
+    "Senou Int'l (BKO / GABS)": {
+      "total_legs_in_window": 7,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 4.8
+    },
+    "Heydar Aliyev Int'l (GYD / UBBB)": {
+      "total_legs_in_window": 6,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 4.2
+    },
+    "Panama Pacifico Int'l (BLB / MPPA)": {
+      "total_legs_in_window": 14,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 9.7
+    },
+    "Sri Guru Ram Dass Jee International Airport (ATQ / VIAR)": {
+      "total_legs_in_window": 6,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 4.2
+    },
+    "Banjul Int'l (Yundum Int'l) (BJL / GBYD)": {
+      "total_legs_in_window": 8,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 5.5
+    },
+    "Hewanorra Int'l (UVF / TLPL)": {
+      "total_legs_in_window": 6,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 4.2
+    },
+    "N'Djili Int'l (FIH / FZAA)": {
+      "total_legs_in_window": 10,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 6.9
+    },
+    "Port Bouet (Felix Houphouet Boigny Int'l) (ABJ / DIAP)": {
+      "total_legs_in_window": 8,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 5.5
+    },
+    "RAF Mildenhall (MHZ / EGUN)": {
+      "total_legs_in_window": 6,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 4.2
+    },
+    "Kuwait Int'l (KWI / OKKK)": {
+      "total_legs_in_window": 6,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 4.2
+    },
+    "Oasis Ranger Station-U S Government\u00a0(9FL7)": {
+      "total_legs_in_window": 7,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 4.8
+    },
+    "King Mswati III International Airport (SHO / FDSK)": {
+      "total_legs_in_window": 5,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 3.5
+    },
+    "Domodedovo Int'l (DME / UUDD)": {
+      "total_legs_in_window": 5,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 3.5
+    },
+    "Eduardo Gomes Int'l (MAO / SBEG)": {
+      "total_legs_in_window": 4,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.8
+    },
+    "Hollywood Burbank Airport (KBUR)": {
+      "total_legs_in_window": 5,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 3.5
+    },
+    "Manas Int'l (BSZ / UCFM)": {
+      "total_legs_in_window": 4,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.8
+    },
+    "Austin-Bergstrom Intl (KAUS)": {
+      "total_legs_in_window": 8,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 5.5
+    },
+    "Grantley Adams Int'l (BGI / TBPB)": {
+      "total_legs_in_window": 4,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.8
+    },
+    "Queen Alia Int'l (AMM / OJAI)": {
+      "total_legs_in_window": 4,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.8
+    },
+    "Ben Gurion Int'l (TLV / LLBG)": {
+      "total_legs_in_window": 6,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 4.2
+    },
+    "Malabo (SSG / FGSL)": {
+      "total_legs_in_window": 10,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 6.9
+    },
+    "Plattsburgh Intl (KPBG)": {
+      "total_legs_in_window": 4,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.8
+    },
+    "Ouagadougou (OUA / DFFD)": {
+      "total_legs_in_window": 8,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 5.5
+    },
+    "Niagara Falls Intl (KIAG)": {
+      "total_legs_in_window": 4,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.8
+    },
+    "Ekibastuz (UASB)": {
+      "total_legs_in_window": 4,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.8
+    },
+    "Lanseria (HLA/ FALA)": {
+      "total_legs_in_window": 4,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.8
+    },
+    "Cincinnati/Northern Kentucky International Airport (KCVG)": {
+      "total_legs_in_window": 6,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 4.2
+    },
+    "Dushanbe (DYU / UTDD)": {
+      "total_legs_in_window": 4,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.8
+    },
+    "Colombo Bandaranaike Int'l (CMB / VCBI)": {
+      "total_legs_in_window": 4,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.8
+    },
+    "Dupage (KDPA)": {
+      "total_legs_in_window": 3,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.1
+    },
+    "Portland Intl Jetport (KPWM)": {
+      "total_legs_in_window": 4,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.8
+    },
+    "March Arb (KRIV)": {
+      "total_legs_in_window": 4,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.8
+    },
+    "Philadelphia Intl (KPHL)": {
+      "total_legs_in_window": 4,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.8
+    },
+    "St Louis Lambert Intl (KSTL)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Shreveport Rgnl (KSHV)": {
+      "total_legs_in_window": 9,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 6.2
+    },
+    "Wichita Eisenhower (KICT)": {
+      "total_legs_in_window": 5,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 3.5
+    },
+    "Washington Dulles Intl (KIAD)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Imam Khomeini Int'l Airport (IKA)": {
+      "total_legs_in_window": 3,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.1
+    },
+    "Clearwater Intl\u00a0(KPIE)": {
+      "total_legs_in_window": 3,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.1
+    },
+    "Fort Worth Alliance (KAFW)": {
+      "total_legs_in_window": 4,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.8
+    },
+    "Ramstein Air Base (RMS / ETAR)": {
+      "total_legs_in_window": 3,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.1
+    },
+    "Mobile Rgnl\u00a0(KMOB)": {
+      "total_legs_in_window": 5,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 3.5
+    },
+    "Bucholz Army Airfield (PKWA)": {
+      "total_legs_in_window": 3,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.1
+    },
+    "Djibouti-Ambouli Int'l (JIB / HDAM)": {
+      "total_legs_in_window": 3,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.1
+    },
+    "Monroe Rgnl (KMLU)": {
+      "total_legs_in_window": 6,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 4.2
+    },
+    "Ontario Intl (KONT)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "F\u00e9lix-Houphou\u00ebt-Boigny Int'l Airport (DIAP)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Athens Int'l, Eleftherios Venizelos (ATH / LGAV)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Robert L. Bradshaw Int'l (SKB / TKPK)": {
+      "total_legs_in_window": 4,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.8
+    },
+    "Baton Rouge Metro (KBTR)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Birmingham-Shuttlesworth Intl (KBHM)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Boston Logan Intl (KBOS)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Maya-Maya (BZV / FCBB)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Tocumen Int'l (PTY / MPTO)": {
+      "total_legs_in_window": 5,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 3.5
+    },
+    "Dover Air Force Base (KDOV)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Chisinau International (RMO / LUKK)": {
+      "total_legs_in_window": 6,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 4.2
+    },
+    "Mohammed V Int'l (CMN / GMMN)": {
+      "total_legs_in_window": 4,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.8
+    },
+    "Cancun Int'l (CUN / MMUN)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Douala Int'l (DLA / FKKD)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Glasgow Prestwick Int'l (PIK / EGPK)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Harare International (HRE / FVRG)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Huntsville Intl (KHSV)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Varna Int'l (VAR / LBWN)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Topeka Rgnl (KFOE)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Cheddi Jagan Int'l (GEO / SYCJ)": {
+      "total_legs_in_window": 4,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.8
+    },
+    "Pristina (PRN / BKPR)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Raleigh-Durham Intl (KRDU)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "N Maine (KPQI)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Praia Int'l (RAI / GVNP)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Maputo Int'l (MPM / FQMA)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Lusaka International Airport (LUN / FLKK)": {
+      "total_legs_in_window": 4,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.8
+    },
+    "Lafayette Rgnl/Paul Fournet Fld\u00a0(KLFT)": {
+      "total_legs_in_window": 6,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 4.2
+    },
+    "Little Rock Afb (KLRF)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Muhammad Ali Intl (KSDF)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Kigali Int'l (KGL / HRYR)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Newport News/Williamsburg Int'l (KPHF)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "N Platte Rgnl Airport (LBF)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Juba (JUB / HJJJ)": {
+      "total_legs_in_window": 1,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 0.7
+    },
+    "Meml Fld (KHOT)": {
+      "total_legs_in_window": 1,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 0.7
+    },
+    "Mahlon Sweet Fld (KEUG)": {
+      "total_legs_in_window": 1,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 0.7
+    },
+    "Northwest Arkansas NTL": {
+      "total_legs_in_window": 3,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.1
+    },
+    "John Glenn Columbus Intl Airport (KCMH)": {
+      "total_legs_in_window": 1,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 0.7
+    },
+    "Charleston Intl/AFB (KCHS)": {
+      "total_legs_in_window": 1,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 0.7
+    },
+    "El Centro Naf (Vraciu Fld) (KNJK)": {
+      "total_legs_in_window": 1,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 0.7
+    },
+    "Osvaldo Vieiro Int'l (OXB / GGOV)": {
+      "total_legs_in_window": 1,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 0.7
+    },
+    "Lincoln (KLNK)": {
+      "total_legs_in_window": 1,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 0.7
+    },
+    "Labrea Airport": {
+      "total_legs_in_window": 1,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 0.7
+    },
+    "Manuel Crescencio Rejon Int'l (MID / MMMD)": {
+      "total_legs_in_window": 9,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 6.2
+    },
+    "Port-au-Prince Intl (PAP / MTPP)": {
+      "total_legs_in_window": 1,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 0.7
+    },
+    "V. C. Bird Int'l (ANU)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Naha (Indonesia) (NAH / WAMH)": {
+      "total_legs_in_window": 1,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 0.7
+    },
+    "Warsaw Frederic Chopin (WAW / EPWA)": {
+      "total_legs_in_window": 1,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 0.7
+    },
+    "Bradley Intl (KBDL)": {
+      "total_legs_in_window": 1,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 0.7
+    },
+    "Aeropuerto Internacional Reina Beatrix (AUA)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Akron-Canton Rgnl (KCAK)": {
+      "total_legs_in_window": 134,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 92.7
+    },
+    "Al Udeid Air Base (XJD / OTBH)": {
+      "total_legs_in_window": 13,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 9.0
+    },
+    "Alvin Callender Fld (KNBG)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Anderson AFB (UAM / PGUA)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Bahias de Huatulco Int'l (HUX / MMBT)": {
+      "total_legs_in_window": 6,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 4.2
+    },
+    "Bangui M'Poko Int'l (BGF)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Biggs Aaf (Fort Bliss) (KBIF)": {
+      "total_legs_in_window": 83,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 57.4
+    },
+    "Bole Int'l (HAAB / ADD)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Brown Fld Muni (KSDM)": {
+      "total_legs_in_window": 1,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 0.7
+    },
+    "Bucharest Henri Coand\u0103 Int'l (OTP / LROP)": {
+      "total_legs_in_window": 26,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 18.0
+    },
+    "Centennial (KAPA)": {
+      "total_legs_in_window": 6,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 4.2
+    },
+    "Cherry Capital (KTVC)": {
+      "total_legs_in_window": 1,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 0.7
+    },
+    "Chicago O'Hare Intl (KORD)": {
+      "total_legs_in_window": 1,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 0.7
+    },
+    "Clinton National (LIT)": {
+      "total_legs_in_window": 3,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.1
+    },
+    "Colorado Sprgs Muni (KCOS)": {
+      "total_legs_in_window": 1,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 0.7
+    },
+    "Columbus (KCSG)": {
+      "total_legs_in_window": 206,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 142.5
+    },
+    "Doha Int'l Airport (DIA)": {
+      "total_legs_in_window": 8,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 5.5
+    },
+    "Don Muang Int'l (DMK / VTBD)": {
+      "total_legs_in_window": 3,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.1
+    },
+    "Entebbe Int'l (EBB / HUEN)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Fort Smith Rgnl (FSM)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "General Francisco J. Mujica Int'l (MLM / MMMM)": {
+      "total_legs_in_window": 8,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 5.5
+    },
+    "Great Falls Intl (KGTF)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Greensville/Spartanburg Int'l (GSP)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Halsey Field (KNZY)": {
+      "total_legs_in_window": 46,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 31.8
+    },
+    "Houari Boumedienne (DAAG / ALG)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Houston Bush Int'ctl (KIAH)": {
+      "total_legs_in_window": 428,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 296.1
+    },
+    "Ing. Alberto Acuna Ongay Int'l (CPE)": {
+      "total_legs_in_window": 8,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 5.5
+    },
+    "Joint Base Andrews (KADW)": {
+      "total_legs_in_window": 1,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 0.7
+    },
+    "La Crosse Rgnl (KLSE)": {
+      "total_legs_in_window": 5,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 3.5
+    },
+    "Magic Valley Rgnl (KTWF)": {
+      "total_legs_in_window": 48,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 33.2
+    },
+    "Menara Int'l (GMMX / RAK)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Miami Intl (KMIA)": {
+      "total_legs_in_window": 401,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 277.4
+    },
+    "New Chitose (CTS / RJCC)": {
+      "total_legs_in_window": 4,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.8
+    },
+    "New Orleans Intl (KMSY)": {
+      "total_legs_in_window": 14,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 9.7
+    },
+    "Phnom Penh Int'l (Pochentong Int'l) (PNH / VDPP)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Phoenix Sky Harbor Intl (KPHX)": {
+      "total_legs_in_window": 1,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 0.7
+    },
+    "Pittsburgh Intl (KPIT)": {
+      "total_legs_in_window": 7,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 4.8
+    },
+    "Punta Cana Int'l (PUJ / MDPC)": {
+      "total_legs_in_window": 10,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 6.9
+    },
+    "Punta Gorda (PGD / KPGD)": {
+      "total_legs_in_window": 12,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 8.3
+    },
+    "San Angelo Rgnl (KSJT)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "San Diego Intl (KSAN)": {
+      "total_legs_in_window": 378,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 261.5
+    },
+    "Sarasota-Bradenton Int'l (SRQ)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Silvio Pettirossi Int'l (ASU / SGAS)": {
+      "total_legs_in_window": 6,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 4.2
+    },
+    "Southwest Florida Intl (KRSW)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "St George Rgnl (KSGU)": {
+      "total_legs_in_window": 56,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 38.7
+    },
+    "St Louis Downtown (KCPS)": {
+      "total_legs_in_window": 2,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 1.4
+    },
+    "Sydney Airport (SYD / YSSY)": {
+      "total_legs_in_window": 1,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 0.7
+    },
+    "Tulum Int'l (TQO)": {
+      "total_legs_in_window": 40,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 27.7
+    },
+    "Waterbury-Oxford (KOXC)": {
+      "total_legs_in_window": 1,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 0.7
+    },
+    "William P Hobby (KHOU)": {
+      "total_legs_in_window": 10,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 6.9
+    },
+    "Yangon Int'l (RGN / VYYY)": {
+      "total_legs_in_window": 4,
+      "window_span_days": 528,
+      "flights_per_year_annualized": 2.8
+    }
+  }
+}

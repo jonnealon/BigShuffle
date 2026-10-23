@@ -1,0 +1,839 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Hotspot change -- a rippling cartogram</title>
+<!--
+  Experimental, standalone companion to the main map's own "Hotspot (weekly change)"
+  layer (map/index.html, data/build_hotspot_trend.py). Built on direct request,
+  2026-10-22: "I wan tto think of an additional different way to viz the hotspot change
+  over time. because there is so much unchanged space between the population centers I
+  want to reduce that... what if we transposed onto a electoral college map. so roughly
+  we were dealing with equal populations... lets try dorling and change if we dont like
+  it. THe viz can live on a separate page like the 3d netowrk."
+
+  REVISED THE SAME DAY, a second direct request after seeing the first (flat, 2D)
+  version: "we are mixing vizualiations. if size is population it cant be another thing
+  too. Id like to try to take this base map and turn it into a 3d plane. then take the
+  central point of each circle and (in addition to color changes) either raise above or
+  pull below the plane = giveing the map a rippling appearance." Two changes from that
+  first version: (1) circle size is population, full stop -- the first version's small
+  "grows/shrinks with the week's change" radius modulation is REMOVED entirely, since
+  mixing two different quantities (population, change) into one visual channel was
+  exactly the confusion flagged; (2) the flat SVG canvas is now a literal 3D surface
+  (three.js, not a charting library) that rises and dips under each circle by that
+  county's own change this week -- "the plane" itself ripples, rather than a second,
+  independent encoding bolted on next to it.
+
+  REVISED A THIRD TIME THE SAME DAY, turning the page into a three-stage, click-driven
+  sequence: "stage 1 - map of the US. stage 2 - map morphs into a electoral style
+  population equalizing, geography estimating map. stage 3 - map will play out like the
+  current version, except without the circles. moving from stage 1 to 2 to 3 requires
+  clicks." Stage 1 shows every county's own true shape (a resampled, simplified real
+  polygon, data/build_hotspot_cartogram.py's own radial_outline()), flat and uncolored
+  -- genuinely "a map of the US," not the cartogram yet. A "Next" click morphs every
+  county's shape AND position, vertex by vertex, from its true outline into its final
+  Dorling circle, while color fades in at the same time (stage 2 -- the "population
+  equalizing, geography estimating" cartogram, now colored by the selected week). A
+  second "Next" click fades the county shapes out entirely while the terrain surface
+  grows up from flat -- stage 3, "the current version... except without the circles":
+  the same rippling terrain this page already had, alone.
+
+  WHAT THIS IS. Every county is still a circle, sized ONLY by its own ACS population
+  (not land area, never touched by the week's change), positioned as close as possible
+  to its real geographic location without overlapping another circle
+  (data/build_hotspot_cartogram.py's one-time Dorling relaxation -- see that script's
+  docstring for the full method). Lower 48 + DC only -- EPSG:5070 ("CONUS Albers")
+  mis-projects Alaska and Hawaii into nonsensical far-flung points when used as a
+  literal on-screen coordinate, which is what this page does; excluding them also
+  matches the owner's own framing of the original request ("roughly maintains the shape
+  of the lower 48").
+
+  THE SURFACE. A continuous terrain mesh (data/build_hotspot_cartogram.py's own
+  precomputed grid: ~3,400 vertices, each carrying the 6 nearest counties' indices and
+  fixed inverse-distance weights) sits under every circle. A vertex's height is a
+  weighted blend of its nearby counties' CURRENT pct_change -- flat (sea level) where
+  there's no signal nearby, bulging up where counties are running hot against their own
+  baseline, dipping down where they're running cold. A circle's own height uses its own
+  point's value directly (not a blend), so the circle sits exactly where its own county
+  says it should, with the surrounding terrain blending smoothly out from it. Color (the
+  SAME diverging ramp as map/index.html's own hotspot layer, HOTSPOT_TREND_COLORS/
+  BREAKS, copied not re-picked) is applied to both the circles and the terrain surface,
+  so height and color are two readings of the one number, not two different numbers.
+
+  LIBRARY: three.js (ES modules, no bundler -- an import map, loaded from jsDelivr,
+  version-pinned, both URLs verified live 2026-10-22 to resolve (HTTP 200) before use)
+  plus its own OrbitControls addon for drag-to-rotate/scroll-to-zoom. No charting
+  library for anything else on this page (the legend, tiles, and panel are plain HTML/
+  CSS, this project's standing convention).
+
+  DATA: reads data/map_hotspot_cartogram.json?v=1792765703 (position/size/terrain grid, the build
+  script's one-time output) and data/map_hotspot_weekly.json?v=1792765703 (the per-week count/
+  baseline/pct_change values, already computed and validated for the main map's own
+  hotspot layer -- never recomputed here, "one master per fact"). Reachable from
+  map/index.html's "More views" row, same convention as network-3d/, population/,
+  miles/, airports/, circuits/, custody-gaps/.
+-->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<style>
+  :root{
+    color-scheme: dark;
+    --surface: #1a1a19;
+    --panel-bg: rgba(20,20,19,0.92);
+    --panel-border: #383835;
+    --ink-primary: #ffffff;
+    --ink-secondary: #c3c2b7;
+    --ink-muted: #898781;
+    --accent: #ff6e3c;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html,body{margin:0;padding:0;height:100%;background:var(--surface);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden;}
+  #stage{position:absolute;inset:0;}
+  #stage canvas{display:block;cursor:grab;}
+  #stage canvas:active{cursor:grabbing;}
+
+  #panel{
+    position:absolute;top:16px;left:16px;z-index:10;width:320px;max-height:calc(100% - 32px);
+    overflow-y:auto;
+    background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:10px;
+    padding:14px 16px;color:var(--ink-primary);box-shadow:0 10px 40px rgba(0,0,0,.5);
+  }
+  #panel .backlink{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;
+    color:var(--ink-muted);text-decoration:none;margin-bottom:8px;}
+  #panel .backlink:hover{color:var(--ink-primary);}
+  #panel h1{font-size:14px;margin:0 0 4px 0;font-weight:600;}
+  #panel .sub{font-size:11px;color:var(--ink-secondary);margin-bottom:10px;line-height:1.5;}
+  #panel .note{font-size:10.5px;color:var(--ink-muted);margin-bottom:10px;line-height:1.5;}
+  #panel .row{margin:10px 0;}
+  #panel h2{font-size:10.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--ink-muted);
+    margin:0 0 6px 0;}
+  .methodrow{display:flex;gap:6px;margin-bottom:8px;}
+  .methodbtn{flex:1;font-family:monospace;font-size:10px;letter-spacing:0.2px;
+    background:rgba(255,255,255,0.05);border:1px solid var(--panel-border);border-radius:6px;
+    color:var(--ink-secondary);padding:6px 4px;cursor:pointer;text-align:center;}
+  .methodbtn:hover{background:rgba(255,255,255,0.10);border-color:#4a4f5c;}
+  .methodbtn.on{background:rgba(255,110,60,0.20);border-color:var(--accent);color:#fff;}
+  #panel input[type=range]{width:100%;accent-color:var(--accent);}
+  .scrubrow{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+  #weekLabel{font-family:monospace;font-size:10.5px;color:#c8ccd6;text-align:center;margin-bottom:8px;}
+  #playBtn{font-family:monospace;font-size:11px;padding:5px 10px;
+    background:rgba(255,255,255,0.06);border:1px solid var(--panel-border);border-radius:6px;
+    color:var(--ink-primary);cursor:pointer;}
+  #playBtn:hover{background:rgba(255,255,255,0.12);}
+  #playBtn.on{background:rgba(255,110,60,0.20);border-color:var(--accent);}
+  #resetViewBtn{font-family:monospace;font-size:11px;padding:5px 10px;
+    background:rgba(255,255,255,0.06);border:1px solid var(--panel-border);border-radius:6px;
+    color:var(--ink-primary);cursor:pointer;}
+  #resetViewBtn:hover{background:rgba(255,255,255,0.12);}
+  #stageLabel{font-size:11px;color:var(--ink-secondary);margin-bottom:8px;line-height:1.4;}
+  #stageBtn{font-family:monospace;font-size:11.5px;padding:8px 12px;width:100%;
+    background:rgba(255,110,60,0.18);border:1px solid var(--accent);border-radius:6px;
+    color:#fff;cursor:pointer;font-weight:600;}
+  #stageBtn:hover{background:rgba(255,110,60,0.30);}
+  .stagecontrols[data-locked="1"]{opacity:0.4;pointer-events:none;}
+  .legend{display:flex;flex-direction:column;gap:3px;margin:4px 0 2px 0;}
+  .legend .lrow{display:flex;align-items:center;gap:8px;font-size:10.5px;color:#c8c8c8;}
+  .legend .sw{width:13px;height:13px;border-radius:3px;flex-shrink:0;}
+  #status{position:absolute;bottom:14px;left:16px;z-index:10;font-family:monospace;
+    font-size:10.5px;color:var(--ink-muted);}
+  #loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    color:var(--ink-secondary);font-size:13px;z-index:20;}
+  #err{position:absolute;top:16px;right:16px;z-index:20;background:#3a1414;color:#ffb3b3;
+    padding:10px 14px;border-radius:8px;font-size:12px;max-width:340px;display:none;}
+  #tooltip{position:absolute;pointer-events:none;background:var(--panel-bg);
+    border:1px solid var(--panel-border);border-radius:8px;padding:8px 10px;font-size:11px;
+    line-height:1.5;color:var(--ink-primary);box-shadow:0 8px 24px rgba(0,0,0,.5);
+    display:none;z-index:30;white-space:nowrap;}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="loading">Loading hotspot cartogram&hellip;</div>
+<div id="err"></div>
+<div id="tooltip"></div>
+
+<div id="panel">
+  <a class="backlink" href="../index.html">&larr; Back to map</a>
+  <h1>Hotspot change -- a rippling cartogram</h1>
+  <div class="sub">
+    Three stages, one click apart: the real map, then a population-equalizing
+    cartogram, then a rippling 3D terrain alone. Drag to rotate, scroll to zoom once
+    you're there. <b>Experimental first pass</b> -- the owner's own framing, not a
+    finished feature.
+  </div>
+  <div class="note" id="caveatNote">Loading caveat text&hellip;</div>
+
+  <div class="row">
+    <div id="stageLabel">Stage 1 of 3: the real map</div>
+    <button id="stageBtn">Next: morph into the cartogram &rarr;</button>
+  </div>
+
+  <div class="stagecontrols" id="stageControls" data-locked="1">
+    <div class="row">
+      <h2>Baseline method</h2>
+      <div class="methodrow">
+        <button class="methodbtn" data-method="flat">Flat avg</button>
+        <button class="methodbtn" data-method="guard1">Flat +1 guard</button>
+        <button class="methodbtn" data-method="ewma">EWMA (&alpha;=0.1)</button>
+      </div>
+    </div>
+
+    <div class="row">
+      <h2>Week</h2>
+      <div class="scrubrow">
+        <button id="playBtn">&#9654; Play</button>
+        <input type="range" id="weekSlider" min="0" max="0" value="0" step="1" style="flex:1;">
+      </div>
+      <div id="weekLabel"></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <h2>Legend</h2>
+    <div class="legend" id="legend"></div>
+    <div class="note" style="margin-top:2px;">
+      Color (from stage 2 on) and height (stage 3's own terrain, rising above or
+      dipping below its flat "sea level"): this county's current week vs. its own
+      baseline (selected method above) -- the same number, shown two ways. A shape's
+      size never changes once it becomes a circle (stage 2) -- only population sets
+      that.
+    </div>
+  </div>
+
+  <div class="row">
+    <button id="resetViewBtn">Reset view</button>
+  </div>
+</div>
+
+<div id="status"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const errEl = document.getElementById('err');
+function showErr(msg) {
+  errEl.textContent = msg;
+  errEl.style.display = 'block';
+  console.error(msg);
+}
+window.addEventListener('error', (e) => showErr('Script error: ' + e.message));
+
+// Copied verbatim from map/index.html's own hotspot layer (not re-picked) --
+// ColorBrewer "RdBu" 7-class diverging [@colorbrewer2002redblue], reversed so blue =
+// below this county's own trailing baseline and red = above; off-white = "within 5%
+// of its own average." Gray marks "not enough data for a trend this week," kept
+// visually distinct from the ramp's own "near baseline" off-white.
+const HOTSPOT_TREND_BREAKS = [-50, -20, -5, 5, 20, 50];
+const HOTSPOT_TREND_COLORS = [
+  [33,102,172], [103,169,207], [209,229,240], [247,247,247], [253,219,199], [239,138,98], [178,24,43],
+];
+const HOTSPOT_NODATA_COLOR = [160,160,160];
+function hotspotTrendBucket(pct){
+  for (let i = 0; i < HOTSPOT_TREND_BREAKS.length; i++) if (pct < HOTSPOT_TREND_BREAKS[i]) return i;
+  return HOTSPOT_TREND_BREAKS.length;
+}
+function rgbCss(c){ return `rgb(${c[0]},${c[1]},${c[2]})`; }
+function colorFor(pct){
+  return (pct === null || pct === undefined)
+    ? HOTSPOT_NODATA_COLOR
+    : HOTSPOT_TREND_COLORS[hotspotTrendBucket(pct)];
+}
+
+const HOTSPOT_METHOD_OFFSETS = { flat: 2, guard1: 4, ewma: 6 };
+
+// Height on the terrain surface -- the owner's own request ("raise above or pull below
+// the plane"), replacing the first version's radius modulation entirely (removed: see
+// this file's own top-of-file note). Clamped so one extreme outlier week can't send a
+// single circle through the roof relative to everything else; a NODATA/zero county sits
+// exactly at sea level (0), same as "no signal here" reads as flat, not a gap.
+const HEIGHT_PER_PCT = 0.55;
+const HEIGHT_CLAMP = 90;
+function heightFor(pct){
+  if (pct === null || pct === undefined) return 0;
+  return Math.max(-HEIGHT_CLAMP, Math.min(HEIGHT_CLAMP, pct * HEIGHT_PER_PCT));
+}
+
+// Three click-driven stages, owner's own direction, 2026-10-22: "stage 1 - map of the
+// US. stage 2 - map morphs into a electoral style population equalizing, geography
+// estimating map. stage 3 - map will play out like the current version, except without
+// the circles." `shapeT` (0->1) blends each county's shape between its true outline and
+// its final Dorling circle, AND its color between neutral gray and the real hotspot
+// color -- one parameter drives both, since stage 2 is precisely "the shape finishes
+// resolving into a circle, and the cartogram's own color appears," not two separate
+// events. `fanOpacity`/`terrainOpacity`/`terrainHeightScale` drive the stage 2->3
+// transition (shapes fade out while the terrain grows up and fades in, together).
+const STAGE_MAP = 0, STAGE_CARTOGRAM = 1, STAGE_TERRAIN = 2;
+const STAGE_LABELS = ['Stage 1 of 3: the real map',
+  'Stage 2 of 3: population-equalizing cartogram', 'Stage 3 of 3: rippling terrain'];
+const STAGE_BTN_LABELS = ['Next: morph into the cartogram →',
+  'Next: become the rippling terrain →', '↺ Restart from the real map'];
+
+const state = {
+  cartogram: null, weekly: null, byCounty: null,
+  method: 'flat', weekIndex: 0, playing: false, playTimer: null,
+  pctByIndex: null,  // Float32Array, one entry per county, this week/method's own pct
+                      // (or NaN) -- rebuilt on every week/method change, read by both
+                      // the county-fan update and the terrain update below.
+  stage: STAGE_MAP, transitioning: false,
+  shapeT: 0, fanOpacity: 1, terrainOpacity: 0, terrainHeightScale: 0,
+};
+
+function entryForWeek(geoid, weekIndex){
+  const byWeek = state.byCounty.get(geoid);
+  if (!byWeek) return null;
+  return byWeek.get(weekIndex) || null;
+}
+function baselinePct(entry, method){
+  if (!entry) return [null, null];
+  const off = HOTSPOT_METHOD_OFFSETS[method];
+  return [entry[off], entry[off + 1]];
+}
+
+function buildLegend(){
+  const el = document.getElementById('legend');
+  const labels = ['< -50%', '-50 to -20%', '-20 to -5%', '-5 to +5%', '+5 to +20%', '+20 to +50%', '> +50%'];
+  el.innerHTML = '';
+  HOTSPOT_TREND_COLORS.forEach((c, i) => {
+    const row = document.createElement('div');
+    row.className = 'lrow';
+    row.innerHTML = `<span class="sw" style="background:${rgbCss(c)}"></span><span>${labels[i]}</span>`;
+    el.appendChild(row);
+  });
+  const grayRow = document.createElement('div');
+  grayRow.className = 'lrow';
+  grayRow.innerHTML = `<span class="sw" style="background:${rgbCss(HOTSPOT_NODATA_COLOR)}"></span><span>Not enough data for a trend</span>`;
+  el.appendChild(grayRow);
+}
+
+function updateWeekLabel(){
+  const d = state.weekly;
+  const start = d.weeks[state.weekIndex];
+  document.getElementById('weekLabel').textContent =
+    `Week of ${start} (${state.weekIndex + 1} of ${d.weeks.length})`;
+}
+
+// ---------------------------------------------------------------------------
+// three.js scene setup. World axes: X/Z are the flattened map plane (matching the
+// build script's own canvas X/Y, centered on origin), Y is height/"sea level."
+// ---------------------------------------------------------------------------
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1a1a19);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 5000);
+let INITIAL_CAMERA_POS = new THREE.Vector3(0, 900, 700);  // replaced once the real
+                                                            // terrain extent is known
+                                                            // (frameCamera(), below) --
+                                                            // this is just a sane
+                                                            // fallback before data loads.
+camera.position.copy(INITIAL_CAMERA_POS);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.maxPolarAngle = Math.PI * 0.49;  // never flip under the surface
+controls.minDistance = 100;
+controls.maxDistance = 3000;
+controls.update();
+
+// Positions the camera so the whole terrain is framed, derived from the real terrain
+// extent rather than a guessed-and-hoped-for fixed position -- a first version hardcoded
+// (0, 650, 520), which (checked live, 2026-10-22) only showed a small, zoomed-in corner
+// of the lower 48, not the shape the owner's own request was specifically about seeing.
+const CAMERA_ELEVATION_DEG = 38;  // degrees above the horizontal -- found live,
+                                   // 2026-10-22: the first value tried (55 degrees, close
+                                   // to top-down) framed the whole shape but made the
+                                   // actual "ripple" -- the entire point of this page --
+                                   // nearly invisible, since height barely reads when
+                                   // looking straight down at a bump. 38 degrees is the
+                                   // owner's own first view of the page, not something
+                                   // reached only by remembering to rotate manually.
+function frameCamera(cartogram){
+  const t = cartogram.terrain;
+  const halfW = (t.cols * t.cell_size) / 2;
+  const halfH = (t.rows * t.cell_size) / 2;
+  const halfDiagonal = Math.hypot(halfW, halfH);
+  const fovRad = THREE.MathUtils.degToRad(camera.fov / 2);
+  const distance = (halfDiagonal / Math.sin(fovRad)) * 1.15;  // 15% margin
+  const elevRad = THREE.MathUtils.degToRad(CAMERA_ELEVATION_DEG);
+  INITIAL_CAMERA_POS = new THREE.Vector3(0, distance * Math.sin(elevRad), distance * Math.cos(elevRad));
+  camera.position.copy(INITIAL_CAMERA_POS);
+  controls.target.set(0, 0, 0);
+  controls.update();
+}
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+const sun = new THREE.DirectionalLight(0xffffff, 0.75);
+sun.position.set(300, 600, 200);
+scene.add(sun);
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+document.getElementById('resetViewBtn').addEventListener('click', () => {
+  camera.position.copy(INITIAL_CAMERA_POS);
+  controls.target.set(0, 0, 0);
+  controls.update();
+});
+
+function animate(){
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+// ---------------------------------------------------------------------------
+// Terrain mesh: built once from data/map_hotspot_cartogram.json?v=1792765703's own precomputed
+// grid+neighbor weights (data/build_hotspot_cartogram.py); only the Y (height) and
+// per-vertex color attributes are rewritten on a week/method change.
+// ---------------------------------------------------------------------------
+let terrainGeom = null, terrainMesh = null, terrainMeta = null;
+
+function buildTerrain(cartogram){
+  const t = cartogram.terrain;
+  const W = cartogram.canvas.width, H = cartogram.canvas.height;
+  const cx = W / 2, cz = H / 2;  // center the whole scene on the origin
+
+  const nVerts = t.cols * t.rows;
+  const positions = new Float32Array(nVerts * 3);
+  for (let row = 0; row < t.rows; row++) {
+    for (let col = 0; col < t.cols; col++) {
+      const vi = row * t.cols + col;
+      const x = t.origin_x + col * t.cell_size - cx;
+      const z = t.origin_y + row * t.cell_size - cz;
+      positions[vi * 3 + 0] = x;
+      positions[vi * 3 + 1] = 0;
+      positions[vi * 3 + 2] = z;
+    }
+  }
+
+  // Already-filtered by the build script -- a vertex more than TERRAIN_INSIDE_CUTOFF_PX
+  // from its own nearest county contributes no triangle at all, so the mesh follows the
+  // real lower-48 outline (holes where there's no data) rather than filling its whole
+  // rectangular bounding box regardless of where the real counties are.
+  const indices = t.faces;
+
+  const geom = new THREE.BufferGeometry();
+  geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(nVerts * 3), 3));
+  geom.setIndex(indices);
+  geom.computeVertexNormals();
+
+  // transparent+opacity from the start -- stage 3 needs to fade this mesh IN (from
+  // nothing, as the county shapes fade out), not just flip a visibility switch.
+  const material = new THREE.MeshLambertMaterial({
+    vertexColors: true, side: THREE.DoubleSide, flatShading: false,
+    transparent: true, opacity: 0,
+  });
+  const mesh = new THREE.Mesh(geom, material);
+  mesh.visible = false;  // stays hidden entirely through stages 1-2; advanceStage()
+                          // flips this true the moment the 2->3 transition begins.
+  scene.add(mesh);
+
+  terrainGeom = geom;
+  terrainMesh = mesh;
+  terrainMeta = { neighbors: t.neighbors, cx, cz };
+}
+
+function updateTerrain(){
+  const pos = terrainGeom.attributes.position;
+  const col = terrainGeom.attributes.color;
+  const pctByIndex = state.pctByIndex;
+  const neighbors = terrainMeta.neighbors;
+  const heightScale = state.terrainHeightScale;
+
+  for (let vi = 0; vi < neighbors.length; vi++) {
+    let h = 0;
+    let r = 0, g = 0, b = 0;
+    for (const [countyIdx, weight] of neighbors[vi]) {
+      const pct = pctByIndex[countyIdx];
+      const p = Number.isNaN(pct) ? 0 : pct;
+      h += weight * heightFor(p);
+      const c = Number.isNaN(pct) ? HOTSPOT_NODATA_COLOR : colorFor(p);
+      r += weight * c[0]; g += weight * c[1]; b += weight * c[2];
+    }
+    pos.setY(vi, h * heightScale);
+    col.setXYZ(vi, r / 255, g / 255, b / 255);
+  }
+  pos.needsUpdate = true;
+  col.needsUpdate = true;
+  terrainGeom.computeVertexNormals();
+  terrainMesh.material.opacity = state.terrainOpacity;
+}
+
+// ---------------------------------------------------------------------------
+// County fans: one flat polygon per county, a triangle fan from its own center to
+// each of its OUTLINE_N_POINTS boundary points -- merged into a single BufferGeometry
+// (not per-county meshes; not an InstancedMesh, since each county's own SHAPE differs
+// during the stage 1->2 morph, which InstancedMesh cannot vary per instance). This one
+// mesh plays THREE roles across the three stages: stage 1, each county's own true
+// shape at its true position (neutral gray, no hotspot color yet -- "a map of the US,"
+// nothing more claimed); stage 2, morphed vertex-by-vertex into a perfect circle at its
+// Dorling position, colored by the selected week (the "population equalizing,
+// geography estimating" cartogram); stage 3, faded out entirely while the terrain
+// (above) fades in and grows -- "the current version... except without the circles."
+// `state.shapeT` (0->1) is the single parameter blending shape+position+color together
+// between stage 1's and stage 2's values; `state.fanOpacity` separately fades the
+// whole mesh out for the stage 2->3 transition.
+let fanGeom = null, fanMesh = null, fanMeta = null;
+const NEUTRAL_COLOR = HOTSPOT_NODATA_COLOR;  // stage 1's own flat tint -- reusing the
+                                              // existing "no data" gray rather than
+                                              // inventing a new color: stage 1
+                                              // genuinely has no hotspot value shown
+                                              // yet, the same claim that gray already
+                                              // makes everywhere else on this page.
+
+function buildCountyFans(cartogram){
+  const W = cartogram.canvas.width, H = cartogram.canvas.height;
+  const cx = W / 2, cz = H / 2;
+  const angles = cartogram.outline_angles;
+  const n = angles.length;
+  const cosA = angles.map(Math.cos);
+  const sinA = angles.map(Math.sin);
+  const counties = cartogram.counties;
+  const count = counties.length;
+  const vertsPerCounty = n + 1;  // n boundary points + 1 center point
+
+  counties.forEach((c) => {
+    c._worldX = c.x - cx;
+    c._worldZ = c.y - cz;
+    c._trueWorldX = c.true_x - cx;
+    c._trueWorldZ = c.true_y - cz;
+    c._outlineWorld = c.outline.map(([ox, oy]) => [ox - cx, oy - cz]);
+  });
+
+  const positions = new Float32Array(count * vertsPerCounty * 3);
+  const colors = new Float32Array(count * vertsPerCounty * 3);
+  const indices = new Uint32Array(count * n * 3);
+  let ii = 0;
+  for (let ci = 0; ci < count; ci++) {
+    const base = ci * vertsPerCounty;
+    const centerIdx = base + n;
+    for (let i = 0; i < n; i++) {
+      indices[ii++] = centerIdx;
+      indices[ii++] = base + i;
+      indices[ii++] = base + ((i + 1) % n);
+    }
+  }
+
+  const geom = new THREE.BufferGeometry();
+  geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geom.setIndex(new THREE.BufferAttribute(indices, 1));
+
+  // Unlit (MeshBasicMaterial), not MeshLambertMaterial like the terrain -- deliberate:
+  // every one of these shapes lies perfectly flat (y=0) through stages 1 and 2, so
+  // there is no slope for a light to reveal, and an unlit material keeps the color
+  // ramp's own hues exact rather than inflected by light direction.
+  const material = new THREE.MeshBasicMaterial({
+    vertexColors: true, side: THREE.DoubleSide, transparent: true, opacity: 1,
+  });
+  const mesh = new THREE.Mesh(geom, material);
+  scene.add(mesh);
+
+  fanGeom = geom;
+  fanMesh = mesh;
+  fanMeta = { count, n, vertsPerCounty, cosA, sinA };
+}
+
+function updateCountyFans(){
+  const pos = fanGeom.attributes.position;
+  const col = fanGeom.attributes.color;
+  const { count, n, vertsPerCounty, cosA, sinA } = fanMeta;
+  const counties = state.cartogram.counties;
+  const pctByIndex = state.pctByIndex;
+  const shapeT = state.shapeT;
+
+  for (let ci = 0; ci < count; ci++) {
+    const c = counties[ci];
+    const base = ci * vertsPerCounty;
+    const pct = pctByIndex[ci];
+    const target = Number.isNaN(pct) ? NEUTRAL_COLOR : colorFor(pct);
+    const r = (NEUTRAL_COLOR[0] + (target[0] - NEUTRAL_COLOR[0]) * shapeT) / 255;
+    const g = (NEUTRAL_COLOR[1] + (target[1] - NEUTRAL_COLOR[1]) * shapeT) / 255;
+    const b = (NEUTRAL_COLOR[2] + (target[2] - NEUTRAL_COLOR[2]) * shapeT) / 255;
+
+    const ccx = c._trueWorldX + (c._worldX - c._trueWorldX) * shapeT;
+    const ccz = c._trueWorldZ + (c._worldZ - c._trueWorldZ) * shapeT;
+    pos.setXYZ(base + n, ccx, 0, ccz);
+    col.setXYZ(base + n, r, g, b);
+
+    for (let i = 0; i < n; i++) {
+      const [ox, oz] = c._outlineWorld[i];
+      const tx = c._worldX + c.radius * cosA[i];
+      const tz = c._worldZ + c.radius * sinA[i];
+      pos.setXYZ(base + i, ox + (tx - ox) * shapeT, 0, oz + (tz - oz) * shapeT);
+      col.setXYZ(base + i, r, g, b);
+    }
+  }
+  pos.needsUpdate = true;
+  col.needsUpdate = true;
+  fanMesh.material.opacity = state.fanOpacity;
+}
+
+// ---------------------------------------------------------------------------
+// Hover tooltip via raycasting against the county-fan mesh. Each county contributes
+// exactly `fanMeta.n` triangles, laid out contiguously in the index buffer in county
+// order -- so a hit face's index divides cleanly into a county index, no per-triangle
+// lookup table needed.
+// ---------------------------------------------------------------------------
+const raycaster = new THREE.Raycaster();
+const pointerNdc = new THREE.Vector2();
+const tooltip = document.getElementById('tooltip');
+
+function showTooltip(evt, c, entry, pct){
+  const d = state.weekly;
+  const week = d.weeks[state.weekIndex];
+  let line;
+  if (!entry) {
+    line = 'No recorded arrests this week';
+  } else if (pct === null) {
+    line = `${entry[1]} arrests this week &middot; not enough data for a trend`;
+  } else {
+    const [baseline] = baselinePct(entry, state.method);
+    line = `${entry[1]} arrests this week &middot; baseline ${baseline} &middot; ` +
+           `<b>${pct > 0 ? '+' : ''}${pct}%</b>`;
+  }
+  tooltip.innerHTML = `<b>${c.name}, ${c.state}</b><br/>Population: ${c.population.toLocaleString()}<br/>` +
+    `Week of ${week}<br/>${line}`;
+  tooltip.style.display = 'block';
+  const pad = 14;
+  let x = evt.clientX + pad, y = evt.clientY + pad;
+  const tw = tooltip.offsetWidth, th = tooltip.offsetHeight;
+  if (x + tw > window.innerWidth) x = evt.clientX - tw - pad;
+  if (y + th > window.innerHeight) y = evt.clientY - th - pad;
+  tooltip.style.left = x + 'px';
+  tooltip.style.top = y + 'px';
+}
+function hideTooltip(){ tooltip.style.display = 'none'; }
+
+renderer.domElement.addEventListener('pointermove', (evt) => {
+  if (!fanMesh || !fanMesh.visible || !state.cartogram) { hideTooltip(); return; }
+  const rect = renderer.domElement.getBoundingClientRect();
+  pointerNdc.x = ((evt.clientX - rect.left) / rect.width) * 2 - 1;
+  pointerNdc.y = -((evt.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(pointerNdc, camera);
+  const hits = raycaster.intersectObject(fanMesh);
+  if (hits.length === 0 || hits[0].faceIndex === undefined) { hideTooltip(); return; }
+  const countyIdx = Math.floor(hits[0].faceIndex / fanMeta.n);
+  const c = state.cartogram.counties[countyIdx];
+  const entry = entryForWeek(c.GEOID, state.weekIndex);
+  const [, pct] = baselinePct(entry, state.method);
+  showTooltip(evt, c, entry, pct);
+});
+renderer.domElement.addEventListener('pointerleave', hideTooltip);
+
+// ---------------------------------------------------------------------------
+// Week/method state -> pctByIndex -> terrain + circle updates.
+// ---------------------------------------------------------------------------
+function recomputePct(){
+  const cartogram = state.cartogram;
+  const arr = new Float32Array(cartogram.counties.length).fill(NaN);
+  cartogram.counties.forEach((c, i) => {
+    const entry = entryForWeek(c.GEOID, state.weekIndex);
+    const [, pct] = baselinePct(entry, state.method);
+    arr[i] = (pct === null || pct === undefined) ? NaN : pct;
+  });
+  state.pctByIndex = arr;
+}
+
+function render(){
+  recomputePct();
+  updateCountyFans();
+  updateTerrain();
+}
+
+// ---------------------------------------------------------------------------
+// Stage transitions -- a simple, generic tween runner (no library: this project's own
+// standing convention is a charting/animation library per page only when the page's
+// whole point is charts; here it's one eased value over a fixed duration, not worth a
+// dependency). `onDone` only fires once, at raw progress 1.0, so a transition can never
+// silently stall partway through.
+// ---------------------------------------------------------------------------
+function easeInOutCubic(t){ return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+
+function tween(durationMs, onUpdate, onDone){
+  const start = performance.now();
+  function step(now){
+    const raw = Math.min(1, (now - start) / durationMs);
+    onUpdate(easeInOutCubic(raw));
+    if (raw < 1) requestAnimationFrame(step);
+    else if (onDone) onDone();
+  }
+  requestAnimationFrame(step);
+}
+
+const TRANSITION_MS = 1800;
+
+function updateStageUI(){
+  document.getElementById('stageLabel').textContent = STAGE_LABELS[state.stage];
+  document.getElementById('stageBtn').textContent = STAGE_BTN_LABELS[state.stage];
+  document.getElementById('stageBtn').disabled = state.transitioning;
+  // The baseline-method/week/Play controls only mean something once color is actually
+  // showing (stage 2 on) -- locked, not just unstyled, during stage 1.
+  document.getElementById('stageControls').dataset.locked = state.stage === STAGE_MAP ? '1' : '0';
+}
+
+function advanceStage(){
+  if (state.transitioning) return;
+
+  if (state.stage === STAGE_MAP) {
+    state.transitioning = true;
+    updateStageUI();
+    tween(TRANSITION_MS, (t) => { state.shapeT = t; render(); }, () => {
+      state.stage = STAGE_CARTOGRAM;
+      state.shapeT = 1;
+      state.transitioning = false;
+      render();
+      updateStageUI();
+    });
+
+  } else if (state.stage === STAGE_CARTOGRAM) {
+    state.transitioning = true;
+    terrainMesh.visible = true;
+    updateStageUI();
+    tween(TRANSITION_MS, (t) => {
+      state.fanOpacity = 1 - t;
+      state.terrainOpacity = t;
+      state.terrainHeightScale = t;
+      render();
+    }, () => {
+      state.stage = STAGE_TERRAIN;
+      state.fanOpacity = 0;
+      state.terrainOpacity = 1;
+      state.terrainHeightScale = 1;
+      state.transitioning = false;
+      fanMesh.visible = false;
+      render();
+      updateStageUI();
+    });
+
+  } else {
+    // Restart -- an instant reset, not a reverse-animated tween: only the forward
+    // click-by-click progression was requested ("moving from stage 1 to 2 to 3
+    // requires clicks"), and a full backward tween is unrequested scope for a page
+    // already marked a first pass.
+    state.stage = STAGE_MAP;
+    state.shapeT = 0; state.fanOpacity = 1; state.terrainOpacity = 0; state.terrainHeightScale = 0;
+    fanMesh.visible = true;
+    terrainMesh.visible = false;
+    render();
+    updateStageUI();
+  }
+}
+
+function setMethod(m){
+  state.method = m;
+  document.querySelectorAll('.methodbtn').forEach(b => b.classList.toggle('on', b.dataset.method === m));
+  render();
+}
+
+function setPlaying(p){
+  state.playing = p;
+  const b = document.getElementById('playBtn');
+  b.textContent = p ? '❚❚ Pause' : '▶ Play';
+  b.classList.toggle('on', p);
+  if (state.playTimer) { clearInterval(state.playTimer); state.playTimer = null; }
+  if (!p) return;
+  state.weekIndex = 0;
+  document.getElementById('weekSlider').value = '0';
+  updateWeekLabel();
+  render();
+  const n = state.weekly.weeks.length;
+  state.playTimer = setInterval(() => {
+    if (state.weekIndex >= n - 1) { setPlaying(false); return; }
+    state.weekIndex++;
+    document.getElementById('weekSlider').value = String(state.weekIndex);
+    updateWeekLabel();
+    render();
+  }, 500);
+}
+
+Promise.all([
+  fetch('../data/map_hotspot_cartogram.json?v=1792765703').then(r => {
+    if (!r.ok) throw new Error('map_hotspot_cartogram.json fetch failed: ' + r.status);
+    return r.json();
+  }),
+  fetch('../data/map_hotspot_weekly.json?v=1792765703').then(r => {
+    if (!r.ok) throw new Error('map_hotspot_weekly.json fetch failed: ' + r.status);
+    return r.json();
+  }),
+]).then(([cartogram, weekly]) => {
+  document.getElementById('loading').style.display = 'none';
+  state.cartogram = cartogram;
+  state.weekly = weekly;
+
+  state.byCounty = new Map();
+  for (const geoid in weekly.counties) {
+    const m = new Map();
+    for (const entry of weekly.counties[geoid]) m.set(entry[0], entry);
+    state.byCounty.set(geoid, m);
+  }
+
+  document.getElementById('caveatNote').innerHTML =
+    (weekly.processing_geography_caveat || '') +
+    ' <br/><br/>' + (cartogram.methodology_note || '');
+
+  buildLegend();
+  buildTerrain(cartogram);
+  buildCountyFans(cartogram);
+  frameCamera(cartogram);
+
+  const slider = document.getElementById('weekSlider');
+  slider.max = String(weekly.weeks.length - 1);
+  slider.value = String(weekly.weeks.length - 1);
+  state.weekIndex = weekly.weeks.length - 1;  // default: current/last week, same
+                                                // convention as map/index.html's own
+                                                // hotspot layer.
+  updateWeekLabel();
+
+  document.querySelectorAll('.methodbtn').forEach(b =>
+    b.addEventListener('click', () => setMethod(b.dataset.method)));
+  setMethod('flat');
+
+  slider.addEventListener('input', e => {
+    setPlaying(false);
+    state.weekIndex = +e.target.value;
+    updateWeekLabel();
+    render();
+  });
+  document.getElementById('playBtn').addEventListener('click', () => setPlaying(!state.playing));
+  document.getElementById('stageBtn').addEventListener('click', advanceStage);
+  updateStageUI();
+
+  render();
+
+  document.getElementById('status').textContent =
+    `${cartogram.counties.length.toLocaleString()} counties (lower 48 + DC)`;
+}).catch(e => {
+  document.getElementById('loading').style.display = 'none';
+  showErr('Could not load cartogram data: ' + e.message +
+    ' -- run "uv run data/build_hotspot_cartogram.py" (and, if missing, ' +
+    '"uv run data/build_hotspot_trend.py") from the project root, and serve this ' +
+    'page over http:// (not file://), e.g. "python3 -m http.server" from the ' +
+    'project root, then open http://localhost:8000/hotspot-cartogram/index.html');
+});
+</script>
+</body>
+</html>
