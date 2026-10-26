@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>State by state breakdown</title>
+<!--
+  Small standalone page, built on direct request, 2026-10-23, right after the NCYL
+  attorneys' demo-session feedback (05-feedback.qmd, #sec-feedback-ncyl, Becky Wolozin
+  and Melissa Adamson): a state-by-state view, aimed specifically at a policymaker
+  audience, where comparing states against each other is itself the motivator for
+  action. Owner: "add a new page for a state by state breakdown. In which we calculate
+  all the numbers per state...number of arrests...detainees, detention centers, median
+  stays, ages, then an analysis of how states ranks, etc.."
+
+  Data: data/state_stats.json?v=1793053686 (data/build_state_stats.py).
+
+  TWO DIFFERENT "STATE" FIELDS, SHOWN SEPARATELY, NEVER BLENDED. "Arrests" and its own
+  age figures are by ARREST state (where the person was taken into custody). Everything
+  else -- detainees, detention centers, median time in custody, detention-side ages --
+  is by FACILITY state (where detention actually happened). A person is very often
+  arrested in one state and detained in a different one; conflating the two would make
+  every number here wrong in a way that wouldn't be visible on the page itself. See
+  build_state_stats.py's own docstring for the full reasoning, and the caveats section
+  below for the reader-facing version.
+
+  MEDIAN, NOT MEAN, for time in custody -- same reasoning as the main map's facility
+  info-box addition the same day: stint_length_days is sharply right-skewed, so a
+  median is the honest "typical" figure for a state, not a plain average pulled upward
+  by a small number of very long stays.
+-->
+<style>
+  :root{
+    color-scheme: dark;
+    --surface: #1a1a19;
+    --panel-bg: rgba(20,20,19,0.92);
+    --panel-border: #383835;
+    --ink-primary: #ffffff;
+    --ink-secondary: #c3c2b7;
+    --ink-muted: #898781;
+    --accent: #4a90d9;
+  }
+  html,body{margin:0;padding:0;background:var(--surface);color:var(--ink-primary);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+  a{color:var(--accent);}
+  .wrap{max-width:980px;margin:0 auto;padding:28px 20px 80px;}
+  .backlink{display:inline-flex;align-items:center;gap:5px;font-size:11px;
+    color:var(--ink-muted);text-decoration:none;margin-bottom:18px;}
+  .backlink:hover{color:var(--ink-primary);}
+  h1{font-size:22px;margin:0 0 6px 0;font-weight:700;}
+  .sub{font-size:13px;color:var(--ink-secondary);line-height:1.55;max-width:760px;margin-bottom:6px;}
+  .note{font-size:11.5px;color:var(--ink-muted);line-height:1.5;max-width:760px;}
+  section{margin-top:32px;}
+  h2{font-size:14px;text-transform:uppercase;letter-spacing:0.6px;color:var(--ink-secondary);
+    border-bottom:1px solid var(--panel-border);padding-bottom:8px;margin:0 0 14px 0;}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;}
+  .tile{background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:10px;
+    padding:14px 16px;}
+  .tile .tv{font-size:22px;font-weight:700;color:var(--ink-primary);font-variant-numeric:tabular-nums;}
+  .tile .tk{font-size:10.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--ink-muted);margin-top:4px;}
+  .chartbox{background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:10px;
+    padding:18px 20px;}
+  .metricbar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+  .metricbtn{background:transparent;border:1px solid var(--panel-border);color:var(--ink-secondary);
+    border-radius:16px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:inherit;}
+  .metricbtn:hover{border-color:var(--accent);color:var(--ink-primary);}
+  .metricbtn.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;}
+  .rank-row{display:flex;align-items:center;gap:10px;margin:5px 0;font-size:11.5px;}
+  .rank-num{width:22px;color:var(--ink-muted);text-align:right;flex-shrink:0;}
+  .rank-label{width:170px;flex-shrink:0;color:var(--ink-secondary);white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;}
+  .rank-bar-track{flex:1;position:relative;height:16px;}
+  .rank-bar{position:absolute;top:0;left:0;height:16px;background:var(--accent);border-radius:3px;
+    min-width:2px;}
+  .rank-bar:hover{background:#5aa4ff;}
+  .rank-val{width:90px;flex-shrink:0;text-align:right;color:var(--ink-primary);font-variant-numeric:tabular-nums;}
+  table.stattable{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:4px;}
+  table.stattable th{text-align:left;color:var(--ink-muted);font-weight:600;font-size:10px;
+    text-transform:uppercase;letter-spacing:0.4px;padding:6px 10px;border-bottom:1px solid var(--panel-border);
+    position:sticky;top:0;background:var(--panel-bg);cursor:pointer;user-select:none;white-space:nowrap;}
+  table.stattable th:hover{color:var(--ink-primary);}
+  table.stattable th.sorted::after{content:" \25BC";font-size:8px;}
+  table.stattable th.sorted.asc::after{content:" \25B2";font-size:8px;}
+  table.stattable td{padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.05);}
+  table.stattable td.num{text-align:right;font-variant-numeric:tabular-nums;}
+  table.stattable tr:hover td{background:rgba(255,255,255,0.03);}
+  #tableWrap{max-height:620px;overflow-y:auto;overflow-x:auto;background:var(--panel-bg);
+    border:1px solid var(--panel-border);border-radius:10px;padding:0 20px;}
+  table.stattable{min-width:760px;}
+  footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--panel-border);
+    font-size:11px;color:var(--ink-muted);line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="backlink" href="../index.html">&larr; back to the map</a>
+  <h1>State by state breakdown</h1>
+  <p class="sub">Arrests, detainees, detention centers, time in custody, and age -- one
+    row per state, compared against each other. Built for a policymaker audience, at the
+    direct suggestion of Becky Wolozin and Melissa Adamson (National Center for Youth
+    Law): a state-level comparison is a real motivator for action in a way a single
+    national number is not.</p>
+  <p class="note">Two different "state" fields are used here, on purpose, never blended:
+    <b>arrests</b> and their own age figures are counted by the state where a person was
+    <i>arrested</i>; <b>detainees, detention centers, time in custody</b>, and their own
+    age figures are counted by the state where a detention facility is actually
+    <i>located</i>. A person is very often arrested in one state and detained in another
+    -- see "How to read this page" below before comparing the two columns to each
+    other.</p>
+
+  <section>
+    <h2>National, this study window</h2>
+    <div class="tiles" id="nationalTiles"></div>
+  </section>
+
+  <section>
+    <h2>Ranked: top 15 states</h2>
+    <div class="chartbox">
+      <div class="metricbar" id="metricBar"></div>
+      <div id="rankChart"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Full table (<span id="totalCount"></span> states/territories) -- click a column to sort</h2>
+    <div id="tableWrap">
+      <table class="stattable">
+        <thead><tr id="tableHead"></tr></thead>
+        <tbody id="fullTable"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>How to read this page</h2>
+    <div class="chartbox">
+      <p class="sub" style="margin-bottom:10px;">
+        <b>Arrest state vs. facility state.</b> "Arrests" (and the arrest-side age range)
+        count where a person was taken into custody. Every other column counts where a
+        detention facility is physically located -- a state can show a large arrest
+        count and a small detainee count (people arrested there are usually transferred
+        elsewhere), or the reverse (a state with major detention infrastructure but
+        comparatively few arrests of its own, like Louisiana).
+      </p>
+      <p class="sub" style="margin-bottom:10px;">
+        <b>Median, not average, time in custody.</b> How long a single stint at one
+        facility lasts is heavily skewed by a small number of very long stays -- a plain
+        average would be pulled upward and describe a "typical" stay worse than the
+        median does. Nationally, the median stint is <span id="medianVsAvgNote"></span>.
+      </p>
+      <p class="sub" style="margin-bottom:10px;">
+        <b>Age is approximate.</b> Computed as the event's own year minus birth year --
+        neither field carries a month or day, so this can be off by up to a year in
+        either direction. Extreme values are shown as the data actually has them, not
+        clipped to a "plausible" range.
+      </p>
+      <p class="note" id="excludedNote"></p>
+      <p class="note">"Guantánamo Bay, Cuba" (postal-style code <code>CU</code> in the
+        underlying data) is not a US state -- it is kept as its own row because three
+        real, active detention facilities are located there, with no corresponding
+        arrest-state figures (no one is arrested in Cuba under this framework).</p>
+    </div>
+  </section>
+
+  <footer id="footerSrc">
+    <b>Sources.</b> Deportation Data Project (ICE records via FOIA). Built by
+    <code>data/build_state_stats.py</code>. Analysis &amp; visualization: Jon Nealon.
+  </footer>
+</div>
+
+<script>
+const METRICS = [
+  {key: 'n_detainees', label: 'Detainees', fmt: v => num(v)},
+  {key: 'n_arrests', label: 'Arrests', fmt: v => num(v)},
+  {key: 'n_detention_centers', label: 'Detention centers', fmt: v => num(v)},
+  {key: 'median_stay_days', label: 'Median time in custody', fmt: v => v == null ? '—' : v.toFixed(1) + ' d'},
+];
+const COLUMNS = [
+  {key: 'name', label: 'State', num: false},
+  {key: 'n_arrests', label: 'Arrests', num: true},
+  {key: 'arrest_age_median', label: 'Arrest age (median)', num: true, dec: 1},
+  {key: 'n_detainees', label: 'Detainees', num: true},
+  {key: 'n_detention_centers', label: 'Detention centers', num: true},
+  {key: 'median_stay_days', label: 'Median time in custody (days)', num: true, dec: 1},
+  {key: 'detain_age_median', label: 'Detention age (median)', num: true, dec: 1},
+  {key: 'detain_age_min', label: 'Age range (min)', num: true},
+  {key: 'detain_age_max', label: 'Age range (max)', num: true},
+];
+
+function num(n){ return (n === null || n === undefined || Number.isNaN(n)) ? '—' : Number(n).toLocaleString(); }
+function fmtCell(col, v){
+  if (v === null || v === undefined || Number.isNaN(v)) return '—';
+  if (col.dec) return Number(v).toFixed(col.dec);
+  if (col.num) return Number(v).toLocaleString();
+  return v;
+}
+
+let STATE = { rows: [], metric: 'n_detainees', sortKey: 'n_detainees', sortDir: 'desc' };
+
+function renderTiles(national){
+  const tiles = document.getElementById('nationalTiles');
+  const items = [
+    ['Arrests', num(national.n_arrests)],
+    ['Detainees', num(national.n_detainees)],
+    ['Detention centers', num(national.n_detention_centers)],
+    ['Median time in custody', national.median_stay_days.toFixed(1) + ' days'],
+    ['Age range (detention)', `${national.detain_age_min}–${national.detain_age_max}`],
+  ];
+  tiles.innerHTML = items.map(([k,v]) => `<div class="tile"><div class="tv">${v}</div><div class="tk">${k}</div></div>`).join('');
+  document.getElementById('medianVsAvgNote').textContent =
+    `${national.median_stay_days.toFixed(1)} days, against a plain average of ${national.avg_stay_days.toFixed(1)} days`;
+}
+
+function renderMetricBar(){
+  const bar = document.getElementById('metricBar');
+  bar.innerHTML = '';
+  METRICS.forEach(m => {
+    const btn = document.createElement('button');
+    btn.className = 'metricbtn' + (m.key === STATE.metric ? ' active' : '');
+    btn.textContent = m.label;
+    btn.addEventListener('click', () => { STATE.metric = m.key; renderMetricBar(); renderChart(); });
+    bar.appendChild(btn);
+  });
+}
+
+function renderChart(){
+  const metric = METRICS.find(m => m.key === STATE.metric);
+  const ranked = STATE.rows.filter(r => r[metric.key] != null).slice().sort((a,b) => b[metric.key] - a[metric.key]);
+  const top15 = ranked.slice(0, 15);
+  const maxVal = top15[0] ? top15[0][metric.key] : 1;
+  const chart = document.getElementById('rankChart');
+  chart.innerHTML = '';
+  top15.forEach((r, i) => {
+    const pct = (r[metric.key] / maxVal) * 100;
+    const row = document.createElement('div');
+    row.className = 'rank-row';
+    row.innerHTML = `<div class="rank-num">${i+1}</div>` +
+      `<div class="rank-label" title="${r.name}">${r.name}</div>` +
+      `<div class="rank-bar-track"><div class="rank-bar" style="width:${pct}%"></div></div>` +
+      `<div class="rank-val">${metric.fmt(r[metric.key])}</div>`;
+    chart.appendChild(row);
+  });
+}
+
+function renderTableHead(){
+  const head = document.getElementById('tableHead');
+  head.innerHTML = COLUMNS.map(c => {
+    const sorted = c.key === STATE.sortKey;
+    const cls = sorted ? `sorted ${STATE.sortDir === 'asc' ? 'asc' : ''}` : '';
+    return `<th class="${cls}" data-key="${c.key}">${c.label}</th>`;
+  }).join('');
+  head.querySelectorAll('th').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.key;
+      if (STATE.sortKey === key) {
+        STATE.sortDir = STATE.sortDir === 'desc' ? 'asc' : 'desc';
+      } else {
+        STATE.sortKey = key;
+        STATE.sortDir = 'desc';
+      }
+      renderTableHead();
+      renderTable();
+    });
+  });
+}
+
+function renderTable(){
+  const col = COLUMNS.find(c => c.key === STATE.sortKey);
+  const dir = STATE.sortDir === 'asc' ? 1 : -1;
+  const rows = STATE.rows.slice().sort((a, b) => {
+    const av = a[STATE.sortKey], bv = b[STATE.sortKey];
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    if (col.num) return (av - bv) * dir;
+    return String(av).localeCompare(String(bv)) * dir;
+  });
+  const tbody = document.getElementById('fullTable');
+  tbody.innerHTML = rows.map(r =>
+    '<tr>' + COLUMNS.map(c => `<td class="${c.num ? 'num' : ''}">${fmtCell(c, r[c.key])}</td>`).join('') + '</tr>'
+  ).join('');
+  document.getElementById('totalCount').textContent = rows.length.toLocaleString();
+}
+
+async function main(){
+  const d = await fetch('../data/state_stats.json?v=1793053686').then(r => r.json());
+  STATE.rows = d.states;
+  renderTiles(d.national);
+  renderMetricBar();
+  renderChart();
+  renderTableHead();
+  renderTable();
+  const exc = d.arrest_excluded_total;
+  document.getElementById('excludedNote').textContent = exc > 0
+    ? `${exc.toLocaleString()} arrest-side records were excluded from this table because their recorded ` +
+      `location isn't a real US state or territory (${d.arrest_excluded_categories.join(', ')}) -- a tiny ` +
+      `share of the total, disclosed here rather than silently dropped.`
+    : '';
+}
+
+main().catch(e => {
+  document.body.innerHTML = '<div class="wrap"><p class="sub">Failed to load: ' + e.message +
+    '. This page uses fetch() to load JSON under ../data/, which most browsers block for local ' +
+    'file:// pages -- serve this folder over a local HTTP server instead.</p></div>';
+});
+</script>
+</body>
+</html>

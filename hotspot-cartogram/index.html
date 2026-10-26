@@ -1,0 +1,850 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Hotspot change -- a rippling cartogram</title>
+<!--
+  Experimental, standalone companion to the main map's own "Hotspot (weekly change)"
+  layer (map/index.html, data/build_hotspot_trend.py). Built on direct request,
+  2026-10-22: "I wan tto think of an additional different way to viz the hotspot change
+  over time. because there is so much unchanged space between the population centers I
+  want to reduce that... what if we transposed onto a electoral college map. so roughly
+  we were dealing with equal populations... lets try dorling and change if we dont like
+  it. THe viz can live on a separate page like the 3d netowrk."
+
+  REVISED THE SAME DAY, a second direct request after seeing the first (flat, 2D)
+  version: "we are mixing vizualiations. if size is population it cant be another thing
+  too. Id like to try to take this base map and turn it into a 3d plane. then take the
+  central point of each circle and (in addition to color changes) either raise above or
+  pull below the plane = giveing the map a rippling appearance." Two changes from that
+  first version: (1) circle size is population, full stop -- the first version's small
+  "grows/shrinks with the week's change" radius modulation is REMOVED entirely, since
+  mixing two different quantities (population, change) into one visual channel was
+  exactly the confusion flagged; (2) the flat SVG canvas is now a literal 3D surface
+  (three.js, not a charting library) that rises and dips under each circle by that
+  county's own change this week -- "the plane" itself ripples, rather than a second,
+  independent encoding bolted on next to it.
+
+  REVISED A THIRD TIME THE SAME DAY, turning the page into a three-stage, click-driven
+  sequence: "stage 1 - map of the US. stage 2 - map morphs into a electoral style
+  population equalizing, geography estimating map. stage 3 - map will play out like the
+  current version, except without the circles. moving from stage 1 to 2 to 3 requires
+  clicks." Stage 1 shows every county's own true shape, flat and uncolored -- genuinely
+  "a map of the US," not the cartogram yet.
+
+  REPLACED 2026-10-25 -- the shapes are now HEXAGON CLUSTERS, not circles, and the
+  stage 1->2 transition is a crossfade, not a vertex morph. See
+  data/build_hotspot_cartogram.py's own docstring for the full reasoning (a
+  circle-relaxation layout could not hold real regional shape -- the Great Lakes, New
+  England/Maine, Florida's peninsula -- without reintroducing unacceptable circle
+  overlap; a discrete hex-tile region-growth algorithm, the owner's own suggestion,
+  solves the actual problem structurally rather than fighting it with a bigger force).
+  A crossfade (fan mesh opacity 1->0, hex mesh opacity 0->1), not a per-vertex morph,
+  drives stage 1->2 -- a variable-count cluster of hex cells has no natural vertex
+  correspondence to a fixed-point county outline the way one circle always did. Stage
+  2->3 no longer swaps in a SEPARATE terrain mesh either: every hex cell already belongs
+  to exactly one county, so it IS its own terrain -- the 2->3 transition is just that
+  same mesh's own per-cell height animating from flat to its full rise/dip.
+
+  WHAT THIS IS. Every county is a cluster of hexagonal cells, sized by its own ACS
+  population (not land area, never touched by the week's change), grown outward from
+  its own real geographic location via a multi-source weighted region-growth algorithm
+  (data/build_hotspot_cartogram.py's own `assign_hex_grid()` -- see that script's
+  docstring for the full method, including two real algorithmic bugs found and fixed
+  live: a mismatched-size "swallowing" pathology, and a severe-shortfall case for
+  counties wedged between other huge counties, both documented there rather than here).
+  Lower 48 + DC only -- EPSG:5070 ("CONUS Albers") mis-projects Alaska and Hawaii into
+  nonsensical far-flung points when used as a literal on-screen coordinate, which is
+  what this page does; excluding them also matches the owner's own framing of the
+  original request ("roughly maintains the shape of the lower 48").
+
+  THE SURFACE. Every hex cell's own height is that cell's own OWNING county's current
+  pct_change, directly -- no blending or interpolation needed at all, unlike the old
+  circle design's separate terrain grid, since the hex cells themselves already
+  exhaustively tile the whole cartogram with no gaps a terrain grid would otherwise need
+  to fill in between sparse circle positions. Color (the SAME diverging ramp as
+  map/index.html's own hotspot layer, HOTSPOT_TREND_COLORS/BREAKS, copied not re-picked)
+  and height are both read from the one number, per cell, not two different ones.
+
+  LIBRARY: three.js (ES modules, no bundler -- an import map, loaded from jsDelivr,
+  version-pinned, both URLs verified live 2026-10-22 to resolve (HTTP 200) before use)
+  plus its own OrbitControls addon for drag-to-rotate/scroll-to-zoom. No charting
+  library for anything else on this page (the legend, tiles, and panel are plain HTML/
+  CSS, this project's standing convention).
+
+  DATA: reads data/map_hotspot_cartogram.json?v=1793053686 (each county's true outline and hex-cell
+  cluster, the build script's one-time output) and data/map_hotspot_weekly.json?v=1793053686 (the
+  per-week count/baseline/pct_change values, already computed and validated for the
+  main map's own hotspot layer -- never recomputed here, "one master per fact").
+  Reachable from map/index.html's "More views" row, same convention as network-3d/,
+  population/, miles/, airports/, circuits/, custody-gaps/.
+-->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<style>
+  :root{
+    color-scheme: dark;
+    --surface: #1a1a19;
+    --panel-bg: rgba(20,20,19,0.92);
+    --panel-border: #383835;
+    --ink-primary: #ffffff;
+    --ink-secondary: #c3c2b7;
+    --ink-muted: #898781;
+    --accent: #ff6e3c;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html,body{margin:0;padding:0;height:100%;background:var(--surface);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden;}
+  #stage{position:absolute;inset:0;}
+  #stage canvas{display:block;cursor:grab;}
+  #stage canvas:active{cursor:grabbing;}
+
+  #panel{
+    position:absolute;top:16px;left:16px;z-index:10;width:320px;max-height:calc(100% - 32px);
+    overflow-y:auto;
+    background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:10px;
+    padding:14px 16px;color:var(--ink-primary);box-shadow:0 10px 40px rgba(0,0,0,.5);
+  }
+  #panel .backlink{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;
+    color:var(--ink-muted);text-decoration:none;margin-bottom:8px;}
+  #panel .backlink:hover{color:var(--ink-primary);}
+  #panel h1{font-size:14px;margin:0 0 4px 0;font-weight:600;}
+  #panel .sub{font-size:11px;color:var(--ink-secondary);margin-bottom:10px;line-height:1.5;}
+  #panel .note{font-size:10.5px;color:var(--ink-muted);margin-bottom:10px;line-height:1.5;}
+  #panel .row{margin:10px 0;}
+  #panel h2{font-size:10.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--ink-muted);
+    margin:0 0 6px 0;}
+  .methodrow{display:flex;gap:6px;margin-bottom:8px;}
+  .methodbtn{flex:1;font-family:monospace;font-size:10px;letter-spacing:0.2px;
+    background:rgba(255,255,255,0.05);border:1px solid var(--panel-border);border-radius:6px;
+    color:var(--ink-secondary);padding:6px 4px;cursor:pointer;text-align:center;}
+  .methodbtn:hover{background:rgba(255,255,255,0.10);border-color:#4a4f5c;}
+  .methodbtn.on{background:rgba(255,110,60,0.20);border-color:var(--accent);color:#fff;}
+  #panel input[type=range]{width:100%;accent-color:var(--accent);}
+  .scrubrow{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+  #weekLabel{font-family:monospace;font-size:10.5px;color:#c8ccd6;text-align:center;margin-bottom:8px;}
+  #playBtn{font-family:monospace;font-size:11px;padding:5px 10px;
+    background:rgba(255,255,255,0.06);border:1px solid var(--panel-border);border-radius:6px;
+    color:var(--ink-primary);cursor:pointer;}
+  #playBtn:hover{background:rgba(255,255,255,0.12);}
+  #playBtn.on{background:rgba(255,110,60,0.20);border-color:var(--accent);}
+  #resetViewBtn{font-family:monospace;font-size:11px;padding:5px 10px;
+    background:rgba(255,255,255,0.06);border:1px solid var(--panel-border);border-radius:6px;
+    color:var(--ink-primary);cursor:pointer;}
+  #resetViewBtn:hover{background:rgba(255,255,255,0.12);}
+  #stageLabel{font-size:11px;color:var(--ink-secondary);margin-bottom:8px;line-height:1.4;}
+  #stageBtn{font-family:monospace;font-size:11.5px;padding:8px 12px;width:100%;
+    background:rgba(255,110,60,0.18);border:1px solid var(--accent);border-radius:6px;
+    color:#fff;cursor:pointer;font-weight:600;}
+  #stageBtn:hover{background:rgba(255,110,60,0.30);}
+  .stagecontrols[data-locked="1"]{opacity:0.4;pointer-events:none;}
+  .legend{display:flex;flex-direction:column;gap:3px;margin:4px 0 2px 0;}
+  .legend .lrow{display:flex;align-items:center;gap:8px;font-size:10.5px;color:#c8c8c8;}
+  .legend .sw{width:13px;height:13px;border-radius:3px;flex-shrink:0;}
+  #status{position:absolute;bottom:14px;left:16px;z-index:10;font-family:monospace;
+    font-size:10.5px;color:var(--ink-muted);}
+  #loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    color:var(--ink-secondary);font-size:13px;z-index:20;}
+  #err{position:absolute;top:16px;right:16px;z-index:20;background:#3a1414;color:#ffb3b3;
+    padding:10px 14px;border-radius:8px;font-size:12px;max-width:340px;display:none;}
+  #tooltip{position:absolute;pointer-events:none;background:var(--panel-bg);
+    border:1px solid var(--panel-border);border-radius:8px;padding:8px 10px;font-size:11px;
+    line-height:1.5;color:var(--ink-primary);box-shadow:0 8px 24px rgba(0,0,0,.5);
+    display:none;z-index:30;white-space:nowrap;}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="loading">Loading hotspot cartogram&hellip;</div>
+<div id="err"></div>
+<div id="tooltip"></div>
+
+<div id="panel">
+  <a class="backlink" href="../index.html">&larr; Back to map</a>
+  <h1>Hotspot change -- a rippling cartogram</h1>
+  <div class="sub">
+    Three stages, one click apart: the real map, then a population-equalizing
+    cartogram, then a rippling 3D terrain alone. Drag to rotate, scroll to zoom once
+    you're there. <b>Experimental first pass</b> -- the owner's own framing, not a
+    finished feature.
+  </div>
+  <div class="note" id="caveatNote">Loading caveat text&hellip;</div>
+
+  <div class="row">
+    <div id="stageLabel">Stage 1 of 3: the real map</div>
+    <button id="stageBtn">Next: morph into the cartogram &rarr;</button>
+  </div>
+
+  <div class="stagecontrols" id="stageControls" data-locked="1">
+    <div class="row">
+      <h2>Baseline method</h2>
+      <div class="methodrow">
+        <button class="methodbtn" data-method="flat">Flat avg</button>
+        <button class="methodbtn" data-method="guard1">Flat +1 guard</button>
+        <button class="methodbtn" data-method="ewma">EWMA (&alpha;=0.1)</button>
+      </div>
+    </div>
+
+    <div class="row">
+      <h2>Week</h2>
+      <div class="scrubrow">
+        <button id="playBtn">&#9654; Play</button>
+        <input type="range" id="weekSlider" min="0" max="0" value="0" step="1" style="flex:1;">
+      </div>
+      <div id="weekLabel"></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <h2>Legend</h2>
+    <div class="legend" id="legend"></div>
+    <div class="note" style="margin-top:2px;">
+      Color (from stage 2 on) and height (stage 3, each hex cell rising above or
+      dipping below its flat "sea level"): this county's current week vs. its own
+      baseline (selected method above) -- the same number, shown two ways. A county's
+      own hex-cell area never changes once stage 2 is reached -- only population sets
+      that.
+    </div>
+  </div>
+
+  <div class="row">
+    <button id="resetViewBtn">Reset view</button>
+  </div>
+</div>
+
+<div id="status"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const errEl = document.getElementById('err');
+function showErr(msg) {
+  errEl.textContent = msg;
+  errEl.style.display = 'block';
+  console.error(msg);
+}
+window.addEventListener('error', (e) => showErr('Script error: ' + e.message));
+
+// Copied verbatim from map/index.html's own hotspot layer (not re-picked) --
+// ColorBrewer "RdBu" 7-class diverging [@colorbrewer2002redblue], reversed so blue =
+// below this county's own trailing baseline and red = above; off-white = "within 5%
+// of its own average." Gray marks "not enough data for a trend this week," kept
+// visually distinct from the ramp's own "near baseline" off-white.
+const HOTSPOT_TREND_BREAKS = [-50, -20, -5, 5, 20, 50];
+const HOTSPOT_TREND_COLORS = [
+  [33,102,172], [103,169,207], [209,229,240], [247,247,247], [253,219,199], [239,138,98], [178,24,43],
+];
+const HOTSPOT_NODATA_COLOR = [160,160,160];
+function hotspotTrendBucket(pct){
+  for (let i = 0; i < HOTSPOT_TREND_BREAKS.length; i++) if (pct < HOTSPOT_TREND_BREAKS[i]) return i;
+  return HOTSPOT_TREND_BREAKS.length;
+}
+function rgbCss(c){ return `rgb(${c[0]},${c[1]},${c[2]})`; }
+function colorFor(pct){
+  return (pct === null || pct === undefined)
+    ? HOTSPOT_NODATA_COLOR
+    : HOTSPOT_TREND_COLORS[hotspotTrendBucket(pct)];
+}
+
+const HOTSPOT_METHOD_OFFSETS = { flat: 2, guard1: 4, ewma: 6 };
+
+// Height on the terrain surface -- the owner's own request ("raise above or pull below
+// the plane"), replacing the first version's radius modulation entirely (removed: see
+// this file's own top-of-file note). Clamped so one extreme outlier week can't send a
+// single circle through the roof relative to everything else; a NODATA/zero county sits
+// exactly at sea level (0), same as "no signal here" reads as flat, not a gap.
+const HEIGHT_PER_PCT = 0.55;
+const HEIGHT_CLAMP = 90;
+function heightFor(pct){
+  if (pct === null || pct === undefined) return 0;
+  return Math.max(-HEIGHT_CLAMP, Math.min(HEIGHT_CLAMP, pct * HEIGHT_PER_PCT));
+}
+
+// Three click-driven stages, owner's own direction, 2026-10-22: "stage 1 - map of the
+// US. stage 2 - map morphs into a electoral style population equalizing, geography
+// estimating map. stage 3 - map will play out like the current version, except without
+// the circles." As of the 2026-10-25 hex-tile revision: stage 1->2 is a CROSSFADE
+// (`fanOpacity` 1->0, `hexOpacity` 0->1), not a vertex morph -- a variable-count hex
+// cluster has no natural per-vertex correspondence to a fixed-point county outline.
+// Stage 2->3 no longer swaps in a second mesh either: it is the SAME hex mesh, just
+// animating `terrainHeightScale` from 0 (flat, stage 2) to 1 (full rise/dip, stage 3).
+const STAGE_MAP = 0, STAGE_CARTOGRAM = 1, STAGE_TERRAIN = 2;
+const STAGE_LABELS = ['Stage 1 of 3: the real map',
+  'Stage 2 of 3: population-equalizing cartogram', 'Stage 3 of 3: rippling terrain'];
+const STAGE_BTN_LABELS = ['Next: morph into the cartogram →',
+  'Next: become the rippling terrain →', '↺ Restart from the real map'];
+
+const state = {
+  cartogram: null, weekly: null, byCounty: null,
+  method: 'flat', weekIndex: 0, playing: false, playTimer: null,
+  pctByIndex: null,  // Float32Array, one entry per county, this week/method's own pct
+                      // (or NaN) -- rebuilt on every week/method change, read by the
+                      // hex-mesh update below.
+  stage: STAGE_MAP, transitioning: false,
+  fanOpacity: 1, hexOpacity: 0, terrainHeightScale: 0,
+};
+
+function entryForWeek(geoid, weekIndex){
+  const byWeek = state.byCounty.get(geoid);
+  if (!byWeek) return null;
+  return byWeek.get(weekIndex) || null;
+}
+function baselinePct(entry, method){
+  if (!entry) return [null, null];
+  const off = HOTSPOT_METHOD_OFFSETS[method];
+  return [entry[off], entry[off + 1]];
+}
+
+function buildLegend(){
+  const el = document.getElementById('legend');
+  const labels = ['< -50%', '-50 to -20%', '-20 to -5%', '-5 to +5%', '+5 to +20%', '+20 to +50%', '> +50%'];
+  el.innerHTML = '';
+  HOTSPOT_TREND_COLORS.forEach((c, i) => {
+    const row = document.createElement('div');
+    row.className = 'lrow';
+    row.innerHTML = `<span class="sw" style="background:${rgbCss(c)}"></span><span>${labels[i]}</span>`;
+    el.appendChild(row);
+  });
+  const grayRow = document.createElement('div');
+  grayRow.className = 'lrow';
+  grayRow.innerHTML = `<span class="sw" style="background:${rgbCss(HOTSPOT_NODATA_COLOR)}"></span><span>Not enough data for a trend</span>`;
+  el.appendChild(grayRow);
+}
+
+function updateWeekLabel(){
+  const d = state.weekly;
+  const start = d.weeks[state.weekIndex];
+  document.getElementById('weekLabel').textContent =
+    `Week of ${start} (${state.weekIndex + 1} of ${d.weeks.length})`;
+}
+
+// ---------------------------------------------------------------------------
+// three.js scene setup. World axes: X/Z are the flattened map plane (matching the
+// build script's own canvas X/Y, centered on origin), Y is height/"sea level."
+// ---------------------------------------------------------------------------
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1a1a19);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 5000);
+let INITIAL_CAMERA_POS = new THREE.Vector3(0, 900, 700);  // replaced once the real
+                                                            // terrain extent is known
+                                                            // (frameCamera(), below) --
+                                                            // this is just a sane
+                                                            // fallback before data loads.
+camera.position.copy(INITIAL_CAMERA_POS);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.maxPolarAngle = Math.PI * 0.49;  // never flip under the surface
+controls.minDistance = 100;
+controls.maxDistance = 3000;
+controls.update();
+
+// Positions the camera so the whole terrain is framed, derived from the real terrain
+// extent rather than a guessed-and-hoped-for fixed position -- a first version hardcoded
+// (0, 650, 520), which (checked live, 2026-10-22) only showed a small, zoomed-in corner
+// of the lower 48, not the shape the owner's own request was specifically about seeing.
+const CAMERA_ELEVATION_DEG = 38;  // degrees above the horizontal -- found live,
+                                   // 2026-10-22: the first value tried (55 degrees, close
+                                   // to top-down) framed the whole shape but made the
+                                   // actual "ripple" -- the entire point of this page --
+                                   // nearly invisible, since height barely reads when
+                                   // looking straight down at a bump. 38 degrees is the
+                                   // owner's own first view of the page, not something
+                                   // reached only by remembering to rotate manually.
+function frameCamera(cartogram){
+  const halfW = cartogram.canvas.width / 2;
+  const halfH = cartogram.canvas.height / 2;
+  const halfDiagonal = Math.hypot(halfW, halfH);
+  const fovRad = THREE.MathUtils.degToRad(camera.fov / 2);
+  const distance = (halfDiagonal / Math.sin(fovRad)) * 1.15;  // 15% margin
+  const elevRad = THREE.MathUtils.degToRad(CAMERA_ELEVATION_DEG);
+  INITIAL_CAMERA_POS = new THREE.Vector3(0, distance * Math.sin(elevRad), distance * Math.cos(elevRad));
+  camera.position.copy(INITIAL_CAMERA_POS);
+  controls.target.set(0, 0, 0);
+  controls.update();
+}
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+const sun = new THREE.DirectionalLight(0xffffff, 0.75);
+sun.position.set(300, 600, 200);
+scene.add(sun);
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+document.getElementById('resetViewBtn').addEventListener('click', () => {
+  camera.position.copy(INITIAL_CAMERA_POS);
+  controls.target.set(0, 0, 0);
+  controls.update();
+});
+
+function animate(){
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+// ---------------------------------------------------------------------------
+// Hex-cell mesh: ONE merged mesh plays BOTH stage 2 (flat, colored, population-sized
+// hex clusters) and stage 3 (the same cells, each extruded up or down by its own
+// county's pct_change) -- unlike the old circle design, there is no separate terrain
+// grid at all, since every hex cell already belongs to exactly one county and needs no
+// interpolation. Each cell is a real 3D PRISM (a flat top hexagon plus 6 rectangular
+// side walls down to y=0), not a floating flat tile -- so a raised/lowered cell reads
+// as a solid extruded column, matching the "rippling"/"raised" visual the owner
+// originally asked for (2026-10-22), now per hex cell instead of per circle.
+// ---------------------------------------------------------------------------
+let hexGeom = null, hexMesh = null, hexMeta = null;
+
+function hexCorners(cx, cy, size){
+  const pts = [];
+  for (let i = 0; i < 6; i++) {
+    const ang = Math.PI / 180 * (60 * i - 30);
+    pts.push([cx + size * Math.cos(ang), cy + size * Math.sin(ang)]);
+  }
+  return pts;
+}
+
+// Per-cell vertex layout (13 total): 0-5 top corners, 6 top center, 7-12 bottom
+// corners (bottom[k] sits directly under top corner k, at y=0, always -- only the TOP
+// half of the prism ever moves). Per-cell triangles (18 total): a 6-triangle top fan,
+// plus 6 side-wall quads (2 triangles each) connecting each top edge to the bottom
+// edge directly beneath it.
+const VERTS_PER_CELL = 13;
+const TRIS_PER_CELL = 18;
+
+function buildHexMesh(cartogram){
+  const W = cartogram.canvas.width, H = cartogram.canvas.height;
+  const cx = W / 2, cz = H / 2;
+  const size = cartogram.hex_size;
+  const counties = cartogram.counties;
+
+  let totalCells = 0;
+  counties.forEach(c => { totalCells += c.cells.length; });
+
+  const positions = new Float32Array(totalCells * VERTS_PER_CELL * 3);
+  const colors = new Float32Array(totalCells * VERTS_PER_CELL * 3);
+  const indices = new Uint32Array(totalCells * TRIS_PER_CELL * 3);
+  const cellCountyIndex = new Int32Array(totalCells);
+
+  let cellIdx = 0, ii = 0;
+  counties.forEach((c, ci) => {
+    for (const [hx, hy] of c.cells) {
+      const base = cellIdx * VERTS_PER_CELL;
+      const centerIdx = base + 6;
+      const wx = hx - cx, wz = hy - cz;
+      const corners = hexCorners(wx, wz, size);
+      for (let k = 0; k < 6; k++) {
+        const [tx, tz] = corners[k];
+        positions[(base + k) * 3 + 0] = tx;      // top corner k -- y set per-frame
+        positions[(base + k) * 3 + 2] = tz;
+        positions[(base + 7 + k) * 3 + 0] = tx;  // bottom corner k -- y always 0
+        positions[(base + 7 + k) * 3 + 2] = tz;
+      }
+      positions[centerIdx * 3 + 0] = wx;          // top center -- y set per-frame
+      positions[centerIdx * 3 + 2] = wz;
+
+      for (let k = 0; k < 6; k++) {
+        indices[ii++] = centerIdx; indices[ii++] = base + k; indices[ii++] = base + ((k + 1) % 6);
+      }
+      for (let k = 0; k < 6; k++) {
+        const a = base + k, b = base + ((k + 1) % 6);
+        const a2 = base + 7 + k, b2 = base + 7 + ((k + 1) % 6);
+        indices[ii++] = a; indices[ii++] = a2; indices[ii++] = b;
+        indices[ii++] = b; indices[ii++] = a2; indices[ii++] = b2;
+      }
+      cellCountyIndex[cellIdx] = ci;
+      cellIdx++;
+    }
+  });
+
+  const geom = new THREE.BufferGeometry();
+  geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geom.setIndex(new THREE.BufferAttribute(indices, 1));
+
+  const material = new THREE.MeshLambertMaterial({
+    vertexColors: true, side: THREE.DoubleSide, flatShading: true,
+    transparent: true, opacity: 0,
+  });
+  const mesh = new THREE.Mesh(geom, material);
+  mesh.visible = false;  // hidden through stage 1; the 1->2 crossfade reveals it.
+  scene.add(mesh);
+
+  hexGeom = geom;
+  hexMesh = mesh;
+  hexMeta = { totalCells, cellCountyIndex };
+}
+
+function updateHexMesh(){
+  const pos = hexGeom.attributes.position;
+  const col = hexGeom.attributes.color;
+  const { totalCells, cellCountyIndex } = hexMeta;
+  const pctByIndex = state.pctByIndex;
+  const heightScale = state.terrainHeightScale;
+
+  for (let cellIdx = 0; cellIdx < totalCells; cellIdx++) {
+    const ci = cellCountyIndex[cellIdx];
+    const pct = pctByIndex[ci];
+    const p = Number.isNaN(pct) ? 0 : pct;
+    const target = Number.isNaN(pct) ? HOTSPOT_NODATA_COLOR : colorFor(p);
+    const r = target[0] / 255, g = target[1] / 255, b = target[2] / 255;
+    const h = heightFor(p) * heightScale;
+    const base = cellIdx * VERTS_PER_CELL;
+    for (let k = 0; k < 6; k++) {
+      pos.setY(base + k, h);           // top corners rise/dip together
+      col.setXYZ(base + k, r, g, b);
+      col.setXYZ(base + 7 + k, r, g, b);  // bottom corners stay at y=0, same color
+                                            // (so the side walls read as one solid tone)
+    }
+    pos.setY(base + 6, h);             // top center
+    col.setXYZ(base + 6, r, g, b);
+  }
+  pos.needsUpdate = true;
+  col.needsUpdate = true;
+  hexGeom.computeVertexNormals();
+  hexMesh.material.opacity = state.hexOpacity;
+}
+
+// ---------------------------------------------------------------------------
+// County fans: one flat polygon per county, a triangle fan from its own center to
+// each of its OUTLINE_N_POINTS boundary points -- merged into a single BufferGeometry.
+// STATIC as of the 2026-10-25 hex-tile revision: stage 1 always shows each county's own
+// true shape at its true position in flat neutral gray, nothing else -- there is no
+// vertex morph into stage 2 any more (a variable-count hex cluster has no natural
+// per-vertex correspondence to a fixed-point outline the way one circle always did), so
+// this mesh's own geometry and color are written ONCE, at build time, and never
+// touched again. Only its OPACITY animates, fading 1->0 as the hex mesh (below)
+// crossfades in for the 1->2 transition.
+let fanMesh = null;
+const NEUTRAL_COLOR = HOTSPOT_NODATA_COLOR;  // reusing the existing "no data" gray --
+                                              // stage 1 genuinely has no hotspot value
+                                              // shown yet, the same claim that gray
+                                              // already makes everywhere else.
+
+function buildCountyFans(cartogram){
+  const W = cartogram.canvas.width, H = cartogram.canvas.height;
+  const cx = W / 2, cz = H / 2;
+  const counties = cartogram.counties;
+  const count = counties.length;
+  const n = cartogram.outline_angles.length;
+  const vertsPerCounty = n + 1;  // n boundary points + 1 center point
+
+  const positions = new Float32Array(count * vertsPerCounty * 3);
+  const colors = new Float32Array(count * vertsPerCounty * 3);
+  const indices = new Uint32Array(count * n * 3);
+  const [r, g, b] = NEUTRAL_COLOR.map(v => v / 255);
+  let ii = 0;
+  counties.forEach((c, ci) => {
+    const base = ci * vertsPerCounty;
+    const centerIdx = base + n;
+    positions[centerIdx * 3 + 0] = c.true_x - cx;
+    positions[centerIdx * 3 + 2] = c.true_y - cz;
+    col3(colors, centerIdx, r, g, b);
+    c.outline.forEach(([ox, oy], i) => {
+      positions[(base + i) * 3 + 0] = ox - cx;
+      positions[(base + i) * 3 + 2] = oy - cz;
+      col3(colors, base + i, r, g, b);
+      indices[ii++] = centerIdx; indices[ii++] = base + i; indices[ii++] = base + ((i + 1) % n);
+    });
+  });
+
+  const geom = new THREE.BufferGeometry();
+  geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geom.setIndex(new THREE.BufferAttribute(indices, 1));
+
+  // Unlit (MeshBasicMaterial): every shape lies perfectly flat (y=0), so there is no
+  // slope for a light to reveal, and an unlit material keeps the gray exact.
+  const material = new THREE.MeshBasicMaterial({
+    vertexColors: true, side: THREE.DoubleSide, transparent: true, opacity: 1,
+  });
+  fanMesh = new THREE.Mesh(geom, material);
+  scene.add(fanMesh);
+}
+function col3(arr, vi, r, g, b){ arr[vi*3]=r; arr[vi*3+1]=g; arr[vi*3+2]=b; }
+
+// ---------------------------------------------------------------------------
+// Hover tooltip via raycasting -- against the county-fan mesh in stage 1 (one hit face
+// maps directly to a county, since that mesh is one fixed-size fan per county), or
+// against the hex mesh from stage 2 on (a hit face's index divides by TRIS_PER_CELL
+// into a cell index, then `hexMeta.cellCountyIndex` maps that cell to its owning
+// county -- needed because, unlike the old fixed-vertex-count circles, each county's
+// own number of hex cells varies, so no single fixed divisor works for every county the
+// way it did before).
+// ---------------------------------------------------------------------------
+const raycaster = new THREE.Raycaster();
+const pointerNdc = new THREE.Vector2();
+const tooltip = document.getElementById('tooltip');
+
+function showTooltip(evt, c, entry, pct){
+  const d = state.weekly;
+  const week = d.weeks[state.weekIndex];
+  let line;
+  if (!entry) {
+    line = 'No recorded arrests this week';
+  } else if (pct === null) {
+    line = `${entry[1]} arrests this week &middot; not enough data for a trend`;
+  } else {
+    const [baseline] = baselinePct(entry, state.method);
+    line = `${entry[1]} arrests this week &middot; baseline ${baseline} &middot; ` +
+           `<b>${pct > 0 ? '+' : ''}${pct}%</b>`;
+  }
+  tooltip.innerHTML = `<b>${c.name}, ${c.state}</b><br/>Population: ${c.population.toLocaleString()}<br/>` +
+    `Week of ${week}<br/>${line}`;
+  tooltip.style.display = 'block';
+  const pad = 14;
+  let x = evt.clientX + pad, y = evt.clientY + pad;
+  const tw = tooltip.offsetWidth, th = tooltip.offsetHeight;
+  if (x + tw > window.innerWidth) x = evt.clientX - tw - pad;
+  if (y + th > window.innerHeight) y = evt.clientY - th - pad;
+  tooltip.style.left = x + 'px';
+  tooltip.style.top = y + 'px';
+}
+function hideTooltip(){ tooltip.style.display = 'none'; }
+
+renderer.domElement.addEventListener('pointermove', (evt) => {
+  if (!state.cartogram) { hideTooltip(); return; }
+  const targetMesh = state.stage === STAGE_MAP ? fanMesh : hexMesh;
+  if (!targetMesh || !targetMesh.visible) { hideTooltip(); return; }
+  const rect = renderer.domElement.getBoundingClientRect();
+  pointerNdc.x = ((evt.clientX - rect.left) / rect.width) * 2 - 1;
+  pointerNdc.y = -((evt.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(pointerNdc, camera);
+  const hits = raycaster.intersectObject(targetMesh);
+  if (hits.length === 0 || hits[0].faceIndex === undefined) { hideTooltip(); return; }
+  let countyIdx;
+  if (state.stage === STAGE_MAP) {
+    const n = state.cartogram.outline_angles.length;
+    countyIdx = Math.floor(hits[0].faceIndex / n);
+  } else {
+    const cellIdx = Math.floor(hits[0].faceIndex / TRIS_PER_CELL);
+    countyIdx = hexMeta.cellCountyIndex[cellIdx];
+  }
+  const c = state.cartogram.counties[countyIdx];
+  const entry = entryForWeek(c.GEOID, state.weekIndex);
+  const [, pct] = baselinePct(entry, state.method);
+  showTooltip(evt, c, entry, pct);
+});
+renderer.domElement.addEventListener('pointerleave', hideTooltip);
+
+// ---------------------------------------------------------------------------
+// Week/method state -> pctByIndex -> terrain + circle updates.
+// ---------------------------------------------------------------------------
+function recomputePct(){
+  const cartogram = state.cartogram;
+  const arr = new Float32Array(cartogram.counties.length).fill(NaN);
+  cartogram.counties.forEach((c, i) => {
+    const entry = entryForWeek(c.GEOID, state.weekIndex);
+    const [, pct] = baselinePct(entry, state.method);
+    arr[i] = (pct === null || pct === undefined) ? NaN : pct;
+  });
+  state.pctByIndex = arr;
+}
+
+function render(){
+  recomputePct();
+  fanMesh.material.opacity = state.fanOpacity;
+  updateHexMesh();
+}
+
+// ---------------------------------------------------------------------------
+// Stage transitions -- a simple, generic tween runner (no library: this project's own
+// standing convention is a charting/animation library per page only when the page's
+// whole point is charts; here it's one eased value over a fixed duration, not worth a
+// dependency). `onDone` only fires once, at raw progress 1.0, so a transition can never
+// silently stall partway through.
+// ---------------------------------------------------------------------------
+function easeInOutCubic(t){ return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+
+function tween(durationMs, onUpdate, onDone){
+  const start = performance.now();
+  function step(now){
+    const raw = Math.min(1, (now - start) / durationMs);
+    onUpdate(easeInOutCubic(raw));
+    if (raw < 1) requestAnimationFrame(step);
+    else if (onDone) onDone();
+  }
+  requestAnimationFrame(step);
+}
+
+const TRANSITION_MS = 1800;
+
+function updateStageUI(){
+  document.getElementById('stageLabel').textContent = STAGE_LABELS[state.stage];
+  document.getElementById('stageBtn').textContent = STAGE_BTN_LABELS[state.stage];
+  document.getElementById('stageBtn').disabled = state.transitioning;
+  // The baseline-method/week/Play controls only mean something once color is actually
+  // showing (stage 2 on) -- locked, not just unstyled, during stage 1.
+  document.getElementById('stageControls').dataset.locked = state.stage === STAGE_MAP ? '1' : '0';
+}
+
+function advanceStage(){
+  if (state.transitioning) return;
+
+  if (state.stage === STAGE_MAP) {
+    // Stage 1->2: a crossfade (fan out, hex in), not a vertex morph -- see the hex
+    // mesh's own build-time comment for why a morph no longer makes sense here.
+    state.transitioning = true;
+    hexMesh.visible = true;
+    updateStageUI();
+    tween(TRANSITION_MS, (t) => {
+      state.fanOpacity = 1 - t;
+      state.hexOpacity = t;
+      render();
+    }, () => {
+      state.stage = STAGE_CARTOGRAM;
+      state.fanOpacity = 0;
+      state.hexOpacity = 1;
+      state.transitioning = false;
+      fanMesh.visible = false;
+      render();
+      updateStageUI();
+    });
+
+  } else if (state.stage === STAGE_CARTOGRAM) {
+    // Stage 2->3: the SAME hex mesh, already fully visible -- only its own per-cell
+    // height animates from flat to its full rise/dip. No second mesh to fade in.
+    state.transitioning = true;
+    updateStageUI();
+    tween(TRANSITION_MS, (t) => {
+      state.terrainHeightScale = t;
+      render();
+    }, () => {
+      state.stage = STAGE_TERRAIN;
+      state.terrainHeightScale = 1;
+      state.transitioning = false;
+      render();
+      updateStageUI();
+    });
+
+  } else {
+    // Restart -- an instant reset, not a reverse-animated tween: only the forward
+    // click-by-click progression was requested ("moving from stage 1 to 2 to 3
+    // requires clicks"), and a full backward tween is unrequested scope for a page
+    // already marked a first pass.
+    state.stage = STAGE_MAP;
+    state.fanOpacity = 1; state.hexOpacity = 0; state.terrainHeightScale = 0;
+    fanMesh.visible = true;
+    hexMesh.visible = false;
+    render();
+    updateStageUI();
+  }
+}
+
+function setMethod(m){
+  state.method = m;
+  document.querySelectorAll('.methodbtn').forEach(b => b.classList.toggle('on', b.dataset.method === m));
+  render();
+}
+
+function setPlaying(p){
+  state.playing = p;
+  const b = document.getElementById('playBtn');
+  b.textContent = p ? '❚❚ Pause' : '▶ Play';
+  b.classList.toggle('on', p);
+  if (state.playTimer) { clearInterval(state.playTimer); state.playTimer = null; }
+  if (!p) return;
+  state.weekIndex = 0;
+  document.getElementById('weekSlider').value = '0';
+  updateWeekLabel();
+  render();
+  const n = state.weekly.weeks.length;
+  state.playTimer = setInterval(() => {
+    if (state.weekIndex >= n - 1) { setPlaying(false); return; }
+    state.weekIndex++;
+    document.getElementById('weekSlider').value = String(state.weekIndex);
+    updateWeekLabel();
+    render();
+  }, 500);
+}
+
+Promise.all([
+  fetch('../data/map_hotspot_cartogram.json?v=1793053686').then(r => {
+    if (!r.ok) throw new Error('map_hotspot_cartogram.json fetch failed: ' + r.status);
+    return r.json();
+  }),
+  fetch('../data/map_hotspot_weekly.json?v=1793053686').then(r => {
+    if (!r.ok) throw new Error('map_hotspot_weekly.json fetch failed: ' + r.status);
+    return r.json();
+  }),
+]).then(([cartogram, weekly]) => {
+  document.getElementById('loading').style.display = 'none';
+  state.cartogram = cartogram;
+  state.weekly = weekly;
+
+  state.byCounty = new Map();
+  for (const geoid in weekly.counties) {
+    const m = new Map();
+    for (const entry of weekly.counties[geoid]) m.set(entry[0], entry);
+    state.byCounty.set(geoid, m);
+  }
+
+  document.getElementById('caveatNote').innerHTML =
+    (weekly.processing_geography_caveat || '') +
+    ' <br/><br/>' + (cartogram.methodology_note || '');
+
+  buildLegend();
+  buildHexMesh(cartogram);
+  buildCountyFans(cartogram);
+  frameCamera(cartogram);
+
+  const slider = document.getElementById('weekSlider');
+  slider.max = String(weekly.weeks.length - 1);
+  slider.value = String(weekly.weeks.length - 1);
+  state.weekIndex = weekly.weeks.length - 1;  // default: current/last week, same
+                                                // convention as map/index.html's own
+                                                // hotspot layer.
+  updateWeekLabel();
+
+  document.querySelectorAll('.methodbtn').forEach(b =>
+    b.addEventListener('click', () => setMethod(b.dataset.method)));
+  setMethod('flat');
+
+  slider.addEventListener('input', e => {
+    setPlaying(false);
+    state.weekIndex = +e.target.value;
+    updateWeekLabel();
+    render();
+  });
+  document.getElementById('playBtn').addEventListener('click', () => setPlaying(!state.playing));
+  document.getElementById('stageBtn').addEventListener('click', advanceStage);
+  updateStageUI();
+
+  render();
+
+  document.getElementById('status').textContent =
+    `${cartogram.counties.length.toLocaleString()} counties (lower 48 + DC)`;
+}).catch(e => {
+  document.getElementById('loading').style.display = 'none';
+  showErr('Could not load cartogram data: ' + e.message +
+    ' -- run "uv run data/build_hotspot_cartogram.py" (and, if missing, ' +
+    '"uv run data/build_hotspot_trend.py") from the project root, and serve this ' +
+    'page over http:// (not file://), e.g. "python3 -m http.server" from the ' +
+    'project root, then open http://localhost:8000/hotspot-cartogram/index.html');
+});
+</script>
+</body>
+</html>

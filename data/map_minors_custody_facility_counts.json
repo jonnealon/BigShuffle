@@ -1,0 +1,270 @@
+{
+"suppress_below": 5,
+"note": "Per-facility totals, summed from already-suppressed monthly cells (a facility/month cell too small to publish on its own is never re-aggregated back in at the facility level). 'total_flagged_minor_stays' is the sum of both counts -- how many flagged minor stays launched from this hold room.",
+"facilities": [
+{
+"fac": "NYCHOLD",
+"lat": 40.71571691,
+"lon": -74.00438162,
+"court_documented_hotel_staging": 42,
+"unrecorded_custody_gap_inferred": 109,
+"total_flagged_minor_stays": 151
+},
+{
+"fac": "STFRCTX",
+"lat": 28.65785369,
+"lon": -99.20038782,
+"court_documented_hotel_staging": 5,
+"unrecorded_custody_gap_inferred": 104,
+"total_flagged_minor_stays": 109
+},
+{
+"fac": "SNAHOLD",
+"lat": null,
+"lon": null,
+"court_documented_hotel_staging": 25,
+"unrecorded_custody_gap_inferred": 82,
+"total_flagged_minor_stays": 107
+},
+{
+"fac": "LOSHOLD",
+"lat": 34.053742,
+"lon": -118.23961,
+"court_documented_hotel_staging": 33,
+"unrecorded_custody_gap_inferred": 48,
+"total_flagged_minor_stays": 81
+},
+{
+"fac": "MIAHOLD",
+"lat": null,
+"lon": null,
+"court_documented_hotel_staging": 6,
+"unrecorded_custody_gap_inferred": 61,
+"total_flagged_minor_stays": 67
+},
+{
+"fac": "PHOHOLD",
+"lat": null,
+"lon": null,
+"court_documented_hotel_staging": 31,
+"unrecorded_custody_gap_inferred": 29,
+"total_flagged_minor_stays": 60
+},
+{
+"fac": "SEAHOLD",
+"lat": 47.49050762,
+"lon": -122.2911876,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 60,
+"total_flagged_minor_stays": 60
+},
+{
+"fac": "CHIHOLD",
+"lat": null,
+"lon": null,
+"court_documented_hotel_staging": 6,
+"unrecorded_custody_gap_inferred": 50,
+"total_flagged_minor_stays": 56
+},
+{
+"fac": "HOUHOLD",
+"lat": 29.93757547,
+"lon": -95.40639406,
+"court_documented_hotel_staging": 6,
+"unrecorded_custody_gap_inferred": 42,
+"total_flagged_minor_stays": 48
+},
+{
+"fac": "DALHOLD",
+"lat": null,
+"lon": null,
+"court_documented_hotel_staging": 15,
+"unrecorded_custody_gap_inferred": 25,
+"total_flagged_minor_stays": 40
+},
+{
+"fac": "DETHOLD",
+"lat": null,
+"lon": null,
+"court_documented_hotel_staging": 6,
+"unrecorded_custody_gap_inferred": 32,
+"total_flagged_minor_stays": 38
+},
+{
+"fac": "DENHOLD",
+"lat": 39.60151617,
+"lon": -104.8449951,
+"court_documented_hotel_staging": 12,
+"unrecorded_custody_gap_inferred": 25,
+"total_flagged_minor_stays": 37
+},
+{
+"fac": "NOLHOLD",
+"lat": null,
+"lon": null,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 35,
+"total_flagged_minor_stays": 35
+},
+{
+"fac": "SNDHOLD",
+"lat": 32.71460715,
+"lon": -117.165296,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 33,
+"total_flagged_minor_stays": 33
+},
+{
+"fac": "ATLHOLD",
+"lat": 33.74958147,
+"lon": -84.39736522,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 31,
+"total_flagged_minor_stays": 31
+},
+{
+"fac": "DLRHOLD",
+"lat": null,
+"lon": null,
+"court_documented_hotel_staging": 5,
+"unrecorded_custody_gap_inferred": 22,
+"total_flagged_minor_stays": 27
+},
+{
+"fac": "AUSHOLD",
+"lat": null,
+"lon": null,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 24,
+"total_flagged_minor_stays": 24
+},
+{
+"fac": "UCBPMCA",
+"lat": null,
+"lon": null,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 21,
+"total_flagged_minor_stays": 21
+},
+{
+"fac": "SPMHOLD",
+"lat": 44.89410469,
+"lon": -93.19490987,
+"court_documented_hotel_staging": 8,
+"unrecorded_custody_gap_inferred": 11,
+"total_flagged_minor_stays": 19
+},
+{
+"fac": "ORLHOLD",
+"lat": 28.42818942,
+"lon": -81.40971328,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 19,
+"total_flagged_minor_stays": 19
+},
+{
+"fac": "JAXHOLD",
+"lat": 30.13257185,
+"lon": -81.51262118,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 16,
+"total_flagged_minor_stays": 16
+},
+{
+"fac": "RGS",
+"lat": 26.15603231,
+"lon": -97.33778121,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 12,
+"total_flagged_minor_stays": 12
+},
+{
+"fac": "SAAHOLD",
+"lat": null,
+"lon": null,
+"court_documented_hotel_staging": 10,
+"unrecorded_custody_gap_inferred": 0,
+"total_flagged_minor_stays": 10
+},
+{
+"fac": "CLTHOLD",
+"lat": null,
+"lon": null,
+"court_documented_hotel_staging": 9,
+"unrecorded_custody_gap_inferred": 0,
+"total_flagged_minor_stays": 9
+},
+{
+"fac": "MEMHOLD",
+"lat": null,
+"lon": null,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 7,
+"total_flagged_minor_stays": 7
+},
+{
+"fac": "NEWHOLD",
+"lat": null,
+"lon": null,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 7,
+"total_flagged_minor_stays": 7
+},
+{
+"fac": "SMAHOLD",
+"lat": null,
+"lon": null,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 6,
+"total_flagged_minor_stays": 6
+},
+{
+"fac": "BIINCCO",
+"lat": 39.76087267,
+"lon": -104.8491804,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 6,
+"total_flagged_minor_stays": 6
+},
+{
+"fac": "SFRHOLD",
+"lat": null,
+"lon": null,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 6,
+"total_flagged_minor_stays": 6
+},
+{
+"fac": "FREHOLD",
+"lat": null,
+"lon": null,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 5,
+"total_flagged_minor_stays": 5
+},
+{
+"fac": "LOUHOLD",
+"lat": null,
+"lon": null,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 5,
+"total_flagged_minor_stays": 5
+},
+{
+"fac": "TAMHOLD",
+"lat": null,
+"lon": null,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 5,
+"total_flagged_minor_stays": 5
+},
+{
+"fac": "CHLHOLD",
+"lat": null,
+"lon": null,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 5,
+"total_flagged_minor_stays": 5
+}
+]
+}
