@@ -1,0 +1,511 @@
+{
+"suppress_below": 5,
+"note": "Two separate counts per facility and month: a minor whose stay matched a court-documented Flores v. Reno hotel chain ('court_documented_hotel_staging'), and a minor whose stay shows the same end-of-stay pattern with no court match at all ('unrecorded_custody_gap_inferred', NOT a hotel -- see notes/flores-hotel-records.md). Any cell under 5 is omitted entirely, not rounded or shown as '<5'.",
+"by_month": {
+"2025-06": {
+"HOUHOLD": {
+"court_documented_hotel_staging": 6
+},
+"SNAHOLD": {
+"court_documented_hotel_staging": 14,
+"unrecorded_custody_gap_inferred": 7
+},
+"NYCHOLD": {
+"court_documented_hotel_staging": 20
+},
+"LOSHOLD": {
+"court_documented_hotel_staging": 14
+},
+"DETHOLD": {
+"court_documented_hotel_staging": 6
+},
+"STFRCTX": {
+"court_documented_hotel_staging": 5,
+"unrecorded_custody_gap_inferred": 16
+},
+"DENHOLD": {
+"court_documented_hotel_staging": 12
+},
+"DALHOLD": {
+"court_documented_hotel_staging": 8
+},
+"SAAHOLD": {
+"court_documented_hotel_staging": 5
+},
+"CHIHOLD": {
+"court_documented_hotel_staging": 6
+},
+"NOLHOLD": {
+"unrecorded_custody_gap_inferred": 5
+},
+"ATLHOLD": {
+"unrecorded_custody_gap_inferred": 7
+}
+},
+"2025-05": {
+"SNAHOLD": {
+"court_documented_hotel_staging": 5
+},
+"SAAHOLD": {
+"court_documented_hotel_staging": 5
+},
+"PHOHOLD": {
+"court_documented_hotel_staging": 11
+},
+"LOSHOLD": {
+"court_documented_hotel_staging": 8
+},
+"STFRCTX": {
+"unrecorded_custody_gap_inferred": 33
+},
+"DETHOLD": {
+"unrecorded_custody_gap_inferred": 6
+}
+},
+"2025-07": {
+"LOSHOLD": {
+"court_documented_hotel_staging": 6
+},
+"MIAHOLD": {
+"court_documented_hotel_staging": 6
+},
+"NYCHOLD": {
+"unrecorded_custody_gap_inferred": 6
+},
+"DENHOLD": {
+"unrecorded_custody_gap_inferred": 7
+},
+"ATLHOLD": {
+"unrecorded_custody_gap_inferred": 6
+},
+"STFRCTX": {
+"unrecorded_custody_gap_inferred": 7
+}
+},
+"2025-08": {
+"SNAHOLD": {
+"court_documented_hotel_staging": 6
+},
+"NYCHOLD": {
+"court_documented_hotel_staging": 10
+},
+"STFRCTX": {
+"unrecorded_custody_gap_inferred": 7
+}
+},
+"2025-09": {
+"CLTHOLD": {
+"court_documented_hotel_staging": 9
+},
+"NYCHOLD": {
+"court_documented_hotel_staging": 12,
+"unrecorded_custody_gap_inferred": 15
+},
+"PHOHOLD": {
+"court_documented_hotel_staging": 20
+},
+"DALHOLD": {
+"court_documented_hotel_staging": 7
+},
+"LOSHOLD": {
+"court_documented_hotel_staging": 5
+},
+"DLRHOLD": {
+"court_documented_hotel_staging": 5
+}
+},
+"2026-01": {
+"SPMHOLD": {
+"court_documented_hotel_staging": 8,
+"unrecorded_custody_gap_inferred": 6
+},
+"SEAHOLD": {
+"unrecorded_custody_gap_inferred": 11
+},
+"SNAHOLD": {
+"unrecorded_custody_gap_inferred": 10
+},
+"LOSHOLD": {
+"unrecorded_custody_gap_inferred": 15
+},
+"UCBPMCA": {
+"unrecorded_custody_gap_inferred": 7
+},
+"NOLHOLD": {
+"unrecorded_custody_gap_inferred": 5
+},
+"CHIHOLD": {
+"unrecorded_custody_gap_inferred": 5
+},
+"NYCHOLD": {
+"unrecorded_custody_gap_inferred": 13
+}
+},
+"2025-11": {
+"NYCHOLD": {
+"unrecorded_custody_gap_inferred": 26
+},
+"HOUHOLD": {
+"unrecorded_custody_gap_inferred": 6
+}
+},
+"2026-04": {
+"SNAHOLD": {
+"unrecorded_custody_gap_inferred": 19
+},
+"ATLHOLD": {
+"unrecorded_custody_gap_inferred": 6
+},
+"DALHOLD": {
+"unrecorded_custody_gap_inferred": 7
+},
+"MIAHOLD": {
+"unrecorded_custody_gap_inferred": 11
+},
+"LOSHOLD": {
+"unrecorded_custody_gap_inferred": 8
+},
+"DETHOLD": {
+"unrecorded_custody_gap_inferred": 8
+},
+"CHIHOLD": {
+"unrecorded_custody_gap_inferred": 10
+},
+"HOUHOLD": {
+"unrecorded_custody_gap_inferred": 5
+},
+"RGS": {
+"unrecorded_custody_gap_inferred": 5
+},
+"TAMHOLD": {
+"unrecorded_custody_gap_inferred": 5
+}
+},
+"2026-05": {
+"DETHOLD": {
+"unrecorded_custody_gap_inferred": 12
+},
+"FREHOLD": {
+"unrecorded_custody_gap_inferred": 5
+},
+"ORLHOLD": {
+"unrecorded_custody_gap_inferred": 6
+},
+"NOLHOLD": {
+"unrecorded_custody_gap_inferred": 12
+},
+"DLRHOLD": {
+"unrecorded_custody_gap_inferred": 9
+},
+"HOUHOLD": {
+"unrecorded_custody_gap_inferred": 14
+},
+"SNAHOLD": {
+"unrecorded_custody_gap_inferred": 9
+},
+"DALHOLD": {
+"unrecorded_custody_gap_inferred": 8
+},
+"JAXHOLD": {
+"unrecorded_custody_gap_inferred": 5
+},
+"CHIHOLD": {
+"unrecorded_custody_gap_inferred": 16
+},
+"NYCHOLD": {
+"unrecorded_custody_gap_inferred": 7
+},
+"SMAHOLD": {
+"unrecorded_custody_gap_inferred": 6
+},
+"PHOHOLD": {
+"unrecorded_custody_gap_inferred": 5
+},
+"DENHOLD": {
+"unrecorded_custody_gap_inferred": 6
+},
+"SEAHOLD": {
+"unrecorded_custody_gap_inferred": 5
+},
+"MIAHOLD": {
+"unrecorded_custody_gap_inferred": 8
+},
+"ATLHOLD": {
+"unrecorded_custody_gap_inferred": 12
+}
+},
+"2026-07": {
+"MIAHOLD": {
+"unrecorded_custody_gap_inferred": 13
+},
+"DALHOLD": {
+"unrecorded_custody_gap_inferred": 5
+},
+"LOSHOLD": {
+"unrecorded_custody_gap_inferred": 11
+},
+"PHOHOLD": {
+"unrecorded_custody_gap_inferred": 5
+},
+"AUSHOLD": {
+"unrecorded_custody_gap_inferred": 11
+},
+"SEAHOLD": {
+"unrecorded_custody_gap_inferred": 16
+},
+"NYCHOLD": {
+"unrecorded_custody_gap_inferred": 5
+},
+"UCBPMCA": {
+"unrecorded_custody_gap_inferred": 7
+},
+"JAXHOLD": {
+"unrecorded_custody_gap_inferred": 5
+}
+},
+"2025-03": {
+"SNDHOLD": {
+"unrecorded_custody_gap_inferred": 27
+},
+"AUSHOLD": {
+"unrecorded_custody_gap_inferred": 7
+},
+"MIAHOLD": {
+"unrecorded_custody_gap_inferred": 9
+},
+"SEAHOLD": {
+"unrecorded_custody_gap_inferred": 6
+},
+"BIINCCO": {
+"unrecorded_custody_gap_inferred": 6
+},
+"DLRHOLD": {
+"unrecorded_custody_gap_inferred": 8
+},
+"LOUHOLD": {
+"unrecorded_custody_gap_inferred": 5
+}
+},
+"2026-06": {
+"SEAHOLD": {
+"unrecorded_custody_gap_inferred": 5
+},
+"LOSHOLD": {
+"unrecorded_custody_gap_inferred": 9
+},
+"DENHOLD": {
+"unrecorded_custody_gap_inferred": 7
+},
+"SNAHOLD": {
+"unrecorded_custody_gap_inferred": 14
+},
+"ORLHOLD": {
+"unrecorded_custody_gap_inferred": 5
+},
+"JAXHOLD": {
+"unrecorded_custody_gap_inferred": 6
+},
+"PHOHOLD": {
+"unrecorded_custody_gap_inferred": 12
+},
+"NYCHOLD": {
+"unrecorded_custody_gap_inferred": 10
+},
+"CHIHOLD": {
+"unrecorded_custody_gap_inferred": 11
+}
+},
+"2025-12": {
+"AUSHOLD": {
+"unrecorded_custody_gap_inferred": 6
+},
+"SEAHOLD": {
+"unrecorded_custody_gap_inferred": 12
+},
+"NYCHOLD": {
+"unrecorded_custody_gap_inferred": 10
+},
+"PHOHOLD": {
+"unrecorded_custody_gap_inferred": 7
+},
+"SNAHOLD": {
+"unrecorded_custody_gap_inferred": 10
+},
+"NOLHOLD": {
+"unrecorded_custody_gap_inferred": 7
+},
+"STFRCTX": {
+"unrecorded_custody_gap_inferred": 6
+},
+"SNDHOLD": {
+"unrecorded_custody_gap_inferred": 6
+}
+},
+"2025-10": {
+"NOLHOLD": {
+"unrecorded_custody_gap_inferred": 6
+},
+"NYCHOLD": {
+"unrecorded_custody_gap_inferred": 12
+},
+"MIAHOLD": {
+"unrecorded_custody_gap_inferred": 5
+},
+"RGS": {
+"unrecorded_custody_gap_inferred": 7
+},
+"MEMHOLD": {
+"unrecorded_custody_gap_inferred": 7
+},
+"CHLHOLD": {
+"unrecorded_custody_gap_inferred": 5
+}
+},
+"2026-03": {
+"NEWHOLD": {
+"unrecorded_custody_gap_inferred": 7
+},
+"MIAHOLD": {
+"unrecorded_custody_gap_inferred": 9
+},
+"STFRCTX": {
+"unrecorded_custody_gap_inferred": 5
+},
+"CHIHOLD": {
+"unrecorded_custody_gap_inferred": 8
+},
+"SNAHOLD": {
+"unrecorded_custody_gap_inferred": 13
+},
+"DLRHOLD": {
+"unrecorded_custody_gap_inferred": 5
+},
+"DENHOLD": {
+"unrecorded_custody_gap_inferred": 5
+},
+"UCBPMCA": {
+"unrecorded_custody_gap_inferred": 7
+},
+"HOUHOLD": {
+"unrecorded_custody_gap_inferred": 11
+},
+"SFRHOLD": {
+"unrecorded_custody_gap_inferred": 6
+}
+},
+"2025-02": {
+"HOUHOLD": {
+"unrecorded_custody_gap_inferred": 6
+},
+"ORLHOLD": {
+"unrecorded_custody_gap_inferred": 8
+}
+},
+"2026-02": {
+"DALHOLD": {
+"unrecorded_custody_gap_inferred": 5
+},
+"DETHOLD": {
+"unrecorded_custody_gap_inferred": 6
+},
+"SEAHOLD": {
+"unrecorded_custody_gap_inferred": 5
+},
+"LOSHOLD": {
+"unrecorded_custody_gap_inferred": 5
+},
+"NYCHOLD": {
+"unrecorded_custody_gap_inferred": 5
+},
+"SPMHOLD": {
+"unrecorded_custody_gap_inferred": 5
+},
+"MIAHOLD": {
+"unrecorded_custody_gap_inferred": 6
+}
+},
+"2025-04": {
+"STFRCTX": {
+"unrecorded_custody_gap_inferred": 30
+}
+}
+},
+"by_month_total": {
+"2025-06": {
+"court_documented_hotel_staging": 96,
+"unrecorded_custody_gap_inferred": 35
+},
+"2025-05": {
+"court_documented_hotel_staging": 29,
+"unrecorded_custody_gap_inferred": 39
+},
+"2025-07": {
+"court_documented_hotel_staging": 12,
+"unrecorded_custody_gap_inferred": 26
+},
+"2025-08": {
+"court_documented_hotel_staging": 16,
+"unrecorded_custody_gap_inferred": 7
+},
+"2025-09": {
+"court_documented_hotel_staging": 58,
+"unrecorded_custody_gap_inferred": 15
+},
+"2026-01": {
+"court_documented_hotel_staging": 8,
+"unrecorded_custody_gap_inferred": 72
+},
+"2025-11": {
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 32
+},
+"2026-04": {
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 84
+},
+"2026-05": {
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 145
+},
+"2026-07": {
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 78
+},
+"2025-03": {
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 68
+},
+"2026-06": {
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 79
+},
+"2025-12": {
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 64
+},
+"2025-10": {
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 42
+},
+"2026-03": {
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 76
+},
+"2025-02": {
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 14
+},
+"2026-02": {
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 37
+},
+"2025-04": {
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 30
+}
+},
+"summary": {
+"total_court_documented_hotel_staging": 219,
+"total_unrecorded_custody_gap_inferred": 943
+}
+}

@@ -1,0 +1,151 @@
+{
+  "generated_by": "data/build_airport_legs_detail.py",
+  "method_note": "A leg-touch is flagged when its aircraft's verified length implies a higher ARFF index (14 CFR 139.315(a)) than the airport it touches is certificated for. Checked only where BOTH the aircraft type has a verified length (data/aircraft_lengths.csv) and the airport has a parsed, certificated index (data/airport_faa_info.json) -- an airport with no Part 139 certification at all is not counted here, a separate and arguably more consequential case this aggregate does not speak to.",
+  "flag_text": "Aircraft larger than this airport's ARFF index anticipates",
+  "hover_text": "Part 139 certificates airports, not individual flights, so this is not a claim of a violation. 14 CFR 139.315(c) allows an airport to operate at the next lower ARFF index once its longest aircraft type has fewer than five average daily departures -- this may be exactly that case. This data also cannot show whether the operator notified the airport in advance, or whether the airport's own index was temporarily raised for this operation. Worth asking about, not evidence of wrongdoing.",
+  "total_touches_checked": 36977,
+  "total_touches_flagged": 4843,
+  "share_flagged_pct": 13.1,
+  "by_airport": [
+    {
+      "airport": "Valley Intl (KHRL)",
+      "flagged_touches": 2044
+    },
+    {
+      "airport": "Youngstown/Warren Rgnl (KYNG)",
+      "flagged_touches": 1074
+    },
+    {
+      "airport": "So California Logistics (KVCV)",
+      "flagged_touches": 436
+    },
+    {
+      "airport": "Willow Run (KYIP)",
+      "flagged_touches": 233
+    },
+    {
+      "airport": "Columbus (KCSG)",
+      "flagged_touches": 195
+    },
+    {
+      "airport": "Gary/Chicago Intl (KGYY)",
+      "flagged_touches": 182
+    },
+    {
+      "airport": "Phoenix-Mesa Gateway (KIWA)",
+      "flagged_touches": 164
+    },
+    {
+      "airport": "El Paso Intl (KELP)",
+      "flagged_touches": 88
+    },
+    {
+      "airport": "Laurence G Hanscom Fld (KBED)",
+      "flagged_touches": 83
+    },
+    {
+      "airport": "Abilene Rgnl (KABI)",
+      "flagged_touches": 44
+    },
+    {
+      "airport": "Springfield (KSGF)",
+      "flagged_touches": 42
+    },
+    {
+      "airport": "Portsmouth Intl At Pease (KPSM)",
+      "flagged_touches": 39
+    },
+    {
+      "airport": "Yuma Intl (KNYL)",
+      "flagged_touches": 30
+    },
+    {
+      "airport": "Alexandria Intl (KAEX)",
+      "flagged_touches": 25
+    },
+    {
+      "airport": "Meadows Fld (KBFL)",
+      "flagged_touches": 24
+    },
+    {
+      "airport": "Harrisburg Intl (KMDT)",
+      "flagged_touches": 20
+    },
+    {
+      "airport": "Yakima Air Terminal (KYKM)",
+      "flagged_touches": 20
+    },
+    {
+      "airport": "Laredo Intl (KLRD)",
+      "flagged_touches": 18
+    },
+    {
+      "airport": "Bangor Int'l (BGR)",
+      "flagged_touches": 18
+    },
+    {
+      "airport": "Trenton Mercer (KTTN)",
+      "flagged_touches": 16
+    },
+    {
+      "airport": "Baltimore/Washington Intl (KBWI)",
+      "flagged_touches": 10
+    },
+    {
+      "airport": "Brownsville Intl (KBRO)",
+      "flagged_touches": 7
+    },
+    {
+      "airport": "Shreveport Rgnl (KSHV)",
+      "flagged_touches": 4
+    },
+    {
+      "airport": "St George Rgnl (KSGU)",
+      "flagged_touches": 4
+    },
+    {
+      "airport": "Magic Valley Rgnl (KTWF)",
+      "flagged_touches": 4
+    },
+    {
+      "airport": "Kansas City Intl (KMCI)",
+      "flagged_touches": 3
+    },
+    {
+      "airport": "Richmond Intl (KRIC)",
+      "flagged_touches": 2
+    },
+    {
+      "airport": "St Louis Downtown (KCPS)",
+      "flagged_touches": 2
+    },
+    {
+      "airport": "Topeka Rgnl (KFOE)",
+      "flagged_touches": 2
+    },
+    {
+      "airport": "Dallas Love Field (KDAL)",
+      "flagged_touches": 2
+    },
+    {
+      "airport": "Tucson Intl (KTUS)",
+      "flagged_touches": 2
+    },
+    {
+      "airport": "Dover Air Force Base (KDOV)",
+      "flagged_touches": 2
+    },
+    {
+      "airport": "N Platte Rgnl Airport (LBF)",
+      "flagged_touches": 2
+    },
+    {
+      "airport": "Charleston Intl/AFB (KCHS)",
+      "flagged_touches": 1
+    },
+    {
+      "airport": "Boeing Field Intl (KBFI)",
+      "flagged_touches": 1
+    }
+  ]
+}

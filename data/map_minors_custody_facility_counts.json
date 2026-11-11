@@ -1,0 +1,1185 @@
+{
+"suppress_below": 5,
+"note": "Per-facility totals, summed from already-suppressed monthly cells (a facility/month cell too small to publish on its own is never re-aggregated back in at the facility level). 'total_flagged_minor_stays' is the sum of both counts -- how many flagged minor stays launched from this hold room. A null value (added 2026-10-26) means this facility has a real, nonzero count in this category, but every month it occurred in was individually too small to publish -- distinct from a true 0, which means no occurrence at all; show null as '-', never as 0.",
+"facilities": [
+{
+"fac": "NYCHOLD",
+"name": "NYC Hold Room",
+"lat": 40.71571691,
+"lon": -74.00438162,
+"total_flagged_minor_stays": 151,
+"court_documented_hotel_staging": 42,
+"unrecorded_custody_gap_inferred": 109
+},
+{
+"fac": "STFRCTX",
+"name": "South Texas Family Residential Center1",
+"lat": 28.65785369,
+"lon": -99.20038782,
+"total_flagged_minor_stays": 109,
+"court_documented_hotel_staging": 5,
+"unrecorded_custody_gap_inferred": 104
+},
+{
+"fac": "SNAHOLD",
+"name": "San Antonio Detention and Removal Operations Hold Room",
+"lat": 29.542857271619,
+"lon": -98.429085248369,
+"total_flagged_minor_stays": 107,
+"court_documented_hotel_staging": 25,
+"unrecorded_custody_gap_inferred": 82
+},
+{
+"fac": "LOSHOLD",
+"name": "Los Cust Case",
+"lat": 34.053742,
+"lon": -118.23961,
+"total_flagged_minor_stays": 81,
+"court_documented_hotel_staging": 33,
+"unrecorded_custody_gap_inferred": 48
+},
+{
+"fac": "MIAHOLD",
+"name": "Miami (Miramar) Hold Room",
+"lat": 25.983290459082,
+"lon": -80.340044780445,
+"total_flagged_minor_stays": 67,
+"court_documented_hotel_staging": 6,
+"unrecorded_custody_gap_inferred": 61
+},
+{
+"fac": "PHOHOLD",
+"name": "Phoenix District Office",
+"lat": 33.572154,
+"lon": -112.090132,
+"total_flagged_minor_stays": 60,
+"court_documented_hotel_staging": 31,
+"unrecorded_custody_gap_inferred": 29
+},
+{
+"fac": "SEAHOLD",
+"name": "Seattle Field Office Hold Room",
+"lat": 47.49050762,
+"lon": -122.2911876,
+"total_flagged_minor_stays": 60,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": 60
+},
+{
+"fac": "CHIHOLD",
+"name": "Chicago Hold Room",
+"lat": 41.837045,
+"lon": -87.684939,
+"total_flagged_minor_stays": 56,
+"court_documented_hotel_staging": 6,
+"unrecorded_custody_gap_inferred": 50
+},
+{
+"fac": "HOUHOLD",
+"name": "Houston Field Office Hold Room",
+"lat": 29.93757547,
+"lon": -95.40639406,
+"total_flagged_minor_stays": 48,
+"court_documented_hotel_staging": 6,
+"unrecorded_custody_gap_inferred": 42
+},
+{
+"fac": "DALHOLD",
+"name": "Dallas FO Hold",
+"lat": 32.821446540721,
+"lon": -96.870773475945,
+"total_flagged_minor_stays": 40,
+"court_documented_hotel_staging": 15,
+"unrecorded_custody_gap_inferred": 25
+},
+{
+"fac": "DETHOLD",
+"name": "Detroit Hold Room",
+"lat": 42.342359223373,
+"lon": -83.009076410967,
+"total_flagged_minor_stays": 38,
+"court_documented_hotel_staging": 6,
+"unrecorded_custody_gap_inferred": 32
+},
+{
+"fac": "DENHOLD",
+"name": "Denver Hold Room",
+"lat": 39.60151617,
+"lon": -104.8449951,
+"total_flagged_minor_stays": 37,
+"court_documented_hotel_staging": 12,
+"unrecorded_custody_gap_inferred": 25
+},
+{
+"fac": "NOLHOLD",
+"name": "New Orleans Hold Room",
+"lat": 29.985284897602,
+"lon": -90.285065405734,
+"total_flagged_minor_stays": 35,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": 35
+},
+{
+"fac": "SNDHOLD",
+"name": "Snd District Staging",
+"lat": 32.71460715,
+"lon": -117.165296,
+"total_flagged_minor_stays": 33,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": 33
+},
+{
+"fac": "ATLHOLD",
+"name": "Atlanta District Hold Room",
+"lat": 33.74958147,
+"lon": -84.39736522,
+"total_flagged_minor_stays": 31,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": 31
+},
+{
+"fac": "DLRHOLD",
+"name": "Del Rio Detention and Removal Operations Hold Room",
+"lat": 29.373578064167,
+"lon": -100.845908961447,
+"total_flagged_minor_stays": 27,
+"court_documented_hotel_staging": 5,
+"unrecorded_custody_gap_inferred": 22
+},
+{
+"fac": "AUSHOLD",
+"name": "Austin Detention and Removal Operations Hold Room",
+"lat": 30.273149551548,
+"lon": -97.746018820793,
+"total_flagged_minor_stays": 24,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": 24
+},
+{
+"fac": "UCBPMCA",
+"name": null,
+"lat": null,
+"lon": null,
+"total_flagged_minor_stays": 21,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": 21
+},
+{
+"fac": "SPMHOLD",
+"name": "Bishop Henry Whipple Federal Building",
+"lat": 44.89410469,
+"lon": -93.19490987,
+"total_flagged_minor_stays": 19,
+"court_documented_hotel_staging": 8,
+"unrecorded_custody_gap_inferred": 11
+},
+{
+"fac": "ORLHOLD",
+"name": "Orlando Hold Room",
+"lat": 28.42818942,
+"lon": -81.40971328,
+"total_flagged_minor_stays": 19,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": 19
+},
+{
+"fac": "JAXHOLD",
+"name": "Jacksonville Sub-Office",
+"lat": 30.13257185,
+"lon": -81.51262118,
+"total_flagged_minor_stays": 16,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 16
+},
+{
+"fac": "RGS",
+"name": "Rio Grande Valley Staging",
+"lat": 26.15603231,
+"lon": -97.33778121,
+"total_flagged_minor_stays": 12,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": 12
+},
+{
+"fac": "SAAHOLD",
+"name": "Santa Ana Detention and Removal Operations Hold Room",
+"lat": 33.751492719875,
+"lon": -117.87231616121,
+"total_flagged_minor_stays": 10,
+"court_documented_hotel_staging": 10,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "CLTHOLD",
+"name": "Charlotte Hold Room",
+"lat": 35.163753160621,
+"lon": -80.910572065797,
+"total_flagged_minor_stays": 9,
+"court_documented_hotel_staging": 9,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "MEMHOLD",
+"name": "Memphis Hold Room",
+"lat": 35.071581268402,
+"lon": -89.96388883128,
+"total_flagged_minor_stays": 7,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": 7
+},
+{
+"fac": "NEWHOLD",
+"name": "New/INS Os Hold Room",
+"lat": null,
+"lon": null,
+"total_flagged_minor_stays": 7,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": 7
+},
+{
+"fac": "BIINCCO",
+"name": "BI Incororated, Geo Group Company",
+"lat": 39.76087267,
+"lon": -104.8491804,
+"total_flagged_minor_stays": 6,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": 6
+},
+{
+"fac": "SMAHOLD",
+"name": "Santa Maria Sub Office Enforcement and Removal Operations",
+"lat": 34.918495396637,
+"lon": -120.443947914698,
+"total_flagged_minor_stays": 6,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 6
+},
+{
+"fac": "SFRHOLD",
+"name": "Sfr Hold Room",
+"lat": 37.796029,
+"lon": -122.401662,
+"total_flagged_minor_stays": 6,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": 6
+},
+{
+"fac": "CHLHOLD",
+"name": "Charleston, SC Hold Room",
+"lat": 32.828017,
+"lon": -79.972896,
+"total_flagged_minor_stays": 5,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": 5
+},
+{
+"fac": "LOUHOLD",
+"name": "Louisville Hold Room",
+"lat": 38.247509405671,
+"lon": -85.763265342059,
+"total_flagged_minor_stays": 5,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": 5
+},
+{
+"fac": "FREHOLD",
+"name": "Fresno Hold Room",
+"lat": 36.732674975829,
+"lon": -119.785252966141,
+"total_flagged_minor_stays": 5,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": 5
+},
+{
+"fac": "TAMHOLD",
+"name": "Tampa Hold Room",
+"lat": 27.952386897786,
+"lon": -82.537218062151,
+"total_flagged_minor_stays": 5,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": 5
+},
+{
+"fac": "MGAHOLD",
+"name": "Montgomery Hold Room",
+"lat": 32.362067871889,
+"lon": -86.243158083342,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "LASHOLD",
+"name": "Las Cruces Hold Room",
+"lat": 32.346923307673,
+"lon": -106.764371783608,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "BILHOLD",
+"name": "Billings Hold Room",
+"lat": 45.788538,
+"lon": -108.552475,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "CHMHOLD",
+"name": "Champlain Hold Room",
+"lat": 44.988281,
+"lon": -73.432429,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "HARHOLD",
+"name": "Hartford Office",
+"lat": 41.765933,
+"lon": -72.681579,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "ABQHOLD",
+"name": "Albuquerque Hold Room",
+"lat": 35.002349117119,
+"lon": -106.616309274944,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "CHAHOLD",
+"name": "Charlotte Amalie Hold Room",
+"lat": 18.35,
+"lon": -64.95,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "RICHOLD",
+"name": "Richland Hold Room",
+"lat": 46.28698,
+"lon": -119.294045,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "HLGHOLD",
+"name": "Harlingen Hold Room",
+"lat": 26.178918205287,
+"lon": -97.714623927244,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "FRDHOLD",
+"name": "Frederick Hold Room",
+"lat": 40.084044889832,
+"lon": -104.984255091328,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": 0
+},
+{
+"fac": "HCPSCMS",
+"name": "Hancock County Public Safety Complex",
+"lat": 30.30312418,
+"lon": -89.47651733,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "STLHOLD",
+"name": "St. Louis Hold Room",
+"lat": 38.624332220679,
+"lon": -90.199860586934,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "LICEPLA",
+"name": "Louisiana ICE Processing Center",
+"lat": 30.940609,
+"lon": -91.56848321,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "BUFHOLD",
+"name": "Buffalo Hold Room",
+"lat": 42.891104557221,
+"lon": -78.876709701715,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "CSDHOLD",
+"name": "Colorado Springs Den Homeland Security Investigations Hold",
+"lat": 38.788079991455,
+"lon": -104.776812928019,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "IMPHOLD",
+"name": "Imperial Sub Office Hold Room",
+"lat": 32.81319479,
+"lon": -115.572837,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "CLEHOLD",
+"name": "Cleveland Hold Room",
+"lat": 41.478462,
+"lon": -81.679435,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "FDLHOLD",
+"name": "Ferndale Hold Room",
+"lat": 48.822511452662,
+"lon": -122.559311741086,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "PUEHOLD",
+"name": "Pueblo Hold Room",
+"lat": 38.437073346097,
+"lon": -105.113985729773,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "INPHOLD",
+"name": "Indianapolis Hold Room",
+"lat": 39.886198778513,
+"lon": -86.266870419407,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "GRIHOLD",
+"name": "Grand Island Hold Room",
+"lat": 40.924106198452,
+"lon": -98.343073725108,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "POOHOLD",
+"name": "Portland District Office",
+"lat": 45.49280392,
+"lon": -122.6726165,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "MILHOLD",
+"name": "Milwaukee Hold Room",
+"lat": 43.047023808365,
+"lon": -87.908376052893,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "PKEHOLD",
+"name": "Pike County Enforcement and Removal Operations Hold Room",
+"lat": 41.389864812183,
+"lon": -75.073631704468,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "SPOHOLD",
+"name": "Spokane Hold Room",
+"lat": 47.665880717851,
+"lon": -117.41761222595,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "TALHOLD",
+"name": "Tallahassee Hold Room",
+"lat": 30.47097791492,
+"lon": -84.354751863138,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "STCDFTX",
+"name": "South Texas ICE Processing Center",
+"lat": 28.89486166,
+"lon": -99.12126683,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "PRLHOLD",
+"name": "Prairieland Suboffice Hold Room",
+"lat": 32.42141903,
+"lon": -97.19583542,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "CNGHOLD",
+"name": "Chattanooga Hold Room",
+"lat": 35.054864760593,
+"lon": -85.185983560288,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "RDUHOLD",
+"name": "Raleigh Hold Room",
+"lat": 35.820027301551,
+"lon": -78.804112590252,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "MOAHOLD",
+"name": "Mobile Hold Room",
+"lat": 30.673427617116,
+"lon": -88.130900087206,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "CHYHOLD",
+"name": "Cheyenne Hold Room",
+"lat": 41.137288819422,
+"lon": -104.720679365744,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "CLMHOLD",
+"name": "Columbus Hold Room",
+"lat": 39.983938,
+"lon": -82.984882,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "EPC",
+"name": "El Paso Service Processing Center",
+"lat": 31.79376201,
+"lon": -106.3692084,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": 0
+},
+{
+"fac": "JENATLA",
+"name": "Alexandria Staging Facility",
+"lat": 31.3175636,
+"lon": -92.53649027,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "WICHOLD",
+"name": "Wichita Hold Room",
+"lat": 37.690638,
+"lon": -97.345836,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "SPGHOLD",
+"name": "Enforcement and Removal Operations Hold Room (Springfield MO)",
+"lat": 37.194157,
+"lon": -93.292642,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "WASHOLD",
+"name": "Washington Field Office",
+"lat": 38.91143006,
+"lon": -77.45867867,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "SYRHOLD",
+"name": "Syracuse Hold Room",
+"lat": 43.046977591339,
+"lon": -76.152154187197,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "MLJHOLD",
+"name": "Mount Laurel Hold Room",
+"lat": 39.948992,
+"lon": -74.900247,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "GRMHOLD",
+"name": "Grand Rapids Hold Room",
+"lat": 42.972683917947,
+"lon": -85.670242842979,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": 0
+},
+{
+"fac": "HHWHOLD",
+"name": "Enforcement and Removal Operations Honolulu Sub-Office Hold Room",
+"lat": 21.29993808,
+"lon": -157.8638846,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "SXCHOLD",
+"name": "Sioux City Hold Room",
+"lat": 42.49538,
+"lon": -96.389495,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "STUHOLD",
+"name": "Stuart Hold Room",
+"lat": 27.163351702827,
+"lon": -80.221722058836,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "WPOHOLD",
+"name": "Williamsport Hold Room",
+"lat": 41.223992019281,
+"lon": -77.078391778033,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "BOSHOLD",
+"name": "Boston Hold Room",
+"lat": 42.48263463,
+"lon": -71.20887224,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "SGUHOLD",
+"name": "St. George, UT Hold Room",
+"lat": 37.077006,
+"lon": -113.576534,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "CINHOLD",
+"name": "Cincinnati Hold Room",
+"lat": 39.140183,
+"lon": -84.505829,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "FIPCMGA",
+"name": "Folkston ICE Processing Center (Main)",
+"lat": 30.87210016,
+"lon": -81.98234889,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "ETWHOLD",
+"name": "Etowah Enforcement and Removal Operations Hold Room",
+"lat": 34.006597,
+"lon": -86.016078,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "SACHOLD",
+"name": "Sacramento Hold",
+"lat": 38.578162576586,
+"lon": -121.499555184604,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "NORHOLD",
+"name": "Norfolk Sub-Office Hold",
+"lat": 36.84850338,
+"lon": -76.29086079,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "YUMHOLD",
+"name": "Yuma Hold Room",
+"lat": 32.656192435402,
+"lon": -114.612144786335,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "BHMHOLD",
+"name": "Birmingham Hold Room",
+"lat": 33.437704366252,
+"lon": -86.865880163119,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "DVDHOLD",
+"name": "Dover Hold Room",
+"lat": 39.155686508454,
+"lon": -75.54317295552,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "MTGPCTX",
+"name": "Montgomery Processing Center",
+"lat": 30.33710098,
+"lon": -95.44269901,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "LVGHOLD",
+"name": "Las Vegas Hold Room",
+"lat": 36.164498431144,
+"lon": -115.143660979796,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "RCMHOLD",
+"name": "Richmond Sub-Office Hold",
+"lat": 37.49424235,
+"lon": -77.56860725,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "POMHOLD",
+"name": "Portland, ME Hold Room",
+"lat": 43.571203,
+"lon": -70.33417,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "CIPHOLD",
+"name": "Central Islip Hold Room",
+"lat": 40.783589,
+"lon": -73.194475,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "KANHOLD",
+"name": "Kansas City Hold Room",
+"lat": 39.294256034362,
+"lon": -94.681646655885,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "OMAHOLD",
+"name": "Omaha Field Office Hold",
+"lat": 41.28062931,
+"lon": -95.90853636,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "ALBHOLD",
+"name": "Albany Hold Room",
+"lat": 42.963722972624,
+"lon": -73.789423071365,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "YRKHOLD",
+"name": "York Hold Room",
+"lat": 39.9849929,
+"lon": -76.75795911,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "BTV",
+"name": "Buffalo (Batavia) Service Processing Center",
+"lat": 43.0204479,
+"lon": -78.20212174,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": 0
+},
+{
+"fac": "SAJHOLD",
+"name": "San Juan Sub-Office Hold Room",
+"lat": 18.45535098,
+"lon": -66.08279203,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "YAKHOLD",
+"name": "Yakima Sub-Office",
+"lat": 46.61861971,
+"lon": -120.558072,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "PENNISD",
+"name": "Pennington County Jail",
+"lat": 44.07876386,
+"lon": -103.221489,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": 0
+},
+{
+"fac": "CBPHOLD",
+"name": "Buffalo USBP Hold Room",
+"lat": 42.93765609,
+"lon": -78.71391502,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "BOPCNV",
+"name": "Nashville Community Correctional",
+"lat": 36.15843994,
+"lon": -86.78240643,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "PCSHOLD",
+"name": "Pecos Hold Room",
+"lat": 31.391676,
+"lon": -103.527166,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "FAYHOLD",
+"name": "Fayetteville Hold Room",
+"lat": 36.071455,
+"lon": -94.166564,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "LRAHOLD",
+"name": "Little Rock Hold Room",
+"lat": 34.721437223378,
+"lon": -92.224844059988,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "PROHOLD",
+"name": "Prohold",
+"lat": 41.73571611,
+"lon": -71.44113855,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "LRDICDF",
+"name": "Corecivic Laredo Processing Center",
+"lat": 27.52925759,
+"lon": -99.44856712,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "TUCHOLD",
+"name": "Tucson INS Hold Room",
+"lat": 32.13534687395,
+"lon": -110.926051969303,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "SLCHOLD",
+"name": "Salt Lake City Hold Room",
+"lat": 40.706917401433,
+"lon": -111.946776742519,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "OKCHOLD",
+"name": "Oklahoma City Hold Room",
+"lat": 35.4536782,
+"lon": -97.59814012,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "BASILLA",
+"name": "South Louisiana ICE Processing Center",
+"lat": 30.48171312,
+"lon": -92.58121682,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "PITHOLD",
+"name": "Pittsburgh Hold Room",
+"lat": 40.439936,
+"lon": -79.975676,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "CRPHOLD",
+"name": "Corpus Christi EOR Hold Room",
+"lat": 27.754252,
+"lon": -97.173385,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "BALHOLD",
+"name": "Baltimore Hold Room",
+"lat": 39.28809309,
+"lon": -76.61669655,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "HELHOLD",
+"name": "Hel District Custody",
+"lat": 46.596556,
+"lon": -112.021765,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "PHIHOLD",
+"name": "Phi District Office",
+"lat": 39.953734727222,
+"lon": -75.153088909793,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "OAKHOLD",
+"name": "Oakdale Holding Room",
+"lat": 30.816418,
+"lon": -92.655855,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "KNXHOLD",
+"name": "Knoxville Hold Room",
+"lat": 35.923083641463,
+"lon": -84.07790097777,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "JAKHOLD",
+"name": "Jackson MS Hold Room",
+"lat": 32.315834,
+"lon": -90.21285,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "VENHOLD",
+"name": "Ventura Custody Case",
+"lat": 34.21409975,
+"lon": -118.9948304,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "MLDHOLD",
+"name": "Midland, TX Enforcement and Removal Operations Hold Room",
+"lat": 32.024642,
+"lon": -102.113467,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "MTGHOLD",
+"name": "Montgomery Hold Room",
+"lat": 30.336790921848,
+"lon": -95.449925429331,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "FMYHOLD",
+"name": "Fort Myers Enforcement and Removal Operations Hold Room",
+"lat": 26.548804714812,
+"lon": -81.809990606934,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "GRRHOLD",
+"name": "Greer Hold Room",
+"lat": 34.872003408556,
+"lon": -82.227377305737,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "STAHOLD",
+"name": "Saint Albans Hold Room",
+"lat": 44.80149468,
+"lon": -73.07339391,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "BKLHOLD",
+"name": "Bakerfield Hold",
+"lat": 35.373365537494,
+"lon": -119.010705976953,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": 0
+},
+{
+"fac": "NSVHOLD",
+"name": "Nashville Hold Room",
+"lat": 36.1718,
+"lon": -86.785002,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "SFDHOLD",
+"name": "Sioux Falls Hold Room",
+"lat": 43.576466529184,
+"lon": -96.72453508686,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": 0,
+"unrecorded_custody_gap_inferred": null
+},
+{
+"fac": "CSPHOLD",
+"name": "Casper Hold Room",
+"lat": 42.84212,
+"lon": -106.321282,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": 0
+},
+{
+"fac": "SBDHOLD",
+"name": "San Bernardino Hold Room",
+"lat": 34.100795015053,
+"lon": -117.297660504107,
+"total_flagged_minor_stays": 0,
+"court_documented_hotel_staging": null,
+"unrecorded_custody_gap_inferred": null
+}
+]
+}
